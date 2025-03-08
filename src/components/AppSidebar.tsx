@@ -1,5 +1,5 @@
 
-import { Calendar, CheckSquare, BarChart, Flame, BookOpen, Heart, Home } from "lucide-react";
+import { Calendar, CheckSquare, BarChart, Flame, BookOpen, Heart, Home, Code } from "lucide-react";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -52,6 +52,11 @@ export function AppSidebar() {
       title: "Analytics",
       path: "/analytics",
       icon: BarChart,
+    },
+    {
+      title: "Developer",
+      path: "/developer",
+      icon: Code,
     },
   ];
 

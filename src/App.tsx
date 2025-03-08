@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +12,7 @@ import Goals from "./pages/Goals";
 import Journal from "./pages/Journal";
 import Mood from "./pages/Mood";
 import Analytics from "./pages/Analytics";
+import Developer from "./pages/Developer";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { useState, useEffect, Component } from "react";
@@ -27,7 +27,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
   
@@ -43,7 +42,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Error boundary component - Class-based to ensure proper error handling
 class ErrorBoundaryClass extends Component<
   { children: React.ReactNode },
   { hasError: boolean; error: Error | null }
@@ -86,7 +84,6 @@ class ErrorBoundaryClass extends Component<
   }
 }
 
-// App component with auth context
 const AppWithAuth = () => {
   const { user, isLoading } = useAuth();
   
@@ -96,16 +93,13 @@ const AppWithAuth = () => {
 
   return (
     <Routes>
-      {/* Public routes */}
       <Route 
         path="/login" 
         element={user ? <Navigate to="/dashboard" /> : <Login />} 
       />
 
-      {/* Protected routes */}
       <Route path="/" element={<Navigate to="/dashboard" />} />
 
-      {/* Layout wrapper for protected routes */}
       <Route element={
         <ProtectedRoute>
           <Layout />
@@ -118,9 +112,9 @@ const AppWithAuth = () => {
         <Route path="/journal" element={<Journal />} />
         <Route path="/mood" element={<Mood />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/developer" element={<Developer />} />
       </Route>
 
-      {/* Catch-all route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
