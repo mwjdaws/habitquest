@@ -1,11 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
 import { Flame, AlertCircle, Info, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -18,16 +17,14 @@ const Login = () => {
   const [infoMessage, setInfoMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [activeTab, setActiveTab] = useState("login");
-  const { toast } = useToast();
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect authenticated users to dashboard
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
+  if (user) {
+    navigate("/dashboard");
+    return null;
+  }
 
   const validateInputs = () => {
     setErrorMessage("");
@@ -82,36 +79,40 @@ const Login = () => {
             setSuccessMessage("Test account is ready. You can now log in.");
             setActiveTab("login");
           } else {
-            toast({
-              title: "Account Created",
-              description: "Please check your email for a confirmation link before logging in.",
-            });
-            
-            setActiveTab("login");
             setSuccessMessage("Account created successfully! You can now log in.");
+            setActiveTab("login");
           }
         }
       } else {
         // Login
         setInfoMessage("Logging in...");
         
-        const { error, success } = await signIn(email, password);
-        
-        if (error) {
-          console.error(`Login error:`, error);
+        try {
+          const { error, success } = await signIn(email, password);
           
-          if (error.message.includes("Invalid login credentials")) {
-            setErrorMessage("Invalid email or password. Please try again or create an account.");
-          } else if (error.message.includes("Email not confirmed")) {
-            setErrorMessage("Please confirm your email before logging in. Check your inbox for a confirmation link.");
-          } else {
-            setErrorMessage(error.message);
+          if (error) {
+            console.error(`Login error:`, error);
+            
+            if (error.message.includes("Invalid login credentials")) {
+              setErrorMessage("Invalid email or password. Please try again or create an account.");
+            } else if (error.message.toLowerCase().includes("network") || 
+                      error.message.toLowerCase().includes("failed") ||
+                      error.message.toLowerCase().includes("connection")) {
+              setErrorMessage("Network error. Please check your connection and try again.");
+            } else if (error.message.includes("Email not confirmed")) {
+              setErrorMessage("Please confirm your email before logging in. Check your inbox for a confirmation link.");
+            } else {
+              setErrorMessage(error.message);
+            }
           }
-        } else if (success && !window.location.pathname.includes('/dashboard')) {
-          toast({
-            title: "Login Successful",
-            description: "Welcome back!",
-          });
+          
+          // If success, the navigation happens in the auth context
+          if (!success) {
+            setInfoMessage("");
+          }
+        } catch (e) {
+          console.error("Unexpected error during login:", e);
+          setErrorMessage("An unexpected error occurred. Please try again.");
         }
       }
     } catch (error) {
@@ -125,7 +126,8 @@ const Login = () => {
   const useTestCredentials = () => {
     setEmail("test@example.com");
     setPassword("password123");
-    setInfoMessage("Using test credentials. If this is your first time, please sign up first.");
+    setInfoMessage("Using test credentials. Click the login button to continue.");
+    setErrorMessage("");
   };
 
   return (
@@ -268,12 +270,7 @@ const Login = () => {
         </Tabs>
         
         <div className="text-center mt-6 text-sm text-muted-foreground">
-          <p className="font-medium text-base mb-2">Test Account Instructions:</p>
-          <ol className="text-left list-decimal pl-6 space-y-1 mb-3">
-            <li>First click <strong>"Sign Up"</strong> tab and use test credentials</li>
-            <li>Then click <strong>"Create account"</strong> button</li>
-            <li>Switch to <strong>"Login"</strong> tab and log in with same credentials</li>
-          </ol>
+          <p className="mb-2">For quick testing, use these credentials:</p>
           <div className="p-3 bg-gray-100 rounded-md">
             <p><strong>Email:</strong> test@example.com</p>
             <p><strong>Password:</strong> password123</p>

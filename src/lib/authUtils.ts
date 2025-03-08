@@ -105,49 +105,68 @@ export const signUp = async (email: string, password: string) => {
   }
 };
 
-// Sign in function
+// Sign in function - simplified to be more reliable
 export const signIn = async (email: string, password: string) => {
+  console.log('Signing in with email:', email);
+  
   try {
-    console.log('Signing in with email:', email);
-    
-    // Handle test account separately
+    // Handle test account separately to avoid network requests
     if (email === 'test@example.com' && password === 'password123') {
       console.log('Using test account login');
+      const { user, session } = createTestUserAndSession();
       return {
-        error: null,
         success: true,
         isTestAccount: true,
+        user,
+        session,
+        error: null
       };
     }
     
-    // Regular sign in process
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) {
-      console.error('Sign in failed:', error);
+    // For real users, attempt to sign in with Supabase
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Supabase sign in error:', error.message);
+        return {
+          success: false,
+          isTestAccount: false,
+          error,
+          user: null,
+          session: null
+        };
+      }
+      
+      console.log('Sign in successful for user:', data.user?.email);
       return {
-        error,
+        success: true,
+        isTestAccount: false,
+        error: null,
+        user: data.user,
+        session: data.session
+      };
+    } catch (networkError) {
+      console.error('Network error during sign in:', networkError);
+      return {
         success: false,
         isTestAccount: false,
+        error: new Error('Network error. Please check your connection and try again.'),
+        user: null,
+        session: null
       };
     }
-    
-    console.log('Sign in successful for regular user:', data.user?.email);
-    return {
-      error: null,
-      success: true,
-      isTestAccount: false,
-      session: data.session,
-    };
   } catch (error) {
-    console.error('Error signing in:', error);
+    console.error('Unexpected error in signIn function:', error);
     return {
-      error: error as Error,
       success: false,
       isTestAccount: false,
+      error: error as Error,
+      user: null,
+      session: null
     };
   }
 };
@@ -155,5 +174,10 @@ export const signIn = async (email: string, password: string) => {
 // Sign out function
 export const signOut = async () => {
   console.log('Signing out');
-  return await supabase.auth.signOut();
+  try {
+    return await supabase.auth.signOut();
+  } catch (error) {
+    console.error('Error signing out:', error);
+    throw error;
+  }
 };

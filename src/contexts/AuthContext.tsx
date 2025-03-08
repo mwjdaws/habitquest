@@ -4,7 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
-import { signIn, signUp, signOut as authSignOut, createTestUserAndSession } from '@/lib/authUtils';
+import { signIn, signUp, signOut as authSignOut } from '@/lib/authUtils';
 
 type AuthContextType = {
   user: User | null;
@@ -93,30 +93,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await signIn(email, password);
       
       if (result.success) {
-        // Handle test account login
-        if (result.isTestAccount) {
-          console.log('Using test account credentials');
-          
-          toast({
-            title: "Test Account Login",
-            description: "You are now logged in with the test account.",
-          });
-          
-          // Create a complete mock User object for the test account
-          const { user: testUser, session: testSession } = createTestUserAndSession();
-          
-          // Set the user and session manually
-          setUser(testUser);
-          setSession(testSession);
-        } else if (result.session) {
-          // For regular users, the session should already be set by the auth state change listener
-          // But we'll set it here explicitly as well to ensure immediate UI update
-          console.log('Regular account sign in successful');
-          setUser(result.session.user);
-          setSession(result.session);
-        }
+        // Both test account and regular user login now follow the same flow
+        // as both return user and session directly
+        console.log('Sign in successful, setting user and session');
         
-        console.log('Sign in successful, navigating to dashboard');
+        // Set user and session data
+        setUser(result.user);
+        setSession(result.session);
+        
+        // Show success toast
+        toast({
+          title: "Login Successful",
+          description: result.isTestAccount 
+            ? "You are now logged in with the test account." 
+            : "Welcome back!",
+        });
+        
+        // Navigate to dashboard
         navigate('/dashboard');
       }
       
@@ -148,12 +141,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    await authSignOut();
-    toast({
-      title: "Signed Out",
-      description: "You have been successfully signed out.",
-    });
-    navigate('/login');
+    try {
+      await authSignOut();
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out.",
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      toast({
+        title: "Sign Out Failed",
+        description: "There was a problem signing you out. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const value = {
