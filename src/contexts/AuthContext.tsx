@@ -4,6 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
+import { signIn, signUp, signOut as authSignOut, createTestUserAndSession } from '@/lib/authUtils';
 
 type AuthContextType = {
   user: User | null;
@@ -83,65 +84,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const signUp = async (email: string, password: string) => {
-    try {
-      console.log('Signing up with email:', email);
-      
-      // Handle test account separately
-      if (email === 'test@example.com' && password === 'password123') {
-        console.log('Using test account - bypassing actual signup');
-        return {
-          error: null,
-          success: true,
-        };
-      }
-      
-      // Validate email with a basic regex before sending to Supabase
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return {
-          error: new Error('Please enter a valid email address'),
-          success: false,
-        };
-      }
-
-      // Create a new user
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      
-      console.log('Sign up response:', data ? 'Success' : 'Failed', error ? `Error: ${error.message}` : 'No error');
-      
-      if (error) {
-        return {
-          error,
-          success: false,
-        };
-      }
-      
-      toast({
-        title: "Signup Successful",
-        description: "Your account has been created. You can now log in.",
-      });
-      
-      return {
-        error: null,
-        success: true,
-      };
-    } catch (error) {
-      console.error('Error in sign up process:', error);
-      return {
-        error: error as Error,
-        success: false,
-      };
-    }
+  const handleSignUp = async (email: string, password: string) => {
+    return await signUp(email, password);
   };
 
-  const signIn = async (email: string, password: string) => {
+  const handleSignIn = async (email: string, password: string) => {
     try {
-      console.log('Signing in with email:', email);
-      
       // Handle test account login
       if (email === 'test@example.com' && password === 'password123') {
         console.log('Using test account credentials');
@@ -153,37 +101,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         
         // Create a complete mock User object for the test account
-        // Making sure it has all the required properties of the User type
-        const testUser = {
-          id: 'test-user-id',
-          aud: 'authenticated',
-          email: 'test@example.com',
-          phone: '',
-          app_metadata: { provider: 'email', providers: ['email'] },
-          user_metadata: { name: 'Test User' },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          identities: [],
-          role: 'authenticated',
-          confirmed_at: new Date().toISOString(),
-          last_sign_in_at: new Date().toISOString(),
-          email_confirmed_at: new Date().toISOString(),
-          phone_confirmed_at: null,
-          banned_until: null,
-          confirmation_sent_at: null,
-          recovery_sent_at: null,
-          factors: null,
-        } as User;
+        const { user: testUser, session: testSession } = createTestUserAndSession();
         
         // Set the user and session manually
         setUser(testUser);
-        setSession({ 
-          user: testUser,
-          access_token: 'test-token',
-          refresh_token: 'test-refresh-token',
-          expires_at: Date.now() + 3600,
-          expires_in: 3600
-        } as Session);
+        setSession(testSession);
         
         console.log('Test account sign in successful, navigating to dashboard');
         navigate('/dashboard');
@@ -195,27 +117,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Standard sign in process for non-test accounts
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const result = await signIn(email, password);
       
-      if (error) {
-        console.error('Sign in failed:', error);
-        return {
-          error,
-          success: false,
-        };
+      if (result.success) {
+        console.log('Sign in successful, navigating to dashboard');
+        navigate('/dashboard');
       }
       
-      console.log('Sign in successful, navigating to dashboard');
-      navigate('/dashboard');
-      return {
-        error: null,
-        success: true,
-      };
+      return result;
     } catch (error) {
-      console.error('Error signing in:', error);
+      console.error('Error in handleSignIn:', error);
       return {
         error: error as Error,
         success: false,
@@ -223,8 +134,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signOut = async () => {
-    console.log('Signing out');
+  const handleSignOut = async () => {
+    console.log('Handling sign out');
     
     // Handle test account signout
     if (user?.email === 'test@example.com') {
@@ -238,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    await supabase.auth.signOut();
+    await authSignOut();
     toast({
       title: "Signed Out",
       description: "You have been successfully signed out.",
@@ -250,14 +161,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     isLoading,
-    signUp,
-    signIn,
-    signOut,
+    signUp: handleSignUp,
+    signIn: handleSignIn,
+    signOut: handleSignOut,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// Export the useAuth hook from this file
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
