@@ -90,41 +90,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleSignIn = async (email: string, password: string) => {
     try {
-      // Handle test account login
-      if (email === 'test@example.com' && password === 'password123') {
-        console.log('Using test account credentials');
-        
-        // We'll simulate a successful login without contacting Supabase
-        toast({
-          title: "Test Account Login",
-          description: "You are now logged in with the test account.",
-        });
-        
-        // Create a complete mock User object for the test account
-        const { user: testUser, session: testSession } = createTestUserAndSession();
-        
-        // Set the user and session manually
-        setUser(testUser);
-        setSession(testSession);
-        
-        console.log('Test account sign in successful, navigating to dashboard');
-        navigate('/dashboard');
-        
-        return {
-          error: null,
-          success: true,
-        };
-      }
-      
-      // Standard sign in process for non-test accounts
       const result = await signIn(email, password);
       
       if (result.success) {
+        // Handle test account login
+        if (result.isTestAccount) {
+          console.log('Using test account credentials');
+          
+          toast({
+            title: "Test Account Login",
+            description: "You are now logged in with the test account.",
+          });
+          
+          // Create a complete mock User object for the test account
+          const { user: testUser, session: testSession } = createTestUserAndSession();
+          
+          // Set the user and session manually
+          setUser(testUser);
+          setSession(testSession);
+        } else if (result.session) {
+          // For regular users, the session should already be set by the auth state change listener
+          // But we'll set it here explicitly as well for consistency
+          console.log('Regular account sign in successful');
+        }
+        
         console.log('Sign in successful, navigating to dashboard');
         navigate('/dashboard');
       }
       
-      return result;
+      return {
+        error: result.error,
+        success: result.success,
+      };
     } catch (error) {
       console.error('Error in handleSignIn:', error);
       return {

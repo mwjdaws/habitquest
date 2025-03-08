@@ -110,37 +110,44 @@ export const signIn = async (email: string, password: string) => {
   try {
     console.log('Signing in with email:', email);
     
-    // Standard sign in process for non-test accounts
-    if (email !== 'test@example.com' || password !== 'password123') {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        console.error('Sign in failed:', error);
-        return {
-          error,
-          success: false,
-        };
-      }
-      
+    // Handle test account separately
+    if (email === 'test@example.com' && password === 'password123') {
+      console.log('Using test account login');
       return {
         error: null,
         success: true,
+        isTestAccount: true,
       };
     }
     
-    // Test account handling happens in the component
+    // Regular sign in process
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) {
+      console.error('Sign in failed:', error);
+      return {
+        error,
+        success: false,
+        isTestAccount: false,
+      };
+    }
+    
+    console.log('Sign in successful for regular user:', data.user?.email);
     return {
       error: null,
       success: true,
+      isTestAccount: false,
+      session: data.session,
     };
   } catch (error) {
     console.error('Error signing in:', error);
     return {
       error: error as Error,
       success: false,
+      isTestAccount: false,
     };
   }
 };
