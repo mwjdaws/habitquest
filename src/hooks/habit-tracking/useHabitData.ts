@@ -24,11 +24,12 @@ export function useHabitData(onHabitChange?: () => void) {
   
   const isMountedRef = useRef(true);
   const lastFetchTimeRef = useRef(0);
+  const dataVersionRef = useRef(0);
   const { filterHabitsForToday } = useHabitFiltering();
   const today = getTodayFormatted();
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Enhanced data loading with improved error handling and request cancellation
+  // Enhanced data loading with improved error handling, request cancellation, and versioning
   const loadData = useCallback(async (showLoading = true) => {
     if (!isMountedRef.current) return;
     
@@ -39,11 +40,15 @@ export function useHabitData(onHabitChange?: () => void) {
     }
     lastFetchTimeRef.current = now;
     
+    // Increment data version to track current request
+    const currentVersion = ++dataVersionRef.current;
+    
     // Cancel any in-flight requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
     
     // Only update loading state if explicitly requested
     if (showLoading) {
@@ -53,12 +58,16 @@ export function useHabitData(onHabitChange?: () => void) {
     try {      
       // Optimized data fetching with parallel requests and better error handling
       const [habitsData, completionsData, failuresData] = await Promise.all([
-        withRetry(() => fetchHabits(), 2),
-        withRetry(() => getCompletionsForDate(today), 2),
-        withRetry(() => getFailuresForDate(today), 2)
+        withRetry(() => fetchHabits(), 2, signal),
+        withRetry(() => getCompletionsForDate(today), 2, signal),
+        withRetry(() => getFailuresForDate(today), 2, signal)
       ]);
       
-      if (!isMountedRef.current) return;
+      // Version check to prevent race conditions - only apply latest data
+      if (!isMountedRef.current || dataVersionRef.current !== currentVersion) {
+        console.log('Ignoring stale data from version', currentVersion, 'current is', dataVersionRef.current);
+        return;
+      }
       
       if (!habitsData) {
         throw new Error("Failed to fetch habits data");
@@ -67,7 +76,8 @@ export function useHabitData(onHabitChange?: () => void) {
       const filtered = filterHabitsForToday(habitsData);
       
       // Update state in a single operation with immutable update pattern
-      setState({
+      setState(prev => ({
+        ...prev,
         habits: habitsData,
         filteredHabits: filtered,
         completions: completionsData || [],
@@ -75,7 +85,7 @@ export function useHabitData(onHabitChange?: () => void) {
         isInitialized: true,
         loading: false,
         error: null
-      });
+      }));
       
       // Notify parent if needed
       if (onHabitChange) {
@@ -89,7 +99,10 @@ export function useHabitData(onHabitChange?: () => void) {
       
       console.error("Error loading habit data:", error);
       
-      if (!isMountedRef.current) return;
+      // Version check for errors too
+      if (!isMountedRef.current || dataVersionRef.current !== currentVersion) {
+        return;
+      }
       
       // Set error state with better error messaging
       setState(prev => ({
@@ -109,7 +122,7 @@ export function useHabitData(onHabitChange?: () => void) {
     }
   }, [filterHabitsForToday, today, onHabitChange]);
 
-  // Simplified refresh function with abort handling
+  // Simplified refresh function with abort handling and version check
   const refreshData = useCallback((showLoading = true) => {
     if (isMountedRef.current) {
       loadData(showLoading);
@@ -128,22 +141,37 @@ export function useHabitData(onHabitChange?: () => void) {
     };
   }, []);
 
-  // More efficient visibility change handler
+  // More efficient visibility change handler with better debouncing
   useEffect(() => {
+    let visibilityTimeout: number | null = null;
+    
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && isMountedRef.current) {
-        refreshData(false);
+        // Clear existing timeout if it exists
+        if (visibilityTimeout) {
+          window.clearTimeout(visibilityTimeout);
+        }
+        
+        // Debounce the refresh to prevent multiple calls
+        visibilityTimeout = window.setTimeout(() => {
+          refreshData(false);
+          visibilityTimeout = null;
+        }, 300);
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (visibilityTimeout) {
+        window.clearTimeout(visibilityTimeout);
+      }
     };
   }, [refreshData]);
 
   return {
     state,
+    setState, // Expose setState to allow direct updates from actions
     loadData,
     refreshData
   };

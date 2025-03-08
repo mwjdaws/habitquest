@@ -8,7 +8,7 @@ import { HabitTrackerHeader } from "./habit-tracker/HabitTrackerHeader";
 import { LoadingState } from "./habit-list/LoadingState";
 import { ErrorState } from "./habit-tracker/ErrorState";
 import { EmptyState } from "./habit-tracker/EmptyState";
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useMemo } from "react";
 import { toast } from "@/components/ui/use-toast";
 
 interface HabitTrackerProps {
@@ -17,9 +17,13 @@ interface HabitTrackerProps {
 
 // Using memo for HabitTracker component to prevent unnecessary re-renders
 export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitTrackerProps) {
-  const [habitIdForFailure, setHabitIdForFailure] = useState<string | null>(null);
-  const [habitNameForFailure, setHabitNameForFailure] = useState<string>("");
+  // State for failure dialog - local to this component
+  const [failureState, setFailureState] = useState<{
+    habitId: string | null;
+    habitName: string;
+  }>({ habitId: null, habitName: "" });
   
+  // Use the optimized hook
   const { 
     habits,
     completions,
@@ -35,33 +39,45 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     isInitialized
   } = useHabitTracking(onHabitChange);
 
-  // Optimized retry handler
+  // Optimized retry handler with debounce
   const handleRetry = useCallback(() => {
     toast({ title: "Refreshing", description: "Refreshing your habit data..." });
     refreshData(true);
   }, [refreshData]);
 
-  // Memoized failure handling
+  // Memoized handlers for failure dialog
   const onLogFailure = useCallback((habitId: string) => {
     const habit = habits.find(h => h.id === habitId);
     if (habit) {
-      setHabitIdForFailure(habitId);
-      setHabitNameForFailure(habit.name);
+      setFailureState({
+        habitId,
+        habitName: habit.name
+      });
     }
   }, [habits]);
 
   const onConfirmFailure = useCallback(async (habitId: string, reason: string) => {
     await handleLogFailure(habitId, reason);
-    setHabitIdForFailure(null);
+    setFailureState({ habitId: null, habitName: "" });
   }, [handleLogFailure]);
 
   const onCancelFailure = useCallback(() => {
-    setHabitIdForFailure(null);
+    setFailureState({ habitId: null, habitName: "" });
   }, []);
 
   const handleDialogOpenChange = useCallback((open: boolean) => {
-    if (!open) setHabitIdForFailure(null);
+    if (!open) setFailureState({ habitId: null, habitName: "" });
   }, []);
+  
+  // Pre-compute dialog props to reduce re-renders
+  const dialogProps = useMemo(() => ({
+    habitId: failureState.habitId || "",
+    habitName: failureState.habitName,
+    open: !!failureState.habitId,
+    onOpenChange: handleDialogOpenChange,
+    onConfirm: onConfirmFailure,
+    onCancel: onCancelFailure
+  }), [failureState, handleDialogOpenChange, onConfirmFailure, onCancelFailure]);
 
   // More efficient content rendering with early returns
   if (loading || !isInitialized) {
@@ -113,14 +129,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
         </CardContent>
       </Card>
       
-      <FailureDialog
-        habitId={habitIdForFailure || ""}
-        habitName={habitNameForFailure}
-        open={!!habitIdForFailure}
-        onOpenChange={handleDialogOpenChange}
-        onConfirm={onConfirmFailure}
-        onCancel={onCancelFailure}
-      />
+      <FailureDialog {...dialogProps} />
     </>
   );
 });

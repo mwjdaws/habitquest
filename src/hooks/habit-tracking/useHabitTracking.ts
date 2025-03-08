@@ -12,13 +12,14 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
   const { 
     state,
     loadData,
-    refreshData
+    refreshData,
+    setState
   } = useHabitData(onHabitChange);
   
-  // Get actions with optimized state updates
+  // Get actions with optimized state updates and pass setState directly
   const { handleToggleCompletion, handleLogFailure } = useHabitActions(
     state,
-    prev => prev,
+    setState, // Pass setState directly to avoid indirect state updates
     refreshData
   );
 
@@ -56,8 +57,8 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     }
   }, [user, loadData, refreshData]);
   
-  // Memoize calculations for better performance using a more stable dependency
-  const { progress, completedCount } = useMemo(() => {
+  // More stable memoization with careful dependency tracking
+  const stats = useMemo(() => {
     const { filteredHabits, completions } = state;
     if (!filteredHabits.length) return { progress: 0, completedCount: 0 };
     
@@ -76,8 +77,8 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     failures: state.failures,
     loading: state.loading,
     error: state.error,
-    progress,
-    completedCount,
+    progress: stats.progress,
+    completedCount: stats.completedCount,
     totalCount: state.filteredHabits.length,
     handleToggleCompletion,
     handleLogFailure,
