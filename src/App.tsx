@@ -14,51 +14,76 @@ import Journal from "./pages/Journal";
 import Mood from "./pages/Mood";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  // This will be replaced with actual Supabase auth check
-  const isAuthenticated = true; // Set to true temporarily for development
+// Protected route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+  
+  return <>{children}</>;
+};
 
+// App component with auth context
+const AppWithAuth = () => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route 
+        path="/login" 
+        element={user ? <Navigate to="/dashboard" /> : <Login />} 
+      />
+
+      {/* Protected routes */}
+      <Route path="/" element={<Navigate to="/dashboard" />} />
+
+      {/* Layout wrapper for protected routes */}
+      <Route element={
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      }>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/habits" element={<Habits />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/goals" element={<Goals />} />
+        <Route path="/journal" element={<Journal />} />
+        <Route path="/mood" element={<Mood />} />
+        <Route path="/analytics" element={<Analytics />} />
+      </Route>
+
+      {/* Catch-all route */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <AppWithAuth />
+          </AuthProvider>
+        </BrowserRouter>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route 
-              path="/login" 
-              element={
-                isAuthenticated ? <Navigate to="/dashboard" /> : <Login />
-              } 
-            />
-
-            {/* Protected routes */}
-            <Route
-              path="/"
-              element={
-                isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
-              }
-            />
-
-            {/* Layout wrapper for protected routes */}
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/habits" element={<Habits />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/goals" element={<Goals />} />
-              <Route path="/journal" element={<Journal />} />
-              <Route path="/mood" element={<Mood />} />
-              <Route path="/analytics" element={<Analytics />} />
-            </Route>
-
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );

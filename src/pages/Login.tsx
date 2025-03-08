@@ -7,25 +7,55 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Flame } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { signIn, signUp } = useAuth();
 
   const handleAuth = async (type: "login" | "signup") => {
-    setLoading(true);
-    
-    // Placeholder for Supabase authentication
-    setTimeout(() => {
+    if (!email || !password) {
       toast({
-        title: "Supabase Auth Not Configured",
-        description: "Please connect your app to Supabase for authentication.",
+        title: "Missing fields",
+        description: "Please fill in all required fields.",
         variant: "destructive",
       });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const { error, success } = type === "login" 
+        ? await signIn(email, password)
+        : await signUp(email, password);
+      
+      if (error) {
+        toast({
+          title: type === "login" ? "Login Failed" : "Sign Up Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else if (success) {
+        if (type === "signup") {
+          toast({
+            title: "Account Created",
+            description: "Please check your email to confirm your account.",
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
