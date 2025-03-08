@@ -8,7 +8,7 @@ import { HabitTrackerHeader } from "./habit-tracker/HabitTrackerHeader";
 import { LoadingState } from "./habit-list/LoadingState";
 import { ErrorState } from "./habit-tracker/ErrorState";
 import { EmptyState } from "./habit-tracker/EmptyState";
-import { useState, useCallback, memo, useMemo, useEffect } from "react";
+import { useState, useCallback, memo, useMemo, useEffect, useRef } from "react";
 import { toast } from "@/components/ui/use-toast";
 
 interface HabitTrackerProps {
@@ -17,6 +17,12 @@ interface HabitTrackerProps {
 
 // Using memo for HabitTracker component to prevent unnecessary re-renders
 export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitTrackerProps) {
+  // Add render counter for debugging
+  const renderCount = useRef(0);
+  
+  // Use a ref to track initialization to prevent multiple data loads
+  const isInitializedRef = useRef(false);
+  
   // State for failure dialog - local to this component
   const [failureState, setFailureState] = useState<{
     habitId: string | null;
@@ -40,15 +46,24 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     isInitialized
   } = useHabitTracking(onHabitChange);
 
-  // Initial data load on component mount - only once
+  // Initial data load on component mount - only once with better tracking
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      console.log("HabitTracker mounted, triggering initial data refresh");
-      refreshData(true);
-    }, 200); // Small delay to avoid concurrent rendering issues
-    
-    return () => clearTimeout(timeout);
+    if (!isInitializedRef.current) {
+      const timeout = setTimeout(() => {
+        console.log("[HabitTracker] Initial mount, triggering data refresh");
+        refreshData(true);
+        isInitializedRef.current = true;
+      }, 200); // Small delay to avoid concurrent rendering issues
+      
+      return () => clearTimeout(timeout);
+    }
   }, []); // Empty dependency array to ensure it runs only once
+  
+  // Debug render tracking
+  useEffect(() => {
+    renderCount.current += 1;
+    console.log(`[HabitTracker] Render #${renderCount.current}, habits: ${habits.length}, loading: ${loading}`);
+  });
   
   // Optimized retry handler with debounce
   const handleRetry = useCallback(() => {
@@ -92,7 +107,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
 
   // Debug output to help troubleshoot
   useEffect(() => {
-    console.log("Habit tracker state:", {
+    console.log("[HabitTracker] State update:", {
       habitCount: habits.length,
       isLoading: loading,
       isInitialized,
