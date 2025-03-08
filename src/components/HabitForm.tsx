@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trash } from "lucide-react";
 import { 
   createHabit, 
   updateHabit, 
@@ -16,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { FrequencySelector } from "./habit/FrequencySelector";
 import { ColorPicker } from "./habit/ColorPicker";
 import { CategorySelector } from "./habit/CategorySelector";
+import { DeleteConfirmation } from "./habit/DeleteConfirmation";
 
 type HabitFormProps = {
   habit?: Habit;
@@ -29,7 +29,6 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
   const [frequency, setFrequency] = useState<string[]>(habit?.frequency || []);
   const [color, setColor] = useState(habit?.color || "habit-purple");
   const [category, setCategory] = useState(habit?.category || "General");
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -169,45 +168,7 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
       {isEdit && (
         <>
           <Separator />
-          <div>
-            {deleteConfirm ? (
-              <div className="flex flex-col space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Are you sure you want to delete this habit? This action cannot be undone.
-                </p>
-                <div className="flex gap-2">
-                  <Button 
-                    type="button" 
-                    variant="destructive" 
-                    onClick={handleDelete}
-                    disabled={loading}
-                  >
-                    <Trash className="mr-2 h-4 w-4" />
-                    Confirm Delete
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setDeleteConfirm(false)}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => setDeleteConfirm(true)}
-                disabled={loading}
-              >
-                <Trash className="mr-2 h-4 w-4" />
-                Delete Habit
-              </Button>
-            )}
-          </div>
+          <DeleteConfirmation onConfirm={handleDelete} isLoading={loading} />
         </>
       )}
 
