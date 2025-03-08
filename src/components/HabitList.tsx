@@ -11,11 +11,14 @@ import { HabitFormCard } from "./habit-list/HabitFormCard";
 import { EmptyState } from "./habit-list/EmptyState";
 import { ErrorAlert } from "./habit-list/ErrorAlert";
 import { LoadingState } from "./habit-list/LoadingState";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
 
 export function HabitList() {
   const [showForm, setShowForm] = useState(false);
   const [completions, setCompletions] = useState<HabitCompletion[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const today = getTodayFormatted();
 
   const { 
@@ -50,16 +53,20 @@ export function HabitList() {
 
   const handleToggleCompletion = async (habitId: string) => {
     try {
+      setIsUpdating(habitId); // Show updating state for this specific habit
       const isCompleted = completions.some(c => c.habit_id === habitId);
       await toggleHabitCompletion(habitId, today, isCompleted);
       await fetchCompletions();
       refetchHabits();
+      
       toast({
         title: isCompleted ? "Habit unmarked" : "Habit completed",
         description: isCompleted ? "Keep working on it!" : "Great job!",
       });
     } catch (error) {
       handleApiError(error, "updating habit status", "Failed to update habit status");
+    } finally {
+      setIsUpdating(null);
     }
   };
 
@@ -89,27 +96,50 @@ export function HabitList() {
         <NewHabitButton onClick={() => setShowForm(!showForm)} />
       </div>
 
-      {showForm && (
-        <HabitFormCard 
-          onSave={handleHabitSaved} 
-          onCancel={() => setShowForm(false)} 
-        />
-      )}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <HabitFormCard 
+              onSave={handleHabitSaved} 
+              onCancel={() => setShowForm(false)} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {habits.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid gap-4">
+        <motion.div 
+          className="grid gap-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, staggerChildren: 0.1 }}
+        >
           {habits.map((habit) => (
-            <HabitItem 
-              key={habit.id} 
-              habit={habit} 
-              isCompleted={completions.some(c => c.habit_id === habit.id)} 
-              onToggle={handleToggleCompletion}
-              onUpdate={refetchHabits}
-            />
+            <motion.div
+              key={habit.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className={cn(
+                isUpdating === habit.id ? "animate-pulse" : ""
+              )}
+            >
+              <HabitItem 
+                habit={habit} 
+                isCompleted={completions.some(c => c.habit_id === habit.id)} 
+                onToggle={handleToggleCompletion}
+                onUpdate={refetchHabits}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
   );
