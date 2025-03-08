@@ -11,7 +11,10 @@ export function LoadingState() {
         </div>
       </div>
       
-      <Skeleton className="h-4 w-full mb-4" />
+      <div className="h-6 flex items-center justify-between mb-4">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-4 w-16" />
+      </div>
       
       <div className="space-y-3">
         <Skeleton className="h-14 w-full rounded-md" />

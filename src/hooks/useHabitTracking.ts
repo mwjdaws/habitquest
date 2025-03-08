@@ -22,6 +22,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const dataRefreshTimerRef = useRef<number | null>(null);
+  const initialLoadAttemptedRef = useRef(false);
   
   const today = getTodayFormatted();
   const todayName = getDayName(new Date());
@@ -40,11 +41,14 @@ export function useHabitTracking(onHabitChange?: () => void) {
         clearTimeout(dataRefreshTimerRef.current);
       }
       
+      console.log('Fetching habit data...');
       const [habitsData, completionsData, failuresData] = await Promise.all([
         fetchHabits(),
         getCompletionsForDate(today),
         getFailuresForDate(today)
       ]);
+      
+      console.log(`Loaded ${habitsData.length} habits, ${completionsData.length} completions, ${failuresData.length} failures`);
       
       setHabits(habitsData);
       setCompletions(completionsData);
@@ -66,12 +70,15 @@ export function useHabitTracking(onHabitChange?: () => void) {
       // Add a small delay to prevent flashing of loading state
       dataRefreshTimerRef.current = window.setTimeout(() => {
         setLoading(false);
-      }, 100);
+      }, 200);
     }
   };
 
   useEffect(() => {
-    loadData();
+    if (user && !initialLoadAttemptedRef.current) {
+      initialLoadAttemptedRef.current = true;
+      loadData();
+    }
     
     return () => {
       // Clean up timer if component unmounts
@@ -79,7 +86,14 @@ export function useHabitTracking(onHabitChange?: () => void) {
         clearTimeout(dataRefreshTimerRef.current);
       }
     }
-  }, [user, today]);
+  }, [user]);
+
+  // Ensure we reload data when the date changes
+  useEffect(() => {
+    if (initialLoadAttemptedRef.current) {
+      loadData();
+    }
+  }, [today]);
 
   // Refresh data without showing loading state
   const refreshData = () => {
@@ -169,6 +183,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
 
   // Filter habits for today
   const todaysHabits = habits.filter(habit => shouldShowHabitForDay(habit, todayName));
+  console.log(`Today (${todayName}): Filtered ${habits.length} habits to ${todaysHabits.length} for today`);
   
   // Calculate progress
   const completedCount = todaysHabits.length > 0 

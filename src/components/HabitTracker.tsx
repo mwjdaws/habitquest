@@ -8,7 +8,7 @@ import { HabitTrackerHeader } from "./habit-tracker/HabitTrackerHeader";
 import { LoadingState } from "./habit-list/LoadingState";
 import { ErrorState } from "./habit-tracker/ErrorState";
 import { EmptyState } from "./habit-tracker/EmptyState";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface HabitTrackerProps {
   onHabitChange?: () => void;
@@ -17,6 +17,7 @@ interface HabitTrackerProps {
 export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   const [habitIdForFailure, setHabitIdForFailure] = useState<string | null>(null);
   const [habitNameForFailure, setHabitNameForFailure] = useState<string>("");
+  const [showLoading, setShowLoading] = useState(true);
   
   const { 
     habits,
@@ -30,6 +31,15 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     handleToggleCompletion,
     handleLogFailure
   } = useHabitTracking(onHabitChange);
+
+  // Add a slight delay before showing content to prevent flashing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoading(loading);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   const onLogFailure = (habitId: string) => {
     const habit = habits.find(h => h.id === habitId);
@@ -51,16 +61,16 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   return (
     <>
       <Card>
-        <HabitTrackerHeader totalHabits={totalCount} />
+        <HabitTrackerHeader totalHabits={totalCount} isLoading={showLoading} />
         <CardContent>
-          {loading ? (
+          {showLoading ? (
             <LoadingState />
           ) : (
             <>
               {error ? (
                 <ErrorState error={error} />
               ) : habits.length === 0 ? (
-                <EmptyState hasHabits={habits.length > 0} />
+                <EmptyState hasHabits={totalCount > 0} />
               ) : (
                 <>
                   <ProgressBar 
