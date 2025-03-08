@@ -152,18 +152,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           description: "You are now logged in with the test account.",
         });
         
-        // Create a fake session for the test account
+        // Create a complete mock User object for the test account
+        // Making sure it has all the required properties of the User type
         const testUser = {
           id: 'test-user-id',
+          aud: 'authenticated',
           email: 'test@example.com',
+          phone: '',
+          app_metadata: { provider: 'email', providers: ['email'] },
           user_metadata: { name: 'Test User' },
-          app_metadata: { role: 'user' },
           created_at: new Date().toISOString(),
-        };
+          updated_at: new Date().toISOString(),
+          identities: [],
+          role: 'authenticated',
+          confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          email_confirmed_at: new Date().toISOString(),
+          phone_confirmed_at: null,
+          banned_until: null,
+          confirmation_sent_at: null,
+          recovery_sent_at: null,
+          factors: null,
+        } as User;
         
         // Set the user and session manually
-        setUser(testUser as User);
-        setSession({ user: testUser as User, access_token: 'test-token', refresh_token: 'test-refresh-token', expires_at: Date.now() + 3600 } as Session);
+        setUser(testUser);
+        setSession({ 
+          user: testUser,
+          access_token: 'test-token',
+          refresh_token: 'test-refresh-token',
+          expires_at: Date.now() + 3600,
+          expires_in: 3600
+        } as Session);
         
         console.log('Test account sign in successful, navigating to dashboard');
         navigate('/dashboard');
