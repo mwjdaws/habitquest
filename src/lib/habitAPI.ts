@@ -356,3 +356,25 @@ export const getFailuresForDate = async (date: string): Promise<HabitFailure[]> 
     return handleApiError(error, "fetching failures");
   }
 };
+
+/**
+ * Removes a habit failure entry to undo a skipped habit
+ */
+export const removeHabitFailure = async (habitId: string, date: string) => {
+  try {
+    const userId = await getAuthenticatedUser();
+
+    // Delete the failure entry
+    const { error } = await supabase
+      .from("habit_failures")
+      .delete()
+      .eq("habit_id", habitId)
+      .eq("failure_date", date)
+      .eq("user_id", userId);
+
+    if (error) throw error;
+
+  } catch (error) {
+    return handleApiError(error, "removing habit failure");
+  }
+};

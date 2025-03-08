@@ -35,6 +35,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     totalCount,
     handleToggleCompletion,
     handleLogFailure,
+    handleUndoFailure,
     refreshData,
     isInitialized
   } = useHabitTracking(onHabitChange);
@@ -123,6 +124,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
                 failures={failures}
                 onToggleCompletion={handleToggleCompletion}
                 onLogFailure={onLogFailure}
+                onUndoFailure={handleUndoFailure}
               />
             </>
           )}

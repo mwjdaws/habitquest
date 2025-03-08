@@ -11,6 +11,7 @@ type HabitItemProps = {
   failures: HabitFailure[];
   onToggleCompletion: (habitId: string) => Promise<void>;
   onLogFailure: (habitId: string) => void;
+  onUndoFailure: (habitId: string) => Promise<void>;
 };
 
 // Using memo with custom comparison to prevent unnecessary re-renders
@@ -19,7 +20,8 @@ export const HabitItem = memo(function HabitItem({
   completions,
   failures,
   onToggleCompletion,
-  onLogFailure
+  onLogFailure,
+  onUndoFailure
 }: HabitItemProps) {
   const isCompleted = completions.some(c => c.habit_id === habit.id);
   const isFailed = failures.some(f => f.habit_id === habit.id);
@@ -27,6 +29,7 @@ export const HabitItem = memo(function HabitItem({
   // Memoize handlers to prevent new function references on each render
   const handleToggle = useCallback(() => onToggleCompletion(habit.id), [habit.id, onToggleCompletion]);
   const handleFailure = useCallback(() => onLogFailure(habit.id), [habit.id, onLogFailure]);
+  const handleUndo = useCallback(() => onUndoFailure(habit.id), [habit.id, onUndoFailure]);
   
   // Determine background color based on status
   const bgColorClass = isCompleted 
@@ -74,6 +77,7 @@ export const HabitItem = memo(function HabitItem({
           isFailed={isFailed}
           onToggleCompletion={handleToggle}
           onLogFailure={handleFailure}
+          onUndoFailure={handleUndo}
           failures={failures}
         />
       </div>
