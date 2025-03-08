@@ -11,3 +11,5 @@ export * from './api/habitCrudAPI';
 export * from './api/completionAPI';
 export * from './api/failureAPI';
 export * from './api/trendAPI';
+export * from './api/taskAPI';
+export * from './taskTypes';
