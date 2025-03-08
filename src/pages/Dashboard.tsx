@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HabitTracker } from "@/components/HabitTracker";
@@ -15,20 +14,16 @@ const Dashboard = () => {
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   const loadingTimerRef = useRef<number | null>(null);
   const dataFetchTimerRef = useRef<number | null>(null);
+  const initialDataFetchedRef = useRef(false);
   
   const loadStreaks = useCallback(async () => {
     if (!user) return;
     
     try {
-      // Clear any existing timer to prevent multiple timers
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
-      }
-      
-      // Only set loading to true if it's going to take more than 300ms
-      loadingTimerRef.current = window.setTimeout(() => {
+      // Only set loading to true if it's going to take a while or it's the initial load
+      if (!initialDataFetchedRef.current) {
         setIsLoading(true);
-      }, 200);
+      }
       
       const habits = await fetchHabits();
       
@@ -38,13 +33,16 @@ const Dashboard = () => {
         .sort((a, b) => b.current_streak - a.current_streak);
       
       setTopStreaks(habitsWithStreaks.slice(0, 3));
+      initialDataFetchedRef.current = true;
       
-      // Clear the timer and set loading to false
+      // Add a small delay before setting loading to false
+      // to prevent UI flickering
       if (loadingTimerRef.current) {
         clearTimeout(loadingTimerRef.current);
-        loadingTimerRef.current = null;
       }
-      setIsLoading(false);
+      loadingTimerRef.current = window.setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
     } catch (error) {
       console.error("Error fetching streak data:", error);
       setIsLoading(false);
@@ -60,7 +58,7 @@ const Dashboard = () => {
     // Set a small delay before fetching to prevent rapid fetch cycles
     dataFetchTimerRef.current = window.setTimeout(() => {
       loadStreaks();
-    }, 100);
+    }, 200);
     
     return () => {
       // Clean up timers if component unmounts

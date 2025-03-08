@@ -24,9 +24,33 @@ export function useHabitTracking(onHabitChange?: () => void) {
   const dataRefreshTimerRef = useRef<number | null>(null);
   const initialLoadAttemptedRef = useRef(false);
   const isLoadingRef = useRef(true);
+  const lastFetchTimeRef = useRef<number>(0);
   
   const today = getTodayFormatted();
   const todayName = getDayName(new Date());
+
+  // Add debounce to prevent multiple rapid data loads
+  const debouncedLoadData = useCallback((showLoading = true) => {
+    // Prevent multiple rapid fetches - only fetch if it's been at least 2 seconds since last fetch
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < 2000 && lastFetchTimeRef.current !== 0) {
+      console.log('Debouncing data fetch - too soon since last fetch');
+      return;
+    }
+    
+    lastFetchTimeRef.current = now;
+    
+    // Clear any existing timer
+    if (dataRefreshTimerRef.current) {
+      window.clearTimeout(dataRefreshTimerRef.current);
+      dataRefreshTimerRef.current = null;
+    }
+    
+    // Set a small delay before actually loading data to debounce
+    dataRefreshTimerRef.current = window.setTimeout(() => {
+      loadData(showLoading);
+    }, 300);
+  }, []);
 
   // Function to load data with optimized error handling
   const loadData = useCallback(async (showLoading = true) => {
@@ -39,13 +63,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
     }
     setError(null);
     
-    try {
-      // Clear any existing timer
-      if (dataRefreshTimerRef.current) {
-        window.clearTimeout(dataRefreshTimerRef.current);
-        dataRefreshTimerRef.current = null;
-      }
-      
+    try {      
       console.log('Fetching habit data...');
       
       // Use Promise.allSettled to handle partial failures
@@ -91,7 +109,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
       dataRefreshTimerRef.current = window.setTimeout(() => {
         isLoadingRef.current = false;
         setLoading(false);
-      }, 300);
+      }, 400);
     }
   }, [user, today, onHabitChange]);
 
@@ -102,8 +120,8 @@ export function useHabitTracking(onHabitChange?: () => void) {
       
       // Small delay before the initial load to ensure auth is fully complete
       const initialLoadTimer = setTimeout(() => {
-        loadData(true);
-      }, 100);
+        debouncedLoadData(true);
+      }, 400);
       
       return () => {
         clearTimeout(initialLoadTimer);
@@ -113,19 +131,19 @@ export function useHabitTracking(onHabitChange?: () => void) {
         }
       };
     }
-  }, [user, loadData]);
+  }, [user, debouncedLoadData]);
 
   // Reload data when date changes
   useEffect(() => {
     if (initialLoadAttemptedRef.current && user) {
-      loadData(true);
+      debouncedLoadData(true);
     }
-  }, [today, user, loadData]);
+  }, [today, user, debouncedLoadData]);
 
   // Public method to refresh data without showing loading state
   const refreshData = useCallback((showLoading = false) => {
-    return loadData(showLoading);
-  }, [loadData]);
+    return debouncedLoadData(showLoading);
+  }, [debouncedLoadData]);
 
   // Handle toggling habit completion with optimistic updates
   const handleToggleCompletion = async (habitId: string) => {

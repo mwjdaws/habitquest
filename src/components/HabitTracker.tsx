@@ -19,6 +19,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   const [habitNameForFailure, setHabitNameForFailure] = useState<string>("");
   const [showLoading, setShowLoading] = useState(true);
   const loadingTimerRef = useRef<number | null>(null);
+  const refreshIntervalRef = useRef<number | null>(null);
   
   const { 
     habits,
@@ -34,22 +35,36 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     refreshData
   } = useHabitTracking(onHabitChange);
 
-  // Force a refresh when the component mounts
+  // Force a refresh when the component mounts - with debounce to prevent excessive calls
   useEffect(() => {
-    // Immediate refresh on mount
-    refreshData();
+    // Clear any existing intervals when component remounts
+    if (refreshIntervalRef.current) {
+      window.clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
+    }
     
-    // Set up regular refresh interval (every 30 seconds)
-    const refreshInterval = setInterval(() => {
-      refreshData(false); // Silent refresh
-    }, 30000);
+    // Initial data fetch - with small delay to ensure auth is ready
+    const initialLoadTimeout = window.setTimeout(() => {
+      console.log('Initial habit data fetch');
+      refreshData(true);
+      
+      // Set up regular refresh interval (every 60 seconds instead of 30 to reduce load)
+      refreshIntervalRef.current = window.setInterval(() => {
+        console.log('Silent refresh of habit data');
+        refreshData(false); // Silent refresh
+      }, 60000);
+    }, 300);
     
     return () => {
-      clearInterval(refreshInterval);
+      window.clearTimeout(initialLoadTimeout);
+      if (refreshIntervalRef.current) {
+        window.clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
+      }
     };
   }, [refreshData]);
 
-  // Smoother transition for loading state to prevent UI flashing
+  // Smoother transition for loading state with improved timing
   useEffect(() => {
     // Clear any existing timer
     if (loadingTimerRef.current) {
@@ -61,10 +76,11 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
       // Immediately show loading state when loading starts
       setShowLoading(true);
     } else {
-      // Add a slight delay before hiding the loading state to prevent flickering
+      // Add a slightly longer delay before hiding the loading state
+      // to ensure content is fully ready (prevents flash of empty content)
       loadingTimerRef.current = window.setTimeout(() => {
         setShowLoading(false);
-      }, 500);
+      }, 600);
     }
     
     return () => {

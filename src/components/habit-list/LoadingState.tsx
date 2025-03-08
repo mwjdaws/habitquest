@@ -2,9 +2,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function LoadingState() {
-  // Create an array of different widths for more realistic skeletons
-  const habitWidths = [90, 85, 95, 80];
-  
   return (
     <div className="space-y-4">
       {/* Progress bar skeleton with realistic proportions */}
@@ -20,7 +17,7 @@ export function LoadingState() {
       <div className="space-y-3">
         {[...Array(3)].map((_, index) => (
           <div key={index} className="flex items-center">
-            <Skeleton className={`h-16 w-${habitWidths[index % habitWidths.length]}% rounded-md`} />
+            <Skeleton className={`h-16 ${index === 0 ? 'w-[90%]' : index === 1 ? 'w-[85%]' : 'w-[95%]'} rounded-md`} />
           </div>
         ))}
       </div>
