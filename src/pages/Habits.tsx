@@ -95,7 +95,7 @@ const Habits = () => {
           <CardDescription>Track your daily habits</CardDescription>
         </CardHeader>
         <CardContent>
-          <HabitList onError={handleErrorOccurred} />
+          <HabitList />
         </CardContent>
       </Card>
     </div>

@@ -7,21 +7,31 @@ import { Button } from "@/components/ui/button";
 import { Check, Plus } from "lucide-react";
 import { HabitForm } from "./HabitForm";
 import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { handleError } from "@/lib/error-utils";
 
 export function HabitList() {
   const [showForm, setShowForm] = useState(false);
   const [completions, setCompletions] = useState<HabitCompletion[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const today = getTodayFormatted();
 
   const { 
     data: habits = [], 
     isLoading, 
-    error,
+    error: queryError,
     refetch: refetchHabits 
   } = useQuery({
     queryKey: ['habits'],
     queryFn: fetchHabits,
   });
+
+  useEffect(() => {
+    if (queryError) {
+      setError(handleError(queryError));
+    }
+  }, [queryError]);
 
   const fetchCompletions = async () => {
     try {
@@ -29,11 +39,7 @@ export function HabitList() {
       setCompletions(data);
     } catch (error) {
       console.error("Error fetching completions:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load your habit completions",
-        variant: "destructive",
-      });
+      handleError(error, "Failed to load your habit completions");
     }
   };
 
@@ -51,12 +57,7 @@ export function HabitList() {
         description: isCompleted ? "Keep working on it!" : "Great job!",
       });
     } catch (error) {
-      console.error("Error toggling habit completion:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update habit status",
-        variant: "destructive",
-      });
+      handleError(error, "Failed to update habit status");
     }
   };
 
@@ -70,7 +71,14 @@ export function HabitList() {
   };
 
   if (isLoading) return <div className="py-8 text-center">Loading habits...</div>;
-  if (error) return <div className="py-8 text-center text-red-500">Error loading habits</div>;
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-4">
