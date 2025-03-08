@@ -41,6 +41,41 @@ export type Database = {
           },
         ]
       }
+      habit_failures: {
+        Row: {
+          created_at: string
+          failure_date: string
+          habit_id: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          failure_date: string
+          habit_id: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          failure_date?: string
+          habit_id?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_failures_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       habits: {
         Row: {
           category: string

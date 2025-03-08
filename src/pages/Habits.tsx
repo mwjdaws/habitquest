@@ -92,7 +92,9 @@ const Habits = () => {
       <Card>
         <CardHeader>
           <CardTitle>Habit Tracking</CardTitle>
-          <CardDescription>Track your daily habits</CardDescription>
+          <CardDescription>
+            Track your daily habits and build streaks for consistent progress
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <HabitList />
