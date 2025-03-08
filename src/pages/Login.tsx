@@ -1,13 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Flame, AlertCircle, Info } from "lucide-react";
+import { Flame, AlertCircle, Info, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,9 +16,18 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [activeTab, setActiveTab] = useState("login");
   const { toast } = useToast();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const validateInputs = () => {
     setErrorMessage("");
@@ -48,6 +58,7 @@ const Login = () => {
     setLoading(true);
     setErrorMessage("");
     setInfoMessage("");
+    setSuccessMessage("");
     
     try {
       console.log(`Attempting to ${type === "login" ? "login" : "sign up"} with email: ${email}`);
@@ -60,7 +71,6 @@ const Login = () => {
         if (error) {
           console.error(`Signup error:`, error);
           
-          // Handle already registered users
           if (error.message.includes("already registered")) {
             setErrorMessage("This email is already registered. Please log in instead.");
             setActiveTab("login");
@@ -68,14 +78,18 @@ const Login = () => {
             setErrorMessage(error.message);
           }
         } else if (success) {
-          toast({
-            title: "Account Created",
-            description: "Please check your email for a confirmation link before logging in.",
-          });
-          
-          // Switch to login tab after successful signup
-          setActiveTab("login");
-          setInfoMessage("Account created successfully. Please check your email for confirmation, then you can log in.");
+          if (email === 'test@example.com') {
+            setSuccessMessage("Test account is ready. You can now log in.");
+            setActiveTab("login");
+          } else {
+            toast({
+              title: "Account Created",
+              description: "Please check your email for a confirmation link before logging in.",
+            });
+            
+            setActiveTab("login");
+            setSuccessMessage("Account created successfully! You can now log in.");
+          }
         }
       } else {
         // Login
@@ -111,7 +125,7 @@ const Login = () => {
   const useTestCredentials = () => {
     setEmail("test@example.com");
     setPassword("password123");
-    setInfoMessage("Using test credentials. Sign up first if this is your first time using the test account.");
+    setInfoMessage("Using test credentials. If this is your first time, please sign up first.");
   };
 
   return (
@@ -142,6 +156,13 @@ const Login = () => {
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2 text-blue-800">
               <Info className="h-5 w-5 shrink-0 mt-0.5" />
               <span>{infoMessage}</span>
+            </div>
+          )}
+          
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md flex items-start gap-2 text-green-800">
+              <CheckCircle className="h-5 w-5 shrink-0 mt-0.5" />
+              <span>{successMessage}</span>
             </div>
           )}
           
@@ -247,10 +268,16 @@ const Login = () => {
         </Tabs>
         
         <div className="text-center mt-6 text-sm text-muted-foreground">
-          <p>For testing, use these credentials:</p>
-          <p className="mt-1"><strong>Email:</strong> test@example.com</p>
-          <p><strong>Password:</strong> password123</p>
-          <p className="mt-2 text-xs">If using test account for the first time, click "Sign Up" first</p>
+          <p className="font-medium text-base mb-2">Test Account Instructions:</p>
+          <ol className="text-left list-decimal pl-6 space-y-1 mb-3">
+            <li>First click <strong>"Sign Up"</strong> tab and use test credentials</li>
+            <li>Then click <strong>"Create account"</strong> button</li>
+            <li>Switch to <strong>"Login"</strong> tab and log in with same credentials</li>
+          </ol>
+          <div className="p-3 bg-gray-100 rounded-md">
+            <p><strong>Email:</strong> test@example.com</p>
+            <p><strong>Password:</strong> password123</p>
+          </div>
         </div>
       </div>
     </div>

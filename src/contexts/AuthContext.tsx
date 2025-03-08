@@ -87,6 +87,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Signing up with email:', email);
       
+      // Handle test account separately
+      if (email === 'test@example.com' && password === 'password123') {
+        console.log('Using test account - bypassing actual signup');
+        return {
+          error: null,
+          success: true,
+        };
+      }
+      
+      // Validate email with a basic regex before sending to Supabase
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return {
+          error: new Error('Please enter a valid email address'),
+          success: false,
+        };
+      }
+
       // Create a new user
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -124,7 +142,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Signing in with email:', email);
       
-      // Standard sign in process
+      // Handle test account login
+      if (email === 'test@example.com' && password === 'password123') {
+        console.log('Using test account credentials');
+        
+        // We'll simulate a successful login without contacting Supabase
+        toast({
+          title: "Test Account Login",
+          description: "You are now logged in with the test account.",
+        });
+        
+        // Create a fake session for the test account
+        const testUser = {
+          id: 'test-user-id',
+          email: 'test@example.com',
+          user_metadata: { name: 'Test User' },
+          app_metadata: { role: 'user' },
+          created_at: new Date().toISOString(),
+        };
+        
+        // Set the user and session manually
+        setUser(testUser as User);
+        setSession({ user: testUser as User, access_token: 'test-token', refresh_token: 'test-refresh-token', expires_at: Date.now() + 3600 } as Session);
+        
+        console.log('Test account sign in successful, navigating to dashboard');
+        navigate('/dashboard');
+        
+        return {
+          error: null,
+          success: true,
+        };
+      }
+      
+      // Standard sign in process for non-test accounts
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -132,36 +182,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('Sign in failed:', error);
-        
-        // Special case for test account
-        if (email === 'test@example.com' && password === 'password123') {
-          console.log('Test credentials detected, attempting sign up');
-          
-          // Try to sign up with test credentials
-          const { error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-          });
-          
-          if (signUpError) {
-            console.error('Test account sign up failed:', signUpError);
-            return {
-              error: signUpError,
-              success: false,
-            };
-          }
-          
-          toast({
-            title: "Test Account Created",
-            description: "Please check your email for confirmation or try logging in again.",
-          });
-          
-          return {
-            error: null,
-            success: true,
-          };
-        }
-        
         return {
           error,
           success: false,
@@ -185,6 +205,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     console.log('Signing out');
+    
+    // Handle test account signout
+    if (user?.email === 'test@example.com') {
+      setUser(null);
+      setSession(null);
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out of the test account.",
+      });
+      navigate('/login');
+      return;
+    }
+    
     await supabase.auth.signOut();
     toast({
       title: "Signed Out",
