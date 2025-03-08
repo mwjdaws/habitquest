@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HabitTracker } from "@/components/HabitTracker";
 import { Zap } from "lucide-react";
@@ -13,19 +13,22 @@ const Dashboard = () => {
   const [topStreaks, setTopStreaks] = useState<Habit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const loadingTimerRef = useRef<number | null>(null);
+  const dataFetchTimerRef = useRef<number | null>(null);
   
-  // Add a state to prevent rapid changes in loading state
-  const [loadingTimer, setLoadingTimer] = useState<number | null>(null);
-
   const loadStreaks = useCallback(async () => {
     if (!user) return;
     
     try {
+      // Clear any existing timer to prevent multiple timers
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+      
       // Only set loading to true if it's going to take more than 300ms
-      const timer = window.setTimeout(() => {
+      loadingTimerRef.current = window.setTimeout(() => {
         setIsLoading(true);
-      }, 300);
-      setLoadingTimer(timer);
+      }, 200);
       
       const habits = await fetchHabits();
       
@@ -37,23 +40,35 @@ const Dashboard = () => {
       setTopStreaks(habitsWithStreaks.slice(0, 3));
       
       // Clear the timer and set loading to false
-      if (loadingTimer) {
-        clearTimeout(loadingTimer);
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
       }
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching streak data:", error);
       setIsLoading(false);
     }
-  }, [user, loadingTimer]);
+  }, [user]);
   
   useEffect(() => {
-    loadStreaks();
+    // Clear any existing data fetch timer
+    if (dataFetchTimerRef.current) {
+      clearTimeout(dataFetchTimerRef.current);
+    }
+    
+    // Set a small delay before fetching to prevent rapid fetch cycles
+    dataFetchTimerRef.current = window.setTimeout(() => {
+      loadStreaks();
+    }, 100);
     
     return () => {
-      // Clean up timer if component unmounts
-      if (loadingTimer) {
-        clearTimeout(loadingTimer);
+      // Clean up timers if component unmounts
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+      if (dataFetchTimerRef.current) {
+        clearTimeout(dataFetchTimerRef.current);
       }
     };
   }, [loadStreaks, lastRefresh]);

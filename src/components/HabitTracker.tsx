@@ -48,43 +48,38 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     setHabitIdForFailure(null);
   };
 
-  if (loading) {
-    return (
-      <Card>
-        <HabitTrackerHeader />
-        <CardContent>
-          <LoadingState />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return <ErrorState error={error} />;
-  }
-
-  if (habits.length === 0) {
-    return <EmptyState hasHabits={habits.length > 0} />;
-  }
-
   return (
     <>
       <Card>
         <HabitTrackerHeader totalHabits={totalCount} />
         <CardContent>
-          <ProgressBar 
-            progress={progress} 
-            completedCount={completedCount} 
-            totalCount={totalCount} 
-          />
-          
-          <HabitList
-            habits={habits}
-            completions={completions}
-            failures={failures}
-            onToggleCompletion={handleToggleCompletion}
-            onLogFailure={onLogFailure}
-          />
+          {loading ? (
+            <LoadingState />
+          ) : (
+            <>
+              {error ? (
+                <ErrorState error={error} />
+              ) : habits.length === 0 ? (
+                <EmptyState hasHabits={habits.length > 0} />
+              ) : (
+                <>
+                  <ProgressBar 
+                    progress={progress} 
+                    completedCount={completedCount} 
+                    totalCount={totalCount} 
+                  />
+                  
+                  <HabitList
+                    habits={habits}
+                    completions={completions}
+                    failures={failures}
+                    onToggleCompletion={handleToggleCompletion}
+                    onLogFailure={onLogFailure}
+                  />
+                </>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
       

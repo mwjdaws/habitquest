@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -21,6 +21,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const dataRefreshTimerRef = useRef<number | null>(null);
   
   const today = getTodayFormatted();
   const todayName = getDayName(new Date());
@@ -34,6 +35,11 @@ export function useHabitTracking(onHabitChange?: () => void) {
     setError(null);
     
     try {
+      // Clear any existing timer
+      if (dataRefreshTimerRef.current) {
+        clearTimeout(dataRefreshTimerRef.current);
+      }
+      
       const [habitsData, completionsData, failuresData] = await Promise.all([
         fetchHabits(),
         getCompletionsForDate(today),
@@ -57,12 +63,22 @@ export function useHabitTracking(onHabitChange?: () => void) {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      // Add a small delay to prevent flashing of loading state
+      dataRefreshTimerRef.current = window.setTimeout(() => {
+        setLoading(false);
+      }, 100);
     }
   };
 
   useEffect(() => {
     loadData();
+    
+    return () => {
+      // Clean up timer if component unmounts
+      if (dataRefreshTimerRef.current) {
+        clearTimeout(dataRefreshTimerRef.current);
+      }
+    }
   }, [user, today]);
 
   // Refresh data without showing loading state

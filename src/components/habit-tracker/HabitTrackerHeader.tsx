@@ -6,17 +6,20 @@ import { ChevronRight } from "lucide-react";
 
 interface HabitTrackerHeaderProps {
   totalHabits?: number;
+  isLoading?: boolean;
 }
 
-export function HabitTrackerHeader({ totalHabits = 0 }: HabitTrackerHeaderProps) {
+export function HabitTrackerHeader({ totalHabits = 0, isLoading = false }: HabitTrackerHeaderProps) {
   return (
     <CardHeader className="flex flex-row items-start justify-between pb-2">
       <div>
         <CardTitle>Today's Habits</CardTitle>
         <CardDescription>
-          {totalHabits > 0 
-            ? `Your habit progress for today (${totalHabits} habit${totalHabits !== 1 ? 's' : ''})`
-            : 'Your habit progress for today'}
+          {isLoading 
+            ? 'Loading your habits for today...'
+            : totalHabits > 0 
+              ? `Your habit progress for today (${totalHabits} habit${totalHabits !== 1 ? 's' : ''})`
+              : 'Your habit progress for today'}
         </CardDescription>
       </div>
       <Button variant="ghost" size="sm" asChild>
