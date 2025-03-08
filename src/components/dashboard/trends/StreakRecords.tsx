@@ -1,6 +1,6 @@
 
 import { Badge } from "@/components/ui/badge";
-import { Fire, Trophy } from "lucide-react";
+import { Flame, Trophy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type StreakRecordsProps = {
@@ -46,7 +46,7 @@ export function StreakRecords({ streakRecords, loading }: StreakRecordsProps) {
               variant={record.current_streak > 0 ? "default" : "outline"}
               className="flex items-center space-x-1"
             >
-              <Fire className="h-3 w-3" />
+              <Flame className="h-3 w-3" />
               <span>{record.current_streak} day{record.current_streak !== 1 ? 's' : ''}</span>
             </Badge>
           </div>

@@ -23,9 +23,9 @@ export function FailureReasons({ failures, loading }: FailureReasonsProps) {
     return Object.entries(reasonCounts)
       .map(([reason, count]) => ({
         reason,
-        count
+        count: Number(count) // Ensure count is a number
       }))
-      .sort((a, b) => b.count - a.count); // Sort by count descending
+      .sort((a, b) => Number(b.count) - Number(a.count)); // Ensure we're comparing numbers
   }, [failures]);
 
   if (loading) {
