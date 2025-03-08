@@ -110,8 +110,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(testSession);
         } else if (result.session) {
           // For regular users, the session should already be set by the auth state change listener
-          // But we'll set it here explicitly as well for consistency
+          // But we'll set it here explicitly as well to ensure immediate UI update
           console.log('Regular account sign in successful');
+          setUser(result.session.user);
+          setSession(result.session);
         }
         
         console.log('Sign in successful, navigating to dashboard');
