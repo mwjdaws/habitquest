@@ -6,17 +6,25 @@ import { Link } from "react-router-dom";
 import { Check, ChevronRight, Flame } from "lucide-react";
 import { fetchHabits, getCompletionsForDate, getTodayFormatted, getDayName, shouldShowHabitForDay, toggleHabitCompletion, Habit, HabitCompletion } from "@/lib/habits";
 import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function HabitTracker() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [completions, setCompletions] = useState<HabitCompletion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  
   const today = getTodayFormatted();
   const todayName = getDayName(new Date());
 
   useEffect(() => {
     const loadData = async () => {
+      if (!user) return;
+      
       setLoading(true);
+      setError(null);
+      
       try {
         const [habitsData, completionsData] = await Promise.all([
           fetchHabits(),
@@ -27,6 +35,7 @@ export function HabitTracker() {
         setCompletions(completionsData);
       } catch (error) {
         console.error("Error loading habit data:", error);
+        setError("Failed to load habit data. Please try again.");
         toast({
           title: "Error",
           description: "Failed to load habit data",
@@ -38,9 +47,11 @@ export function HabitTracker() {
     };
 
     loadData();
-  }, []);
+  }, [user, today]);
 
   const handleToggleCompletion = async (habitId: string) => {
+    if (!user) return;
+    
     try {
       const isCompleted = completions.some(c => c.habit_id === habitId);
       await toggleHabitCompletion(habitId, today, isCompleted);
@@ -49,9 +60,11 @@ export function HabitTracker() {
       if (isCompleted) {
         setCompletions(completions.filter(c => c.habit_id !== habitId));
       } else {
-        const newCompletion = {
+        // Include user_id to fix TypeScript error
+        const newCompletion: HabitCompletion = {
           id: crypto.randomUUID(),
           habit_id: habitId,
+          user_id: user.id,
           completed_date: today,
           created_at: new Date().toISOString()
         };
@@ -92,6 +105,25 @@ export function HabitTracker() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">Loading habits...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Today's Habits</CardTitle>
+          <CardDescription>Your habit progress for today</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="p-3 border border-red-300 bg-red-50 text-red-900 rounded-md">
+            <p className="text-sm font-medium">{error}</p>
+            <Button variant="outline" size="sm" className="mt-2" onClick={() => window.location.reload()}>
+              Try again
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
@@ -164,7 +196,10 @@ export function HabitTracker() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-1 h-10 rounded-full bg-${habit.color}`} />
+                  <div 
+                    className="w-1 h-10 rounded-full" 
+                    style={{ backgroundColor: `var(--${habit.color})` }}
+                  />
                   <div>
                     <div className="font-medium text-sm">
                       {habit.name}
