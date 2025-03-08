@@ -22,6 +22,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
@@ -42,45 +43,48 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Error boundary component
-const ErrorBoundary = ({ children }: { children: React.ReactNode }) => {
-  const [hasError, setHasError] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      console.error('Global error caught:', event.error);
-      setError(event.error);
-      setHasError(true);
-      event.preventDefault();
-    };
-
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, []);
-
-  if (hasError) {
-    return (
-      <div className="flex items-center justify-center min-h-screen flex-col p-4">
-        <h2 className="text-xl font-bold text-red-500 mb-2">Something went wrong</h2>
-        <p className="text-gray-700 mb-4">The application encountered an error.</p>
-        {error && (
-          <pre className="bg-gray-100 p-4 rounded text-sm max-w-full overflow-auto">
-            {error.message}
-          </pre>
-        )}
-        <button 
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          onClick={() => window.location.reload()}
-        >
-          Reload Application
-        </button>
-      </div>
-    );
+// Error boundary component - Class-based to ensure proper error handling
+class ErrorBoundaryClass extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
   }
 
-  return <>{children}</>;
-};
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center min-h-screen flex-col p-4">
+          <h2 className="text-xl font-bold text-red-500 mb-2">Something went wrong</h2>
+          <p className="text-gray-700 mb-4">The application encountered an error.</p>
+          {this.state.error && (
+            <pre className="bg-gray-100 p-4 rounded text-sm max-w-full overflow-auto">
+              {this.state.error.message}
+            </pre>
+          )}
+          <button 
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            onClick={() => window.location.reload()}
+          >
+            Reload Application
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // App component with auth context
 const AppWithAuth = () => {
@@ -126,7 +130,7 @@ const App = () => {
   console.log('Rendering App component');
   
   return (
-    <ErrorBoundary>
+    <ErrorBoundaryClass>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <BrowserRouter>
@@ -138,7 +142,7 @@ const App = () => {
           <Sonner />
         </TooltipProvider>
       </QueryClientProvider>
-    </ErrorBoundary>
+    </ErrorBoundaryClass>
   );
 }
 

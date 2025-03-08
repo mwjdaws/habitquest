@@ -30,29 +30,47 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     completedCount,
     totalCount,
     handleToggleCompletion,
-    handleLogFailure
+    handleLogFailure,
+    refreshData
   } = useHabitTracking(onHabitChange);
+
+  // Force a refresh when the component mounts
+  useEffect(() => {
+    // Immediate refresh on mount
+    refreshData();
+    
+    // Set up regular refresh interval (every 30 seconds)
+    const refreshInterval = setInterval(() => {
+      refreshData(false); // Silent refresh
+    }, 30000);
+    
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [refreshData]);
 
   // Smoother transition for loading state to prevent UI flashing
   useEffect(() => {
     // Clear any existing timer
     if (loadingTimerRef.current) {
-      clearTimeout(loadingTimerRef.current);
+      window.clearTimeout(loadingTimerRef.current);
+      loadingTimerRef.current = null;
     }
     
     if (loading) {
       // Immediately show loading state when loading starts
       setShowLoading(true);
     } else {
-      // Add a slight delay before hiding the loading state
+      // Add a slight delay before hiding the loading state to prevent flickering
       loadingTimerRef.current = window.setTimeout(() => {
         setShowLoading(false);
-      }, 300);
+      }, 500);
     }
     
     return () => {
       if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
+        window.clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
       }
     };
   }, [loading]);

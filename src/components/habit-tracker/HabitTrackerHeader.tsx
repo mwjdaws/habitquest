@@ -10,16 +10,25 @@ interface HabitTrackerHeaderProps {
 }
 
 export function HabitTrackerHeader({ totalHabits = 0, isLoading = false }: HabitTrackerHeaderProps) {
+  // Determine the appropriate description based on loading and habit count
+  const getDescription = () => {
+    if (isLoading) {
+      return 'Loading your habits for today...';
+    }
+    
+    if (totalHabits > 0) {
+      return `Your habit progress for today (${totalHabits} habit${totalHabits !== 1 ? 's' : ''})`;
+    }
+    
+    return 'No habits scheduled for today';
+  };
+
   return (
     <CardHeader className="flex flex-row items-start justify-between pb-2">
       <div>
         <CardTitle>Today's Habits</CardTitle>
         <CardDescription>
-          {isLoading 
-            ? 'Loading your habits for today...'
-            : totalHabits > 0 
-              ? `Your habit progress for today (${totalHabits} habit${totalHabits !== 1 ? 's' : ''})`
-              : 'No habits scheduled for today'}
+          {getDescription()}
         </CardDescription>
       </div>
       <Button variant="ghost" size="sm" asChild>

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -23,14 +23,18 @@ export function useHabitTracking(onHabitChange?: () => void) {
   const { user } = useAuth();
   const dataRefreshTimerRef = useRef<number | null>(null);
   const initialLoadAttemptedRef = useRef(false);
+  const isLoadingRef = useRef(true);
   
   const today = getTodayFormatted();
   const todayName = getDayName(new Date());
 
-  const loadData = async (showLoading = true) => {
+  // Function to load data with optimized error handling
+  const loadData = useCallback(async (showLoading = true) => {
     if (!user) return;
     
+    // Track loading state
     if (showLoading) {
+      isLoadingRef.current = true;
       setLoading(true);
     }
     setError(null);
@@ -38,35 +42,37 @@ export function useHabitTracking(onHabitChange?: () => void) {
     try {
       // Clear any existing timer
       if (dataRefreshTimerRef.current) {
-        clearTimeout(dataRefreshTimerRef.current);
+        window.clearTimeout(dataRefreshTimerRef.current);
+        dataRefreshTimerRef.current = null;
       }
       
       console.log('Fetching habit data...');
       
-      // Use Promise.allSettled to prevent one failure from failing the entire request
+      // Use Promise.allSettled to handle partial failures
       const results = await Promise.allSettled([
         fetchHabits(),
         getCompletionsForDate(today),
         getFailuresForDate(today)
       ]);
       
-      // Process results safely
+      // Process results safely - prevent undefined results
       const habitsData = results[0].status === 'fulfilled' ? results[0].value : [];
       const completionsData = results[1].status === 'fulfilled' ? results[1].value : [];
       const failuresData = results[2].status === 'fulfilled' ? results[2].value : [];
       
-      // Check if any promise was rejected and log it
+      // Log any failures for debugging
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
           console.error(`Failed to fetch data for request ${index}:`, result.reason);
         }
       });
       
+      // Only update state for successful fetches
       console.log(`Loaded ${habitsData.length} habits, ${completionsData.length} completions, ${failuresData.length} failures`);
       
-      setHabits(habitsData);
-      setCompletions(completionsData);
-      setFailures(failuresData);
+      setHabits(habitsData || []);
+      setCompletions(completionsData || []);
+      setFailures(failuresData || []);
       
       // Notify parent components that data has changed
       if (onHabitChange) {
@@ -77,57 +83,60 @@ export function useHabitTracking(onHabitChange?: () => void) {
       setError("Failed to load habit data. Please try again.");
       toast({
         title: "Error",
-        description: "Failed to load habit data",
+        description: "Failed to load habit data. Please refresh.",
         variant: "destructive",
       });
     } finally {
       // Add a small delay to prevent flashing of loading state
       dataRefreshTimerRef.current = window.setTimeout(() => {
+        isLoadingRef.current = false;
         setLoading(false);
       }, 300);
     }
-  };
+  }, [user, today, onHabitChange]);
 
+  // Initial load
   useEffect(() => {
-    if (user) {
+    if (user && !initialLoadAttemptedRef.current) {
       initialLoadAttemptedRef.current = true;
       
-      // Small delay before the initial load
+      // Small delay before the initial load to ensure auth is fully complete
       const initialLoadTimer = setTimeout(() => {
-        loadData();
+        loadData(true);
       }, 100);
       
       return () => {
         clearTimeout(initialLoadTimer);
         if (dataRefreshTimerRef.current) {
-          clearTimeout(dataRefreshTimerRef.current);
+          window.clearTimeout(dataRefreshTimerRef.current);
+          dataRefreshTimerRef.current = null;
         }
       };
     }
-  }, [user]);
+  }, [user, loadData]);
 
-  // Ensure we reload data when the date changes
+  // Reload data when date changes
   useEffect(() => {
     if (initialLoadAttemptedRef.current && user) {
-      loadData();
+      loadData(true);
     }
-  }, [today]);
+  }, [today, user, loadData]);
 
-  // Refresh data without showing loading state
-  const refreshData = () => {
-    loadData(false);
-  };
+  // Public method to refresh data without showing loading state
+  const refreshData = useCallback((showLoading = false) => {
+    return loadData(showLoading);
+  }, [loadData]);
 
+  // Handle toggling habit completion with optimistic updates
   const handleToggleCompletion = async (habitId: string) => {
     if (!user) return;
     
     try {
       const isCompleted = completions.some(c => c.habit_id === habitId);
-      await toggleHabitCompletion(habitId, today, isCompleted);
       
-      // Update local state
+      // Optimistic update - update UI immediately
       if (isCompleted) {
-        setCompletions(completions.filter(c => c.habit_id !== habitId));
+        setCompletions(prev => prev.filter(c => c.habit_id !== habitId));
       } else {
         const newCompletion = {
           id: crypto.randomUUID(),
@@ -136,14 +145,17 @@ export function useHabitTracking(onHabitChange?: () => void) {
           completed_date: today,
           created_at: new Date().toISOString()
         };
-        setCompletions([...completions, newCompletion]);
-
+        setCompletions(prev => [...prev, newCompletion]);
+        
         // Remove any failure for this habit on this day
-        setFailures(failures.filter(f => f.habit_id !== habitId));
+        setFailures(prev => prev.filter(f => f.habit_id !== habitId));
       }
       
+      // Send update to server
+      await toggleHabitCompletion(habitId, today, isCompleted);
+      
       // Refresh habit data to get updated streak
-      refreshData();
+      refreshData(false);
       
       toast({
         title: isCompleted ? "Habit unmarked" : "Habit completed",
@@ -151,21 +163,24 @@ export function useHabitTracking(onHabitChange?: () => void) {
       });
     } catch (error) {
       console.error("Error toggling habit completion:", error);
+      
+      // Rollback optimistic update
+      refreshData(false);
+      
       toast({
         title: "Error",
-        description: "Failed to update habit status",
+        description: "Failed to update habit status. Please try again.",
         variant: "destructive",
       });
     }
   };
 
+  // Handle logging habit failure with optimistic updates
   const handleLogFailure = async (habitId: string, reason: string) => {
     if (!user) return;
     
     try {
-      await logHabitFailure(habitId, today, reason);
-      
-      // Update local state
+      // Optimistic update
       const newFailure = {
         id: crypto.randomUUID(),
         habit_id: habitId,
@@ -176,14 +191,16 @@ export function useHabitTracking(onHabitChange?: () => void) {
       };
       
       // Remove any completions for this habit on this day
-      setCompletions(completions.filter(c => c.habit_id !== habitId));
+      setCompletions(prev => prev.filter(c => c.habit_id !== habitId));
       
       // Add the failure or replace existing one
-      setFailures(failures.filter(f => f.habit_id !== habitId).concat(newFailure));
+      setFailures(prev => [...prev.filter(f => f.habit_id !== habitId), newFailure]);
       
-      // Refresh habit data to get updated streak
-      const refreshedHabits = await fetchHabits();
-      setHabits(refreshedHabits);
+      // Send to server
+      await logHabitFailure(habitId, today, reason);
+      
+      // Refresh to update streaks
+      refreshData(false);
       
       toast({
         title: "Reason logged",
@@ -191,9 +208,13 @@ export function useHabitTracking(onHabitChange?: () => void) {
       });
     } catch (error) {
       console.error("Error logging failure:", error);
+      
+      // Rollback optimistic update
+      refreshData(false);
+      
       toast({
         title: "Error",
-        description: "Failed to log failure reason",
+        description: "Failed to log failure reason. Please try again.",
         variant: "destructive",
       });
     }
@@ -215,12 +236,13 @@ export function useHabitTracking(onHabitChange?: () => void) {
     habits: todaysHabits,
     completions,
     failures,
-    loading,
+    loading: isLoadingRef.current, // Use ref for more stable loading state
     error,
     progress,
     completedCount,
     totalCount: todaysHabits.length,
     handleToggleCompletion,
     handleLogFailure,
+    refreshData,
   };
 }
