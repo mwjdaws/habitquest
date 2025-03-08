@@ -1,33 +1,21 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, Trash } from "lucide-react";
+import { Trash } from "lucide-react";
 import { 
-  weekdays, 
   createHabit, 
   updateHabit, 
   deleteHabit, 
   Habit, 
-  FrequencyType,
-  defaultCategories 
+  FrequencyType 
 } from "@/lib/habits";
 import { toast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-
-const colorOptions = [
-  { name: "Purple", value: "habit-purple" },
-  { name: "Blue", value: "habit-soft-blue" },
-  { name: "Orange", value: "habit-orange" },
-];
+import { FrequencySelector } from "./habit/FrequencySelector";
+import { ColorPicker } from "./habit/ColorPicker";
+import { CategorySelector } from "./habit/CategorySelector";
 
 type HabitFormProps = {
   habit?: Habit;
@@ -56,14 +44,6 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
   const [frequencyType, setFrequencyType] = useState<FrequencyType>(getInitialFrequencyType());
 
   const isEdit = !!habit;
-
-  const handleFrequencyToggle = (day: string) => {
-    if (frequency.includes(day)) {
-      setFrequency(frequency.filter((d) => d !== day));
-    } else {
-      setFrequency([...frequency, day]);
-    }
-  };
 
   const handleFrequencyTypeChange = (type: FrequencyType) => {
     setFrequencyType(type);
@@ -169,91 +149,22 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
         />
       </div>
       
-      <div>
-        <Label htmlFor="category">Category</Label>
-        <Select
-          value={category}
-          onValueChange={setCategory}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            {defaultCategories.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <CategorySelector 
+        selectedCategory={category}
+        onCategoryChange={setCategory}
+      />
 
-      <div>
-        <Label>Frequency</Label>
-        <Tabs 
-          value={frequencyType} 
-          onValueChange={(value) => handleFrequencyTypeChange(value as FrequencyType)}
-          className="mt-2"
-        >
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="daily">Daily</TabsTrigger>
-            <TabsTrigger value="weekly">Weekly</TabsTrigger>
-            <TabsTrigger value="custom">Custom</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="daily">
-            <p className="text-sm text-muted-foreground mt-2">
-              This habit will be tracked every day
-            </p>
-          </TabsContent>
-          
-          <TabsContent value="weekly">
-            <p className="text-sm text-muted-foreground mt-2">
-              This habit will be tracked every Monday
-            </p>
-          </TabsContent>
-          
-          <TabsContent value="custom">
-            <div className="grid grid-cols-7 gap-1 mt-2">
-              {weekdays.map((day) => (
-                <Button
-                  key={day}
-                  type="button"
-                  variant={frequency.includes(day) ? "default" : "outline"}
-                  className={`h-9 ${frequency.includes(day) ? "" : "border-dashed"}`}
-                  onClick={() => handleFrequencyToggle(day)}
-                >
-                  {day.slice(0, 3)}
-                </Button>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {frequency.length === 0
-                ? "Please select at least one day"
-                : `Track on selected days (${frequency.length} days)`}
-            </p>
-          </TabsContent>
-        </Tabs>
-      </div>
+      <FrequencySelector
+        frequency={frequency}
+        frequencyType={frequencyType}
+        onFrequencyChange={setFrequency}
+        onFrequencyTypeChange={handleFrequencyTypeChange}
+      />
 
-      <div>
-        <Label>Color</Label>
-        <div className="flex gap-2 mt-2">
-          {colorOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              className={`h-8 w-8 rounded-full border-2 flex items-center justify-center ${
-                color === option.value ? `border-${option.value} ring-2 ring-offset-2` : "border-muted"
-              }`}
-              style={{ backgroundColor: `var(--${option.value})` }}
-              onClick={() => setColor(option.value)}
-            >
-              {color === option.value && <Check className="h-4 w-4 text-white" />}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ColorPicker 
+        selectedColor={color}
+        onColorChange={setColor}
+      />
 
       {isEdit && (
         <>
