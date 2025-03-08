@@ -8,46 +8,72 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Flame } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { AlertCircle } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const { toast } = useToast();
   const { signIn, signUp } = useAuth();
 
+  const validateInputs = () => {
+    setErrorMessage("");
+    
+    if (!email.trim()) {
+      setErrorMessage("Email is required");
+      return false;
+    }
+    
+    if (!password.trim()) {
+      setErrorMessage("Password is required");
+      return false;
+    }
+    
+    if (password.length < 6) {
+      setErrorMessage("Password must be at least 6 characters");
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleAuth = async (type: "login" | "signup") => {
-    if (!email || !password) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
+    if (!validateInputs()) {
       return;
     }
 
     setLoading(true);
+    setErrorMessage("");
     
     try {
+      console.log(`Attempting to ${type === "login" ? "login" : "sign up"} with email: ${email}`);
+      
       const { error, success } = type === "login" 
         ? await signIn(email, password)
         : await signUp(email, password);
       
       if (error) {
+        console.error(`${type} error:`, error);
+        setErrorMessage(error.message);
         toast({
           title: type === "login" ? "Login Failed" : "Sign Up Failed",
           description: error.message,
           variant: "destructive",
         });
       } else if (success) {
-        if (type === "signup") {
-          toast({
-            title: "Account Created",
-            description: "Please check your email to confirm your account.",
-          });
-        }
+        console.log(`${type} successful`);
+        toast({
+          title: type === "login" ? "Login Successful" : "Account Created",
+          description: type === "login" 
+            ? "Welcome back!" 
+            : "Your account has been created and you've been logged in.",
+        });
       }
     } catch (error) {
+      console.error("Unexpected error:", error);
+      setErrorMessage("An unexpected error occurred");
       toast({
         title: "Error",
         description: "An unexpected error occurred.",
@@ -74,6 +100,13 @@ const Login = () => {
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
+          
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2 text-red-800">
+              <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
           
           <TabsContent value="login">
             <Card>
@@ -126,9 +159,9 @@ const Login = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="signup-email">Email</Label>
                   <Input 
-                    id="email" 
+                    id="signup-email" 
                     type="email" 
                     placeholder="name@example.com"
                     value={email}
@@ -136,13 +169,15 @@ const Login = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="signup-password">Password</Label>
                   <Input 
-                    id="password" 
+                    id="signup-password" 
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    placeholder="6+ characters"
                   />
+                  <p className="text-xs text-muted-foreground">Password must be at least 6 characters</p>
                 </div>
               </CardContent>
               <CardFooter>

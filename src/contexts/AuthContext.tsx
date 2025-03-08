@@ -84,32 +84,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      // Modified to automatically sign in after sign up (no email confirmation)
-      const { error } = await supabase.auth.signUp({
+      console.log('Signing up with email:', email);
+      
+      // Try sign up with auto-confirm option (no email verification)
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          // This option skips the email verification flow
+          emailRedirectTo: window.location.origin,
           data: {
             confirmed_at: new Date().toISOString(),
           }
         }
       });
       
-      // If sign up is successful, immediately sign in
-      if (!error) {
+      console.log('Sign up response:', data ? 'Success' : 'Failed', error ? `Error: ${error.message}` : 'No error');
+      
+      if (!error && data.user) {
+        console.log('Sign up successful, attempting to sign in automatically');
+        // Auto sign in after signup
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password
         });
         
-        if (!signInError) {
-          navigate('/dashboard');
+        if (signInError) {
+          console.error('Auto sign in failed:', signInError);
+          return {
+            error: signInError,
+            success: false,
+          };
         }
         
+        console.log('Auto sign in successful, navigating to dashboard');
+        navigate('/dashboard');
         return {
-          error: signInError,
-          success: !signInError,
+          error: null,
+          success: true,
         };
       }
       
@@ -118,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         success: !error,
       };
     } catch (error) {
-      console.error('Error signing up:', error);
+      console.error('Error in sign up process:', error);
       return {
         error: error as Error,
         success: false,
@@ -128,13 +139,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Signing in with email:', email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (!error) {
+        console.log('Sign in successful, navigating to dashboard');
         navigate('/dashboard');
+      } else {
+        console.error('Sign in failed:', error);
       }
       
       return {
@@ -151,6 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    console.log('Signing out');
     await supabase.auth.signOut();
     navigate('/login');
   };
