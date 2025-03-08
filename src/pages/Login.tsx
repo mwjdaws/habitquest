@@ -52,61 +52,58 @@ const Login = () => {
       console.log(`Attempting to ${type === "login" ? "login" : "sign up"} with email: ${email}`);
       
       if (type === "signup") {
-        // For signup, show additional information to the user
-        setInfoMessage("Creating your account and setting up your profile...");
-      }
-      
-      const { error, success } = type === "login" 
-        ? await signIn(email, password)
-        : await signUp(email, password);
-      
-      if (error) {
-        console.error(`${type} error:`, error);
+        setInfoMessage("Creating your account...");
         
-        // Provide more helpful error messages
-        if (error.message.includes("invalid_credentials") || error.message.includes("Invalid login")) {
-          setErrorMessage(type === "login" 
-            ? "Invalid email or password. Please try again." 
-            : "Account creation failed. This email might already be registered.");
-        } else if (error.message.includes("rate limit")) {
-          setErrorMessage("Too many attempts. Please try again later.");
-        } else {
+        const { error, success } = await signUp(email, password);
+        
+        if (error) {
+          console.error(`Signup error:`, error);
           setErrorMessage(error.message);
+        } else if (success) {
+          toast({
+            title: "Account Created",
+            description: "Please check your email for a confirmation link.",
+          });
+          
+          // Switch to login tab after successful signup
+          const loginTab = document.querySelector('[data-state="inactive"][value="login"]') as HTMLElement;
+          if (loginTab) loginTab.click();
+          
+          setInfoMessage("Account created successfully. You can now log in.");
         }
+      } else {
+        // Login
+        setInfoMessage("Logging in...");
         
-        toast({
-          title: type === "login" ? "Login Failed" : "Sign Up Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else if (success) {
-        console.log(`${type} successful`);
-        setInfoMessage("");
-        toast({
-          title: type === "login" ? "Login Successful" : "Account Created",
-          description: type === "login" 
-            ? "Welcome back!" 
-            : "Your account has been created and you've been logged in.",
-        });
+        const { error, success } = await signIn(email, password);
+        
+        if (error) {
+          console.error(`Login error:`, error);
+          
+          if (error.message.includes("Invalid login credentials")) {
+            setErrorMessage("Invalid email or password. Please try again.");
+          } else {
+            setErrorMessage(error.message);
+          }
+        } else if (success) {
+          toast({
+            title: "Login Successful",
+            description: "Welcome back!",
+          });
+        }
       }
     } catch (error) {
       console.error("Unexpected error:", error);
-      setErrorMessage("An unexpected error occurred");
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
+      setErrorMessage("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Demo credentials for development only
   const useTestCredentials = () => {
     setEmail("test@example.com");
     setPassword("password123");
-    setInfoMessage("Using test credentials. In a production app, these would not be available.");
+    setInfoMessage("Using test credentials. Click Login to continue.");
   };
 
   return (
@@ -168,16 +165,14 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                {process.env.NODE_ENV === 'development' && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full mt-2" 
-                    onClick={useTestCredentials}
-                  >
-                    Use Test Credentials
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-2" 
+                  onClick={useTestCredentials}
+                >
+                  Use Test Credentials
+                </Button>
               </CardContent>
               <CardFooter>
                 <Button 
@@ -236,7 +231,7 @@ const Login = () => {
         </Tabs>
         
         <div className="text-center mt-6 text-sm text-muted-foreground">
-          <p>For testing, you can use these credentials:</p>
+          <p>For testing, use these credentials:</p>
           <p className="mt-1"><strong>Email:</strong> test@example.com</p>
           <p><strong>Password:</strong> password123</p>
         </div>

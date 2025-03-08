@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -86,71 +87,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Signing up with email:', email);
       
-      // Create test user if using test credentials
-      if (email === 'test@example.com' && password === 'password123') {
-        console.log('Using test credentials for sign up');
-        
-        // First check if the test user already exists by trying to sign in
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        // If sign in worked, the user exists already
-        if (!signInError) {
-          console.log('Test user already exists, signing in instead');
-          navigate('/dashboard');
-          return {
-            error: null,
-            success: true,
-          };
-        }
-        
-        // Otherwise create the test user
-        console.log('Creating test user account');
-      }
-      
-      // Try sign up with auto-confirm option
+      // Create a new user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            confirmed_at: new Date().toISOString(),
-          }
-        }
       });
       
       console.log('Sign up response:', data ? 'Success' : 'Failed', error ? `Error: ${error.message}` : 'No error');
       
-      if (!error && data.user) {
-        console.log('Sign up successful, attempting to sign in automatically');
-        // Auto sign in after signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (signInError) {
-          console.error('Auto sign in failed:', signInError);
-          return {
-            error: signInError,
-            success: false,
-          };
-        }
-        
-        console.log('Auto sign in successful, navigating to dashboard');
-        navigate('/dashboard');
+      if (error) {
         return {
-          error: null,
-          success: true,
+          error,
+          success: false,
         };
       }
       
+      toast({
+        title: "Signup Successful",
+        description: "Your account has been created. You can now log in.",
+      });
+      
       return {
-        error,
-        success: !error,
+        error: null,
+        success: true,
       };
     } catch (error) {
       console.error('Error in sign up process:', error);
@@ -165,30 +124,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Signing in with email:', email);
       
-      // Special handling for test account
+      // For testing purposes, we'll allow a test user
       if (email === 'test@example.com' && password === 'password123') {
         console.log('Using test credentials');
         
-        // First try to sign in normally
-        const { error } = await supabase.auth.signInWithPassword({
+        // Try to sign in with test credentials
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         
-        // If the test account doesn't exist yet, create it
-        if (error && error.message.toLowerCase().includes('invalid login')) {
-          console.log('Test account not found, creating it now');
+        // If sign in fails because user doesn't exist, create the test account
+        if (error) {
+          console.log('Test account not found or error occurred, creating it now');
           
-          // Create the test account
-          const { error: signUpError } = await supabase.auth.signUp({
+          // Create the test account with auto verification
+          const { error: signUpError } = await supabase.auth.admin.createUser({
             email,
             password,
-            options: {
-              emailRedirectTo: window.location.origin,
-              data: {
-                confirmed_at: new Date().toISOString(),
-              }
-            }
+            email_confirm: true
           });
           
           if (signUpError) {
@@ -212,23 +166,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               success: false,
             };
           }
-          
-          console.log('Successfully created and signed in with test account');
-          navigate('/dashboard');
-          return {
-            error: null,
-            success: true,
-          };
         }
         
-        if (!error) {
-          console.log('Sign in with test account successful');
-          navigate('/dashboard');
-        }
-        
+        console.log('Sign in successful with test account');
+        navigate('/dashboard');
         return {
-          error,
-          success: !error,
+          error: null,
+          success: true,
         };
       }
       
@@ -238,16 +182,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
       
-      if (!error) {
-        console.log('Sign in successful, navigating to dashboard');
-        navigate('/dashboard');
-      } else {
+      if (error) {
         console.error('Sign in failed:', error);
+        return {
+          error,
+          success: false,
+        };
       }
       
+      console.log('Sign in successful, navigating to dashboard');
+      navigate('/dashboard');
       return {
-        error,
-        success: !error,
+        error: null,
+        success: true,
       };
     } catch (error) {
       console.error('Error signing in:', error);
