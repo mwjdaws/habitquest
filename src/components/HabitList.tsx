@@ -4,12 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchHabits, getTodayFormatted, getCompletionsForDate, toggleHabitCompletion, Habit, HabitCompletion } from "@/lib/habits";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, Tag } from "lucide-react";
 import { HabitForm } from "./HabitForm";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { handleError } from "@/lib/error-utils";
+import { Badge } from "@/components/ui/badge";
 
 export function HabitList() {
   const [showForm, setShowForm] = useState(false);
@@ -152,7 +153,13 @@ function HabitItem({
       ) : (
         <CardContent className="p-4 flex items-center justify-between">
           <div className="flex-1">
-            <h3 className="font-medium">{habit.name}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium">{habit.name}</h3>
+              <Badge variant="outline" className="font-normal text-xs">
+                <Tag className="h-3 w-3 mr-1" />
+                {habit.category}
+              </Badge>
+            </div>
             {habit.description && (
               <p className="text-sm text-muted-foreground">{habit.description}</p>
             )}

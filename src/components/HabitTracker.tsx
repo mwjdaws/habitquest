@@ -1,12 +1,12 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Check, ChevronRight, Flame } from "lucide-react";
+import { Check, ChevronRight, Flame, Tag } from "lucide-react";
 import { fetchHabits, getCompletionsForDate, getTodayFormatted, getDayName, shouldShowHabitForDay, toggleHabitCompletion, Habit, HabitCompletion } from "@/lib/habits";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { Badge } from "@/components/ui/badge";
 
 export function HabitTracker() {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -60,7 +60,6 @@ export function HabitTracker() {
       if (isCompleted) {
         setCompletions(completions.filter(c => c.habit_id !== habitId));
       } else {
-        // Include user_id to fix TypeScript error
         const newCompletion: HabitCompletion = {
           id: crypto.randomUUID(),
           habit_id: habitId,
@@ -85,10 +84,8 @@ export function HabitTracker() {
     }
   };
 
-  // Filter habits for today
   const todaysHabits = habits.filter(habit => shouldShowHabitForDay(habit, todayName));
   
-  // Calculate progress
   const completedCount = todaysHabits.length > 0 
     ? todaysHabits.filter(habit => completions.some(c => c.habit_id === habit.id)).length 
     : 0;
@@ -201,8 +198,14 @@ export function HabitTracker() {
                     style={{ backgroundColor: `var(--${habit.color})` }}
                   />
                   <div>
-                    <div className="font-medium text-sm">
-                      {habit.name}
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium text-sm">
+                        {habit.name}
+                      </div>
+                      <Badge variant="outline" className="text-xs font-normal">
+                        <Tag className="h-3 w-3 mr-1" />
+                        {habit.category}
+                      </Badge>
                     </div>
                     {habit.description && (
                       <div className="text-xs text-muted-foreground">

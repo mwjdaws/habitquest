@@ -5,6 +5,7 @@ export type Habit = {
   description: string | null;
   frequency: string[];
   color: string;
+  category: string;
   user_id: string;
   created_at: string;
   updated_at: string;
@@ -26,4 +27,19 @@ export const weekdays = [
   "thursday",
   "friday",
   "saturday",
+];
+
+// Frequency types for habit creation
+export type FrequencyType = "daily" | "weekly" | "custom";
+
+// Default categories
+export const defaultCategories = [
+  "General",
+  "Health",
+  "Fitness",
+  "Productivity",
+  "Learning",
+  "Finance",
+  "Social",
+  "Other"
 ];

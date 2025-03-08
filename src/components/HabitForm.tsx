@@ -4,9 +4,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Check, Trash } from "lucide-react";
-import { weekdays, createHabit, updateHabit, deleteHabit, Habit } from "@/lib/habits";
+import { 
+  weekdays, 
+  createHabit, 
+  updateHabit, 
+  deleteHabit, 
+  Habit, 
+  FrequencyType,
+  defaultCategories 
+} from "@/lib/habits";
 import { toast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 const colorOptions = [
   { name: "Purple", value: "habit-purple" },
@@ -25,9 +40,20 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
   const [description, setDescription] = useState(habit?.description || "");
   const [frequency, setFrequency] = useState<string[]>(habit?.frequency || []);
   const [color, setColor] = useState(habit?.color || "habit-purple");
+  const [category, setCategory] = useState(habit?.category || "General");
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const getInitialFrequencyType = (): FrequencyType => {
+    if (!habit) return "daily";
+    if (habit.frequency.length === 0) return "daily";
+    if (habit.frequency.length === 7) return "daily";
+    if (habit.frequency.length === 1 && habit.frequency.includes("monday")) return "weekly";
+    return "custom";
+  };
+  
+  const [frequencyType, setFrequencyType] = useState<FrequencyType>(getInitialFrequencyType());
 
   const isEdit = !!habit;
 
@@ -36,6 +62,16 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
       setFrequency(frequency.filter((d) => d !== day));
     } else {
       setFrequency([...frequency, day]);
+    }
+  };
+
+  const handleFrequencyTypeChange = (type: FrequencyType) => {
+    setFrequencyType(type);
+    
+    if (type === "daily") {
+      setFrequency([]);
+    } else if (type === "weekly") {
+      setFrequency(["monday"]);
     }
   };
 
@@ -59,6 +95,7 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
         description: description || null,
         frequency,
         color,
+        category
       };
 
       if (isEdit) {
@@ -131,27 +168,72 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
           placeholder="Add details about your habit"
         />
       </div>
+      
+      <div>
+        <Label htmlFor="category">Category</Label>
+        <Select
+          value={category}
+          onValueChange={setCategory}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a category" />
+          </SelectTrigger>
+          <SelectContent>
+            {defaultCategories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <div>
         <Label>Frequency</Label>
-        <div className="grid grid-cols-7 gap-1 mt-2">
-          {weekdays.map((day) => (
-            <Button
-              key={day}
-              type="button"
-              variant={frequency.includes(day) ? "default" : "outline"}
-              className={`h-9 ${frequency.includes(day) ? "" : "border-dashed"}`}
-              onClick={() => handleFrequencyToggle(day)}
-            >
-              {day.slice(0, 3)}
-            </Button>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          {frequency.length === 0
-            ? "Track daily (no specific days selected)"
-            : `Track on selected days (${frequency.length} days)`}
-        </p>
+        <Tabs 
+          value={frequencyType} 
+          onValueChange={(value) => handleFrequencyTypeChange(value as FrequencyType)}
+          className="mt-2"
+        >
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="daily">Daily</TabsTrigger>
+            <TabsTrigger value="weekly">Weekly</TabsTrigger>
+            <TabsTrigger value="custom">Custom</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="daily">
+            <p className="text-sm text-muted-foreground mt-2">
+              This habit will be tracked every day
+            </p>
+          </TabsContent>
+          
+          <TabsContent value="weekly">
+            <p className="text-sm text-muted-foreground mt-2">
+              This habit will be tracked every Monday
+            </p>
+          </TabsContent>
+          
+          <TabsContent value="custom">
+            <div className="grid grid-cols-7 gap-1 mt-2">
+              {weekdays.map((day) => (
+                <Button
+                  key={day}
+                  type="button"
+                  variant={frequency.includes(day) ? "default" : "outline"}
+                  className={`h-9 ${frequency.includes(day) ? "" : "border-dashed"}`}
+                  onClick={() => handleFrequencyToggle(day)}
+                >
+                  {day.slice(0, 3)}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {frequency.length === 0
+                ? "Please select at least one day"
+                : `Track on selected days (${frequency.length} days)`}
+            </p>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <div>
@@ -228,7 +310,7 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
           Cancel
         </Button>
         <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : isEdit ? "Update Habit" : "Create Habit"}
+          {loading ? "Saving..." : isEdit ? "Update Habit" : "Save Habit"}
         </Button>
       </div>
     </form>
