@@ -28,24 +28,39 @@ export function useHabitData(onHabitChange?: () => void) {
   const { filterHabitsForToday } = useHabitFiltering();
   const today = getTodayFormatted();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const fetchInProgressRef = useRef(false);
 
   // Enhanced data loading with improved error handling, request cancellation, and versioning
   const loadData = useCallback(async (showLoading = true) => {
-    if (!isMountedRef.current) return;
+    if (!isMountedRef.current) {
+      console.log("Component unmounted, cancelling fetch");
+      return;
+    }
+    
+    // Prevent concurrent fetches
+    if (fetchInProgressRef.current) {
+      console.log("Data fetch already in progress, skipping");
+      return;
+    }
     
     // Request throttling (500ms)
     const now = Date.now();
     if (now - lastFetchTimeRef.current < 500) {
+      console.log("Throttling fetch request");
       return;
     }
+    
+    fetchInProgressRef.current = true;
     lastFetchTimeRef.current = now;
     
     // Increment data version to track current request
     const currentVersion = ++dataVersionRef.current;
+    console.log(`Starting data fetch (version ${currentVersion})`);
     
     // Cancel any in-flight requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      console.log("Aborting previous fetch");
     }
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
@@ -64,7 +79,12 @@ export function useHabitData(onHabitChange?: () => void) {
       ]);
       
       // Version check to prevent race conditions - only apply latest data
-      if (!isMountedRef.current || dataVersionRef.current !== currentVersion) {
+      if (!isMountedRef.current) {
+        console.log('Component unmounted during fetch, discarding results');
+        return;
+      }
+      
+      if (currentVersion !== dataVersionRef.current) {
         console.log('Ignoring stale data from version', currentVersion, 'current is', dataVersionRef.current);
         return;
       }
@@ -75,7 +95,6 @@ export function useHabitData(onHabitChange?: () => void) {
       
       // Apply filtered habits
       const filtered = filterHabitsForToday(habitsData);
-      console.log('Filtered habits for today:', filtered.length, 'out of', habitsData.length);
       
       // Update state in a single operation with immutable update pattern
       setState(prev => ({
@@ -93,16 +112,26 @@ export function useHabitData(onHabitChange?: () => void) {
       if (onHabitChange) {
         onHabitChange();
       }
+      
+      console.log(`Data fetch complete (version ${currentVersion}):`, {
+        habits: habitsData.length,
+        filtered: filtered.length,
+        completions: (completionsData || []).length,
+        failures: (failuresData || []).length
+      });
+      
     } catch (error) {
       // Only process error if the request wasn't aborted
       if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('Fetch aborted');
         return;
       }
       
       console.error("Error loading habit data:", error);
       
       // Version check for errors too
-      if (!isMountedRef.current || dataVersionRef.current !== currentVersion) {
+      if (!isMountedRef.current || currentVersion !== dataVersionRef.current) {
+        console.log('Ignoring error from stale request');
         return;
       }
       
@@ -121,6 +150,8 @@ export function useHabitData(onHabitChange?: () => void) {
           variant: "destructive",
         });
       }
+    } finally {
+      fetchInProgressRef.current = false;
     }
   }, [filterHabitsForToday, today, onHabitChange]);
 
@@ -134,14 +165,21 @@ export function useHabitData(onHabitChange?: () => void) {
   // Enhanced cleanup effect
   useEffect(() => {
     isMountedRef.current = true;
+    
+    // Initial data load on mount
+    const timeout = setTimeout(() => {
+      refreshData(true);
+    }, 50); // Small delay to allow component to fully mount
+    
     return () => {
       isMountedRef.current = false;
       // Cancel any in-flight requests on unmount
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      clearTimeout(timeout);
     };
-  }, []);
+  }, [refreshData]);
 
   // More efficient visibility change handler with better debouncing
   useEffect(() => {
@@ -156,6 +194,7 @@ export function useHabitData(onHabitChange?: () => void) {
         
         // Debounce the refresh to prevent multiple calls
         visibilityTimeout = window.setTimeout(() => {
+          console.log("Tab became visible, refreshing data");
           refreshData(false);
           visibilityTimeout = null;
         }, 300);

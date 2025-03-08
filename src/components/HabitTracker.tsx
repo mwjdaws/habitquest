@@ -40,11 +40,15 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     isInitialized
   } = useHabitTracking(onHabitChange);
 
-  // Force load data on component mount
+  // Initial data load on component mount - only once
   useEffect(() => {
-    console.log("HabitTracker mounted, triggering data refresh");
-    refreshData(true);
-  }, [refreshData]);
+    const timeout = setTimeout(() => {
+      console.log("HabitTracker mounted, triggering initial data refresh");
+      refreshData(true);
+    }, 200); // Small delay to avoid concurrent rendering issues
+    
+    return () => clearTimeout(timeout);
+  }, []); // Empty dependency array to ensure it runs only once
   
   // Optimized retry handler with debounce
   const handleRetry = useCallback(() => {
