@@ -1,5 +1,5 @@
 
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
 import { Badge } from "@/components/ui/badge";
 import { Tag, Zap } from "lucide-react";
@@ -13,7 +13,7 @@ type HabitItemProps = {
   onLogFailure: (habitId: string) => void;
 };
 
-// Using memo to prevent unnecessary re-renders
+// Using memo with custom comparison to prevent unnecessary re-renders
 export const HabitItem = memo(function HabitItem({
   habit,
   completions,
@@ -23,6 +23,10 @@ export const HabitItem = memo(function HabitItem({
 }: HabitItemProps) {
   const isCompleted = completions.some(c => c.habit_id === habit.id);
   const isFailed = failures.some(f => f.habit_id === habit.id);
+  
+  // Memoize handlers to prevent new function references on each render
+  const handleToggle = useCallback(() => onToggleCompletion(habit.id), [habit.id, onToggleCompletion]);
+  const handleFailure = useCallback(() => onLogFailure(habit.id), [habit.id, onLogFailure]);
   
   // Determine background color based on status
   const bgColorClass = isCompleted 
@@ -68,11 +72,26 @@ export const HabitItem = memo(function HabitItem({
           habitId={habit.id}
           isCompleted={isCompleted}
           isFailed={isFailed}
-          onToggleCompletion={onToggleCompletion}
-          onLogFailure={onLogFailure}
+          onToggleCompletion={handleToggle}
+          onLogFailure={handleFailure}
           failures={failures}
         />
       </div>
     </div>
   );
+}, (prevProps, nextProps) => {
+  // Custom comparison function to prevent unnecessary re-renders
+  const prevCompletionStatus = prevProps.completions.some(c => c.habit_id === prevProps.habit.id);
+  const nextCompletionStatus = nextProps.completions.some(c => c.habit_id === nextProps.habit.id);
+  
+  const prevFailureStatus = prevProps.failures.some(f => f.habit_id === prevProps.habit.id);
+  const nextFailureStatus = nextProps.failures.some(f => f.habit_id === nextProps.habit.id);
+  
+  // Key properties comparison to avoid costly deep comparisons
+  return prevProps.habit.id === nextProps.habit.id &&
+         prevProps.habit.name === nextProps.habit.name &&
+         prevProps.habit.color === nextProps.habit.color &&
+         prevProps.habit.current_streak === nextProps.habit.current_streak &&
+         prevCompletionStatus === nextCompletionStatus &&
+         prevFailureStatus === nextFailureStatus;
 });

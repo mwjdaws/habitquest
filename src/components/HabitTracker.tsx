@@ -8,14 +8,15 @@ import { HabitTrackerHeader } from "./habit-tracker/HabitTrackerHeader";
 import { LoadingState } from "./habit-list/LoadingState";
 import { ErrorState } from "./habit-tracker/ErrorState";
 import { EmptyState } from "./habit-tracker/EmptyState";
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import { toast } from "@/components/ui/use-toast";
 
 interface HabitTrackerProps {
   onHabitChange?: () => void;
 }
 
-export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
+// Using memo for HabitTracker component to prevent unnecessary re-renders
+export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   const [habitIdForFailure, setHabitIdForFailure] = useState<string | null>(null);
   const [habitNameForFailure, setHabitNameForFailure] = useState<string>("");
   
@@ -40,7 +41,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     refreshData(true);
   }, [refreshData]);
 
-  // Optimized failure handling
+  // Memoized failure handling
   const onLogFailure = useCallback((habitId: string) => {
     const habit = habits.find(h => h.id === habitId);
     if (habit) {
@@ -122,4 +123,4 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
       />
     </>
   );
-}
+});

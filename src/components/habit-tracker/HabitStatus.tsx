@@ -2,7 +2,7 @@
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HabitFailure } from "@/lib/habitTypes";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 
 type HabitStatusProps = {
   habitId: string;
@@ -13,7 +13,7 @@ type HabitStatusProps = {
   failures: HabitFailure[];
 };
 
-// Using memo to prevent unnecessary re-renders
+// Using memo with custom comparison to prevent unnecessary re-renders
 export const HabitStatus = memo(function HabitStatus({
   habitId,
   isCompleted,
@@ -27,6 +27,10 @@ export const HabitStatus = memo(function HabitStatus({
     failures.find(f => f.habit_id === habitId)?.reason || "Failed" : 
     null;
   
+  // Memoize handlers to prevent new function references on each render
+  const handleSkip = useCallback(() => onLogFailure(habitId), [habitId, onLogFailure]);
+  const handleToggle = useCallback(() => onToggleCompletion(habitId), [habitId, onToggleCompletion]);
+  
   // Early return pattern for improved readability and performance
   if (isFailed) {
     return (
@@ -36,10 +40,6 @@ export const HabitStatus = memo(function HabitStatus({
       </div>
     );
   }
-  
-  // Handler functions
-  const handleSkip = () => onLogFailure(habitId);
-  const handleToggle = () => onToggleCompletion(habitId);
   
   return (
     <>
@@ -71,4 +71,12 @@ export const HabitStatus = memo(function HabitStatus({
       </Button>
     </>
   );
+}, (prevProps, nextProps) => {
+  // Custom comparison function to prevent unnecessary re-renders
+  return prevProps.isCompleted === nextProps.isCompleted &&
+    prevProps.isFailed === nextProps.isFailed &&
+    prevProps.habitId === nextProps.habitId &&
+    // Only compare the relevant failure for this habit
+    JSON.stringify(prevProps.failures.find(f => f.habit_id === prevProps.habitId)) === 
+    JSON.stringify(nextProps.failures.find(f => f.habit_id === nextProps.habitId));
 });

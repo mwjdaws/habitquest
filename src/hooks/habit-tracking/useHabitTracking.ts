@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHabitData } from "./useHabitData";
 import { useHabitActions } from "./useHabitActions";
@@ -7,6 +7,8 @@ import { HabitTrackingResult } from "./types";
 
 export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResult {
   const { user } = useAuth();
+  const refreshTimerRef = useRef<number | null>(null);
+  
   const { 
     state,
     loadData,
@@ -20,9 +22,16 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     refreshData
   );
 
-  // Optimized refresh handler for external components
+  // Debounced refresh handler to prevent multiple rapid refreshes
   const handleRefresh = useCallback((showLoading = true) => {
-    refreshData(showLoading);
+    if (refreshTimerRef.current) {
+      window.clearTimeout(refreshTimerRef.current);
+    }
+    
+    refreshTimerRef.current = window.setTimeout(() => {
+      refreshData(showLoading);
+      refreshTimerRef.current = null;
+    }, 50); // Small delay to debounce multiple calls
   }, [refreshData]);
 
   // Load data on mount and when user changes
@@ -30,20 +39,24 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     if (user) {
       loadData(true);
       
-      // Reduced frequency of background refreshes (10 minutes)
+      // Reduced frequency of background refreshes (15 minutes)
       const refreshInterval = window.setInterval(() => {
         if (user && document.visibilityState === 'visible') {
           refreshData(false); // Silent refresh
         }
-      }, 600000); // 10 minutes
+      }, 900000); // 15 minutes
       
       return () => {
         window.clearInterval(refreshInterval);
+        // Clear any pending refresh timers
+        if (refreshTimerRef.current) {
+          window.clearTimeout(refreshTimerRef.current);
+        }
       };
     }
   }, [user, loadData, refreshData]);
   
-  // Memoize calculations for better performance
+  // Memoize calculations for better performance using a more stable dependency
   const { progress, completedCount } = useMemo(() => {
     const { filteredHabits, completions } = state;
     if (!filteredHabits.length) return { progress: 0, completedCount: 0 };

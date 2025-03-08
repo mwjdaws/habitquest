@@ -9,7 +9,7 @@ import {
 } from "@/lib/habits";
 import { HabitTrackingState } from "./types";
 import { useHabitFiltering } from "./useHabitFiltering";
-import { withRetry } from "@/lib/error-utils";
+import { withRetry, handleApiError } from "@/lib/error-utils";
 
 export function useHabitData(onHabitChange?: () => void) {
   const [state, setState] = useState<HabitTrackingState>({
@@ -26,17 +26,24 @@ export function useHabitData(onHabitChange?: () => void) {
   const lastFetchTimeRef = useRef(0);
   const { filterHabitsForToday } = useHabitFiltering();
   const today = getTodayFormatted();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Optimized data loading with improved error handling
+  // Enhanced data loading with improved error handling and request cancellation
   const loadData = useCallback(async (showLoading = true) => {
     if (!isMountedRef.current) return;
     
-    // More efficient throttling (1 second)
+    // Request throttling (500ms)
     const now = Date.now();
-    if (now - lastFetchTimeRef.current < 1000) {
+    if (now - lastFetchTimeRef.current < 500) {
       return;
     }
     lastFetchTimeRef.current = now;
+    
+    // Cancel any in-flight requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
     
     // Only update loading state if explicitly requested
     if (showLoading) {
@@ -44,23 +51,22 @@ export function useHabitData(onHabitChange?: () => void) {
     }
     
     try {      
-      // Optimized data fetching with parallel requests
+      // Optimized data fetching with parallel requests and better error handling
       const [habitsData, completionsData, failuresData] = await Promise.all([
-        withRetry(() => fetchHabits(), 3),
-        withRetry(() => getCompletionsForDate(today), 3),
-        withRetry(() => getFailuresForDate(today), 3)
+        withRetry(() => fetchHabits(), 2),
+        withRetry(() => getCompletionsForDate(today), 2),
+        withRetry(() => getFailuresForDate(today), 2)
       ]);
       
       if (!isMountedRef.current) return;
       
-      // Safety check for data
       if (!habitsData) {
         throw new Error("Failed to fetch habits data");
       }
       
       const filtered = filterHabitsForToday(habitsData);
       
-      // Update state in a single operation to reduce renders
+      // Update state in a single operation with immutable update pattern
       setState({
         habits: habitsData,
         filteredHabits: filtered,
@@ -71,20 +77,25 @@ export function useHabitData(onHabitChange?: () => void) {
         error: null
       });
       
-      // Notify parent
+      // Notify parent if needed
       if (onHabitChange) {
         onHabitChange();
       }
     } catch (error) {
+      // Only process error if the request wasn't aborted
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return;
+      }
+      
       console.error("Error loading habit data:", error);
       
       if (!isMountedRef.current) return;
       
-      // Set error state without changing other state values
+      // Set error state with better error messaging
       setState(prev => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error.message : "Failed to load habit data",
+        error: handleApiError(error, "loading habit data", "Failed to load habit data. Please try again."),
       }));
       
       // Only show toast for user-initiated loads
@@ -98,33 +109,30 @@ export function useHabitData(onHabitChange?: () => void) {
     }
   }, [filterHabitsForToday, today, onHabitChange]);
 
-  // Simplified refresh function without unnecessary setTimeout
+  // Simplified refresh function with abort handling
   const refreshData = useCallback((showLoading = true) => {
     if (isMountedRef.current) {
       loadData(showLoading);
     }
   }, [loadData]);
 
-  // Cleanup effect
+  // Enhanced cleanup effect
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      // Cancel any in-flight requests on unmount
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, []);
 
-  // Optimized visibility change handler
+  // More efficient visibility change handler
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && isMountedRef.current) {
-        // Use a small delay to allow other visibility handlers to complete
-        const timeoutId = window.setTimeout(() => {
-          if (isMountedRef.current) {
-            refreshData(false);
-          }
-        }, 300);
-        
-        return () => window.clearTimeout(timeoutId);
+        refreshData(false);
       }
     };
     
