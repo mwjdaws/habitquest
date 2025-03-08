@@ -20,7 +20,7 @@ import {
 import { Habit } from "@/lib/habitTypes";
 import { HabitList } from "./habit-tracker/HabitList";
 import { ProgressBar } from "./habit-tracker/ProgressBar";
-import { LoadingState } from "./habit-tracker/LoadingState";
+import { LoadingState } from "./habit-list/LoadingState";
 import { ErrorState } from "./habit-tracker/ErrorState";
 import { EmptyState } from "./habit-tracker/EmptyState";
 
@@ -37,38 +37,45 @@ export function HabitTracker() {
   const today = getTodayFormatted();
   const todayName = getDayName(new Date());
 
-  useEffect(() => {
-    const loadData = async () => {
-      if (!user) return;
-      
+  const loadData = async (showLoading = true) => {
+    if (!user) return;
+    
+    if (showLoading) {
       setLoading(true);
-      setError(null);
+    }
+    setError(null);
+    
+    try {
+      const [habitsData, completionsData, failuresData] = await Promise.all([
+        fetchHabits(),
+        getCompletionsForDate(today),
+        getFailuresForDate(today)
+      ]);
       
-      try {
-        const [habitsData, completionsData, failuresData] = await Promise.all([
-          fetchHabits(),
-          getCompletionsForDate(today),
-          getFailuresForDate(today)
-        ]);
-        
-        setHabits(habitsData);
-        setCompletions(completionsData);
-        setFailures(failuresData);
-      } catch (error) {
-        console.error("Error loading habit data:", error);
-        setError("Failed to load habit data. Please try again.");
-        toast({
-          title: "Error",
-          description: "Failed to load habit data",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+      setHabits(habitsData);
+      setCompletions(completionsData);
+      setFailures(failuresData);
+    } catch (error) {
+      console.error("Error loading habit data:", error);
+      setError("Failed to load habit data. Please try again.");
+      toast({
+        title: "Error",
+        description: "Failed to load habit data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadData();
   }, [user, today]);
+
+  // Add a function to refresh data without showing loading state
+  const refreshData = () => {
+    loadData(false);
+  };
 
   const handleToggleCompletion = async (habitId: string) => {
     if (!user) return;
@@ -95,8 +102,7 @@ export function HabitTracker() {
       }
       
       // Refresh habit data to get updated streak
-      const refreshedHabits = await fetchHabits();
-      setHabits(refreshedHabits);
+      refreshData();
       
       toast({
         title: isCompleted ? "Habit unmarked" : "Habit completed",
