@@ -8,7 +8,7 @@ import { HabitTrackerHeader } from "./habit-tracker/HabitTrackerHeader";
 import { LoadingState } from "./habit-list/LoadingState";
 import { ErrorState } from "./habit-tracker/ErrorState";
 import { EmptyState } from "./habit-tracker/EmptyState";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 interface HabitTrackerProps {
   onHabitChange?: () => void;
@@ -36,7 +36,13 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     isInitialized
   } = useHabitTracking(onHabitChange);
 
-  // One-time initial data fetch with proper cleanup
+  // Memoize the retry handler for better error recovery
+  const handleRetry = useCallback(() => {
+    console.log('Retrying data load after error...');
+    refreshData(true);
+  }, [refreshData]);
+
+  // One-time initial data fetch with proper cleanup and retry capability
   useEffect(() => {
     if (!initialFetchCompleted.current) {
       console.log('Setting up initial habit data fetch (one-time)');
@@ -52,15 +58,17 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     }
   }, [refreshData]);
 
-  // Handle loading state transitions with smoother timing
+  // Handle loading state transitions with better debouncing
   useEffect(() => {
     if (loadingTimerRef.current) {
       window.clearTimeout(loadingTimerRef.current);
     }
     
     if (loading) {
-      // Show loading state immediately when loading starts
-      setShowLoading(true);
+      // Only show loading after a small delay to prevent flicker on fast loads
+      loadingTimerRef.current = window.setTimeout(() => {
+        setShowLoading(true);
+      }, 100);
     } else if (isInitialized) {
       // Add a small delay before hiding loading state to prevent flicker
       loadingTimerRef.current = window.setTimeout(() => {
@@ -75,22 +83,22 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     };
   }, [loading, isInitialized]);
 
-  const onLogFailure = (habitId: string) => {
+  const onLogFailure = useCallback((habitId: string) => {
     const habit = habits.find(h => h.id === habitId);
     if (habit) {
       setHabitIdForFailure(habitId);
       setHabitNameForFailure(habit.name);
     }
-  };
+  }, [habits]);
 
-  const onConfirmFailure = async (habitId: string, reason: string) => {
+  const onConfirmFailure = useCallback(async (habitId: string, reason: string) => {
     await handleLogFailure(habitId, reason);
     setHabitIdForFailure(null);
-  };
+  }, [handleLogFailure]);
 
-  const onCancelFailure = () => {
+  const onCancelFailure = useCallback(() => {
     setHabitIdForFailure(null);
-  };
+  }, []);
 
   // Render appropriate content based on state
   const renderContent = () => {
@@ -99,7 +107,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     }
     
     if (error) {
-      return <ErrorState error={error} />;
+      return <ErrorState error={error} onRetry={handleRetry} />;
     }
     
     if (habits.length === 0) {

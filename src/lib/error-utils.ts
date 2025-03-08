@@ -1,4 +1,3 @@
-
 import { toast } from "@/components/ui/use-toast";
 
 /**
@@ -9,10 +8,10 @@ export function handleError(error: unknown, fallbackMessage = "An unexpected err
   // Extract error message
   const errorMessage = formatErrorMessage(error) || fallbackMessage;
   
-  // Log the error with details
+  // Log the error with additional context for better debugging
   console.error("Error occurred:", error);
   
-  // Show toast notification
+  // Show toast notification with consistent formatting
   toast({
     title: "Error",
     description: errorMessage,
@@ -36,6 +35,29 @@ export async function safeAsync<T>(
   } catch (error) {
     const errorMessage = handleError(error, fallbackMessage);
     return [null, errorMessage];
+  }
+}
+
+/**
+ * Enhanced retry mechanism for network operations
+ * @param fn The async function to execute
+ * @param retries Number of retry attempts
+ * @param delay Delay between retries in ms
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>, 
+  retries = 3, 
+  delay = 300
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries <= 0) throw error;
+    
+    console.log(`Operation failed, retrying... (${retries} attempts left)`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
+    return withRetry(fn, retries - 1, delay * 1.5); // Exponential backoff
   }
 }
 
@@ -109,4 +131,35 @@ export function formatErrorMessage(error: unknown): string {
   } 
   
   return "An unexpected error occurred";
+}
+
+/**
+ * Gracefully handle API errors with recovery options
+ */
+export function handleApiError(error: unknown, operation: string): void {
+  const isNetwork = isNetworkError(error);
+  const isAuth = isAuthError(error);
+  
+  console.error(`API Error during ${operation}:`, error);
+  
+  if (isNetwork) {
+    toast({
+      title: "Connection Issue",
+      description: "We're having trouble connecting to the server. Please check your internet connection.",
+      variant: "destructive",
+    });
+  } else if (isAuth) {
+    toast({
+      title: "Authentication Required",
+      description: "Please sign in again to continue.",
+      variant: "destructive",
+    });
+    // Could trigger a refresh of auth token or redirect to login here
+  } else {
+    toast({
+      title: "Error",
+      description: `Failed to ${operation}. Please try again later.`,
+      variant: "destructive",
+    });
+  }
 }

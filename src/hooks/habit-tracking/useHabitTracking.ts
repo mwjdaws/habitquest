@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHabitData } from "./useHabitData";
 import { useHabitActions } from "./useHabitActions";
@@ -19,19 +19,27 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
   
   const [isInitialLoadSetUp, setIsInitialLoadSetUp] = useState(false);
 
-  // Public method to refresh data
+  // Public method to refresh data with improved throttling
   const refreshData = useCallback((showLoading = false) => {
+    // Add timestamp-based throttling to prevent excessive refreshes
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < 800) {
+      console.log('Throttling refresh - too many calls in short period');
+      return;
+    }
+    lastFetchTimeRef.current = now;
+    
     debouncedLoadData(showLoading);
-  }, [debouncedLoadData]);
+  }, [debouncedLoadData, lastFetchTimeRef]);
   
-  // Fix: Pass the state directly instead of trying to use a callback pattern incorrectly
+  // Pass the state and setState directly to useHabitActions
   const { handleToggleCompletion, handleLogFailure } = useHabitActions(
     state,
-    setState => setState, // Just pass the setState function directly
+    setState => setState,
     refreshData
   );
 
-  // Only load data when component mounts and user is authenticated
+  // Optimize initial data loading with better cleanup
   useEffect(() => {
     isMountedRef.current = true;
     
@@ -46,7 +54,7 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
       }, 500);
     }
     
-    // Set up sensible interval for periodic refreshes (every 5 minutes)
+    // Set up sensible interval for periodic refreshes with a longer interval
     const refreshInterval = window.setInterval(() => {
       if (user && initialLoadCompletedRef.current && isMountedRef.current) {
         loadData(false); // Silent refresh
@@ -62,16 +70,20 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
       
       window.clearInterval(refreshInterval);
     };
-  }, [user, loadData, dataLoadTimerRef, isInitialLoadSetUp]);
+  }, [user, loadData, dataLoadTimerRef, isInitialLoadSetUp, initialLoadCompletedRef]);
   
-  // Calculate progress
-  const completedCount = state.filteredHabits.length > 0 
-    ? state.filteredHabits.filter(habit => state.completions.some(c => c.habit_id === habit.id)).length 
-    : 0;
+  // Memoize calculated values to prevent unnecessary recalculations
+  const { progress, completedCount } = useMemo(() => {
+    const completed = state.filteredHabits.length > 0 
+      ? state.filteredHabits.filter(habit => state.completions.some(c => c.habit_id === habit.id)).length 
+      : 0;
+      
+    const prog = state.filteredHabits.length > 0 
+      ? Math.round((completed / state.filteredHabits.length) * 100) 
+      : 0;
     
-  const progress = state.filteredHabits.length > 0 
-    ? Math.round((completedCount / state.filteredHabits.length) * 100) 
-    : 0;
+    return { progress: prog, completedCount: completed };
+  }, [state.filteredHabits, state.completions]);
 
   return {
     habits: state.filteredHabits,
