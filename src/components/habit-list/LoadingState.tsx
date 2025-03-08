@@ -17,7 +17,7 @@ export function LoadingState() {
       <div className="space-y-3 w-full">
         {[...Array(3)].map((_, index) => (
           <div key={index} className="flex items-center w-full">
-            <Skeleton className={`h-16 ${index === 0 ? 'w-full' : index === 1 ? 'w-[95%]' : 'w-[98%]'} rounded-md`} />
+            <Skeleton className="h-16 w-full rounded-md" />
           </div>
         ))}
       </div>

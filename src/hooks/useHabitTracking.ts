@@ -24,53 +24,38 @@ export function useHabitTracking(onHabitChange?: () => void) {
   const [isInitialized, setIsInitialized] = useState(false);
   
   const { user } = useAuth();
-  const dataRefreshTimerRef = useRef<number | null>(null);
-  const initialLoadAttemptedRef = useRef(false);
-  const isLoadingRef = useRef(true);
   const lastFetchTimeRef = useRef<number>(0);
+  const isMountedRef = useRef(true);
+  const initialLoadCompletedRef = useRef(false);
+  const dataLoadTimerRef = useRef<number | null>(null);
   
   const today = getTodayFormatted();
   const todayName = getDayName(new Date());
 
-  // Add debounce to prevent multiple rapid data loads
-  const debouncedLoadData = useCallback((showLoading = true) => {
-    // Prevent multiple rapid fetches - only fetch if it's been at least 3 seconds since last fetch
-    const now = Date.now();
-    if (now - lastFetchTimeRef.current < 3000 && lastFetchTimeRef.current !== 0) {
-      console.log('Debouncing data fetch - too soon since last fetch');
-      return;
-    }
-    
-    lastFetchTimeRef.current = now;
-    
-    // Clear any existing timer
-    if (dataRefreshTimerRef.current) {
-      window.clearTimeout(dataRefreshTimerRef.current);
-      dataRefreshTimerRef.current = null;
-    }
-    
-    // Set a small delay before actually loading data to debounce
-    dataRefreshTimerRef.current = window.setTimeout(() => {
-      loadData(showLoading);
-    }, 300);
-  }, []);
-
-  // Function to apply frequency filtering to habits
+  // Create a dedicated function to filter habits for today
   const filterHabitsForToday = useCallback((allHabits: Habit[]) => {
     if (!allHabits || !allHabits.length) return [];
     
-    const filtered = allHabits.filter(habit => shouldShowHabitForDay(habit, todayName));
-    console.log(`Today (${todayName}): Filtered ${allHabits.length} habits to ${filtered.length} for today`);
-    return filtered;
+    return allHabits.filter(habit => {
+      const shouldShow = shouldShowHabitForDay(habit, todayName);
+      return shouldShow;
+    });
   }, [todayName]);
 
-  // Function to load data with optimized error handling
+  // Dramatically improved data loading with proper debouncing and error handling
   const loadData = useCallback(async (showLoading = true) => {
-    if (!user) return;
+    if (!user || !isMountedRef.current) return;
+    
+    // Strict debouncing: Prevent rapid successive calls
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < 3000) {
+      console.log('Skipping data fetch - too soon since last fetch');
+      return;
+    }
+    lastFetchTimeRef.current = now;
     
     // Track loading state
     if (showLoading) {
-      isLoadingRef.current = true;
       setLoading(true);
     }
     setError(null);
@@ -78,33 +63,26 @@ export function useHabitTracking(onHabitChange?: () => void) {
     try {      
       console.log('Fetching habit data...');
       
-      // Use Promise.all to fetch data in parallel
-      const results = await Promise.allSettled([
+      // Use Promise.all to fetch data in parallel for better performance
+      const [habitsData, completionsData, failuresData] = await Promise.all([
         fetchHabits(),
         getCompletionsForDate(today),
         getFailuresForDate(today)
       ]);
       
-      // Process results safely - prevent undefined results
-      const habitsData = results[0].status === 'fulfilled' ? results[0].value : [];
-      const completionsData = results[1].status === 'fulfilled' ? results[1].value : [];
-      const failuresData = results[2].status === 'fulfilled' ? results[2].value : [];
+      // Only update state if component is still mounted
+      if (!isMountedRef.current) return;
       
-      // Log any failures for debugging
-      results.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          console.error(`Failed to fetch data for request ${index}:`, result.reason);
-        }
-      });
+      const filtered = filterHabitsForToday(habitsData || []);
+      console.log(`Loaded ${habitsData.length} habits, filtered to ${filtered.length} for today (${todayName})`);
       
-      // Only update state for successful fetches
-      console.log(`Loaded ${habitsData.length} habits, ${completionsData.length} completions, ${failuresData.length} failures`);
-      
+      // Update all state at once to prevent multiple rerenders
       setHabits(habitsData || []);
-      setFilteredHabits(filterHabitsForToday(habitsData || []));
+      setFilteredHabits(filtered);
       setCompletions(completionsData || []);
       setFailures(failuresData || []);
       setIsInitialized(true);
+      initialLoadCompletedRef.current = true;
       
       // Notify parent components that data has changed
       if (onHabitChange) {
@@ -112,52 +90,72 @@ export function useHabitTracking(onHabitChange?: () => void) {
       }
     } catch (error) {
       console.error("Error loading habit data:", error);
+      
+      if (!isMountedRef.current) return;
+      
       setError("Failed to load habit data. Please try again.");
-      toast({
-        title: "Error",
-        description: "Failed to load habit data. Please refresh.",
-        variant: "destructive",
-      });
+      
+      // Only show toast for user-initiated loads
+      if (showLoading) {
+        toast({
+          title: "Error",
+          description: "Failed to load habit data. Please refresh.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      // Add a small delay to prevent flashing of loading state
-      dataRefreshTimerRef.current = window.setTimeout(() => {
-        isLoadingRef.current = false;
-        setLoading(false);
-      }, 400);
-    }
-  }, [user, today, onHabitChange, filterHabitsForToday]);
-
-  // Initial load
-  useEffect(() => {
-    if (user && !initialLoadAttemptedRef.current) {
-      initialLoadAttemptedRef.current = true;
+      // Ensure loading state is cleared with slight delay to prevent flickering
+      if (dataLoadTimerRef.current) {
+        window.clearTimeout(dataLoadTimerRef.current);
+      }
       
-      // Small delay before the initial load to ensure auth is fully complete
-      const initialLoadTimer = setTimeout(() => {
-        debouncedLoadData(true);
-      }, 400);
-      
-      return () => {
-        clearTimeout(initialLoadTimer);
-        if (dataRefreshTimerRef.current) {
-          window.clearTimeout(dataRefreshTimerRef.current);
-          dataRefreshTimerRef.current = null;
+      dataLoadTimerRef.current = window.setTimeout(() => {
+        if (isMountedRef.current) {
+          setLoading(false);
         }
-      };
+      }, 300);
     }
-  }, [user, debouncedLoadData]);
+  }, [user, today, todayName, onHabitChange, filterHabitsForToday]);
 
-  // Reload data when date changes
+  // Improved debounce function that prevents rapid calls
+  const debouncedLoadData = useCallback((showLoading = true) => {
+    if (dataLoadTimerRef.current) {
+      window.clearTimeout(dataLoadTimerRef.current);
+    }
+    
+    dataLoadTimerRef.current = window.setTimeout(() => {
+      loadData(showLoading);
+    }, 300);
+  }, [loadData]);
+
+  // Only load data when component mounts and user is authenticated
   useEffect(() => {
-    if (initialLoadAttemptedRef.current && user && isInitialized) {
-      debouncedLoadData(true);
+    isMountedRef.current = true;
+    
+    if (user && !initialLoadCompletedRef.current) {
+      // Small delay before initial load to ensure everything is ready
+      dataLoadTimerRef.current = window.setTimeout(() => {
+        loadData(true);
+      }, 500);
     }
-  }, [today, user, debouncedLoadData, isInitialized]);
-
-  // Public method to refresh data without showing loading state
-  const refreshData = useCallback((showLoading = false) => {
-    return debouncedLoadData(showLoading);
-  }, [debouncedLoadData]);
+    
+    // Set up sensible interval for periodic refreshes (every 5 minutes)
+    const refreshInterval = window.setInterval(() => {
+      if (user && initialLoadCompletedRef.current && isMountedRef.current) {
+        loadData(false); // Silent refresh
+      }
+    }, 300000); // 5 minutes
+    
+    return () => {
+      isMountedRef.current = false;
+      
+      if (dataLoadTimerRef.current) {
+        window.clearTimeout(dataLoadTimerRef.current);
+      }
+      
+      window.clearInterval(refreshInterval);
+    };
+  }, [user, loadData]);
 
   // Handle toggling habit completion with optimistic updates
   const handleToggleCompletion = async (habitId: string) => {
@@ -187,7 +185,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
       await toggleHabitCompletion(habitId, today, isCompleted);
       
       // Refresh habit data to get updated streak (but don't show loading state)
-      refreshData(false);
+      debouncedLoadData(false);
       
       toast({
         title: isCompleted ? "Habit unmarked" : "Habit completed",
@@ -197,7 +195,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
       console.error("Error toggling habit completion:", error);
       
       // Rollback optimistic update
-      refreshData(false);
+      debouncedLoadData(false);
       
       toast({
         title: "Error",
@@ -207,7 +205,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
     }
   };
 
-  // Handle logging habit failure with optimistic updates
+  // Handle logging habit failure
   const handleLogFailure = async (habitId: string, reason: string) => {
     if (!user) return;
     
@@ -232,7 +230,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
       await logHabitFailure(habitId, today, reason);
       
       // Refresh to update streaks
-      refreshData(false);
+      debouncedLoadData(false);
       
       toast({
         title: "Reason logged",
@@ -242,7 +240,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
       console.error("Error logging failure:", error);
       
       // Rollback optimistic update
-      refreshData(false);
+      debouncedLoadData(false);
       
       toast({
         title: "Error",
@@ -252,10 +250,16 @@ export function useHabitTracking(onHabitChange?: () => void) {
     }
   };
   
+  // Public method to refresh data
+  const refreshData = useCallback((showLoading = false) => {
+    debouncedLoadData(showLoading);
+  }, [debouncedLoadData]);
+  
   // Calculate progress
   const completedCount = filteredHabits.length > 0 
     ? filteredHabits.filter(habit => completions.some(c => c.habit_id === habit.id)).length 
     : 0;
+    
   const progress = filteredHabits.length > 0 
     ? Math.round((completedCount / filteredHabits.length) * 100) 
     : 0;
@@ -264,7 +268,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
     habits: filteredHabits,
     completions,
     failures,
-    loading: isLoadingRef.current, // Use ref for more stable loading state
+    loading,
     error,
     progress,
     completedCount,

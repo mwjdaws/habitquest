@@ -19,7 +19,6 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   const [habitNameForFailure, setHabitNameForFailure] = useState<string>("");
   const [showLoading, setShowLoading] = useState(true);
   const loadingTimerRef = useRef<number | null>(null);
-  const refreshIntervalRef = useRef<number | null>(null);
   
   const { 
     habits,
@@ -36,32 +35,18 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     isInitialized
   } = useHabitTracking(onHabitChange);
 
-  // Force a refresh when the component mounts - with debounce to prevent excessive calls
+  // Force a refresh with controlled timing to prevent excessive calls
   useEffect(() => {
-    // Clear any existing intervals when component unmounts or remounts
-    if (refreshIntervalRef.current) {
-      window.clearInterval(refreshIntervalRef.current);
-      refreshIntervalRef.current = null;
-    }
+    console.log('Setting up initial habit data fetch');
     
-    // Initial data fetch - with small delay to ensure auth is ready
-    const initialLoadTimeout = window.setTimeout(() => {
-      console.log('Initial habit data fetch');
+    // Clear any existing timers when component unmounts or remounts
+    const initialLoadTimer = window.setTimeout(() => {
+      console.log('Executing initial habit data fetch');
       refreshData(true);
-      
-      // Set up regular refresh interval (every 2 minutes to reduce load)
-      refreshIntervalRef.current = window.setInterval(() => {
-        console.log('Silent refresh of habit data');
-        refreshData(false); // Silent refresh
-      }, 120000); // 2 minutes
-    }, 500);
+    }, 800); // Increased delay to ensure auth is fully ready
     
     return () => {
-      window.clearTimeout(initialLoadTimeout);
-      if (refreshIntervalRef.current) {
-        window.clearInterval(refreshIntervalRef.current);
-        refreshIntervalRef.current = null;
-      }
+      window.clearTimeout(initialLoadTimer);
     };
   }, [refreshData]);
 
