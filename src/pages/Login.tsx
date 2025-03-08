@@ -6,15 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Flame } from "lucide-react";
+import { Flame, AlertCircle, Info } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertCircle } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
   const { toast } = useToast();
   const { signIn, signUp } = useAuth();
 
@@ -46,9 +46,15 @@ const Login = () => {
 
     setLoading(true);
     setErrorMessage("");
+    setInfoMessage("");
     
     try {
       console.log(`Attempting to ${type === "login" ? "login" : "sign up"} with email: ${email}`);
+      
+      if (type === "signup") {
+        // For signup, show additional information to the user
+        setInfoMessage("Creating your account and setting up your profile...");
+      }
       
       const { error, success } = type === "login" 
         ? await signIn(email, password)
@@ -56,7 +62,18 @@ const Login = () => {
       
       if (error) {
         console.error(`${type} error:`, error);
-        setErrorMessage(error.message);
+        
+        // Provide more helpful error messages
+        if (error.message.includes("invalid_credentials") || error.message.includes("Invalid login")) {
+          setErrorMessage(type === "login" 
+            ? "Invalid email or password. Please try again." 
+            : "Account creation failed. This email might already be registered.");
+        } else if (error.message.includes("rate limit")) {
+          setErrorMessage("Too many attempts. Please try again later.");
+        } else {
+          setErrorMessage(error.message);
+        }
+        
         toast({
           title: type === "login" ? "Login Failed" : "Sign Up Failed",
           description: error.message,
@@ -64,6 +81,7 @@ const Login = () => {
         });
       } else if (success) {
         console.log(`${type} successful`);
+        setInfoMessage("");
         toast({
           title: type === "login" ? "Login Successful" : "Account Created",
           description: type === "login" 
@@ -82,6 +100,13 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Demo credentials for development only
+  const useTestCredentials = () => {
+    setEmail("test@example.com");
+    setPassword("password123");
+    setInfoMessage("Using test credentials. In a production app, these would not be available.");
   };
 
   return (
@@ -105,6 +130,13 @@ const Login = () => {
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2 text-red-800">
               <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
+            </div>
+          )}
+          
+          {infoMessage && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2 text-blue-800">
+              <Info className="h-5 w-5 shrink-0 mt-0.5" />
+              <span>{infoMessage}</span>
             </div>
           )}
           
@@ -136,6 +168,16 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
+                {process.env.NODE_ENV === 'development' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full mt-2" 
+                    onClick={useTestCredentials}
+                  >
+                    Use Test Credentials
+                  </Button>
+                )}
               </CardContent>
               <CardFooter>
                 <Button 
@@ -192,6 +234,12 @@ const Login = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        <div className="text-center mt-6 text-sm text-muted-foreground">
+          <p>For testing, you can use these credentials:</p>
+          <p className="mt-1"><strong>Email:</strong> test@example.com</p>
+          <p><strong>Password:</strong> password123</p>
+        </div>
       </div>
     </div>
   );
