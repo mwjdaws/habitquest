@@ -1,21 +1,12 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { HabitTracker } from "@/components/HabitTracker";
 
 const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Today's Habits</CardTitle>
-            <CardDescription>Your habit progress for today</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Connect to Supabase to track your habits
-            </p>
-          </CardContent>
-        </Card>
+        <HabitTracker />
         
         <Card>
           <CardHeader>

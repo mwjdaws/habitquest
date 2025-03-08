@@ -1,5 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { HabitList } from "@/components/HabitList";
 
 const Habits = () => {
   return (
@@ -10,9 +11,7 @@ const Habits = () => {
           <CardDescription>Track your daily habits</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Connect to Supabase to start tracking your habits
-          </p>
+          <HabitList />
         </CardContent>
       </Card>
     </div>

@@ -10,3 +10,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// CSS variable mapping for habit colors
+document.documentElement.style.setProperty('--habit-purple', '#8B5CF6');
+document.documentElement.style.setProperty('--habit-soft-blue', '#0EA5E9');
+document.documentElement.style.setProperty('--habit-orange', '#F97316');
