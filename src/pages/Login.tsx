@@ -1,13 +1,12 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Flame, AlertCircle, Info, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import AuthLayout from "@/components/auth/AuthLayout";
+import LoginForm from "@/components/auth/LoginForm";
+import SignupForm from "@/components/auth/SignupForm";
+import StatusMessage from "@/components/auth/StatusMessage";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -131,153 +130,44 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-habit-soft-purple to-habit-soft-blue">
-      <div className="max-w-md w-full px-4">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-2">
-            <Flame className="h-12 w-12 text-habit-purple" />
-          </div>
-          <h1 className="text-3xl font-bold">HabitQuest</h1>
-          <p className="text-muted-foreground">Track habits, achieve goals</p>
-        </div>
+    <AuthLayout>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="login">Login</TabsTrigger>
+          <TabsTrigger value="signup">Sign Up</TabsTrigger>
+        </TabsList>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
-          
-          {errorMessage && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2 text-red-800">
-              <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
-          
-          {infoMessage && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2 text-blue-800">
-              <Info className="h-5 w-5 shrink-0 mt-0.5" />
-              <span>{infoMessage}</span>
-            </div>
-          )}
-          
-          {successMessage && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md flex items-start gap-2 text-green-800">
-              <CheckCircle className="h-5 w-5 shrink-0 mt-0.5" />
-              <span>{successMessage}</span>
-            </div>
-          )}
-          
-          <TabsContent value="login">
-            <Card>
-              <CardHeader>
-                <CardTitle>Login</CardTitle>
-                <CardDescription>
-                  Enter your credentials to access your account
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input 
-                    id="password" 
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full mt-2" 
-                  onClick={useTestCredentials}
-                >
-                  Use Test Credentials
-                </Button>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  className="w-full" 
-                  onClick={() => handleAuth("login")}
-                  disabled={loading}
-                >
-                  {loading ? "Logging in..." : "Login"}
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="signup">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create an account</CardTitle>
-                <CardDescription>
-                  Enter your information to create a new account
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input 
-                    id="signup-email" 
-                    type="email" 
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input 
-                    id="signup-password" 
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="6+ characters"
-                  />
-                  <p className="text-xs text-muted-foreground">Password must be at least 6 characters</p>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full mt-2" 
-                  onClick={useTestCredentials}
-                >
-                  Use Test Credentials
-                </Button>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  className="w-full" 
-                  onClick={() => handleAuth("signup")}
-                  disabled={loading}
-                >
-                  {loading ? "Creating account..." : "Create account"}
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <StatusMessage 
+          errorMessage={errorMessage}
+          infoMessage={infoMessage}
+          successMessage={successMessage}
+        />
         
-        <div className="text-center mt-6 text-sm text-muted-foreground">
-          <p className="mb-2">For quick testing, use these credentials:</p>
-          <div className="p-3 bg-gray-100 rounded-md">
-            <p><strong>Email:</strong> test@example.com</p>
-            <p><strong>Password:</strong> password123</p>
-          </div>
-        </div>
-      </div>
-    </div>
+        <TabsContent value="login">
+          <LoginForm
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            loading={loading}
+            handleAuth={handleAuth}
+            useTestCredentials={useTestCredentials}
+          />
+        </TabsContent>
+        
+        <TabsContent value="signup">
+          <SignupForm
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            loading={loading}
+            handleAuth={handleAuth}
+            useTestCredentials={useTestCredentials}
+          />
+        </TabsContent>
+      </Tabs>
+    </AuthLayout>
   );
 };
 
