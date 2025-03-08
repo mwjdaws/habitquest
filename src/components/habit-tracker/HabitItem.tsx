@@ -1,4 +1,5 @@
 
+import { memo } from 'react';
 import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
 import { Badge } from "@/components/ui/badge";
 import { Tag, Zap } from "lucide-react";
@@ -12,7 +13,8 @@ type HabitItemProps = {
   onLogFailure: (habitId: string) => void;
 };
 
-export function HabitItem({
+// Using memo to prevent unnecessary re-renders
+export const HabitItem = memo(function HabitItem({
   habit,
   completions,
   failures,
@@ -22,13 +24,16 @@ export function HabitItem({
   const isCompleted = completions.some(c => c.habit_id === habit.id);
   const isFailed = failures.some(f => f.habit_id === habit.id);
   
+  // Determine background color based on status
+  const bgColorClass = isCompleted 
+    ? "bg-green-50 border-green-200" 
+    : isFailed 
+      ? "bg-red-50 border-red-200" 
+      : "bg-background";
+  
   return (
     <div 
-      key={habit.id} 
-      className={`p-2 rounded-md flex items-center justify-between gap-4 border ${
-        isCompleted ? "bg-green-50 border-green-200" : 
-        isFailed ? "bg-red-50 border-red-200" : "bg-background"
-      }`}
+      className={`p-2 rounded-md flex items-center justify-between gap-4 border ${bgColorClass}`}
     >
       <div className="flex items-center gap-3">
         <div 
@@ -70,4 +75,4 @@ export function HabitItem({
       </div>
     </div>
   );
-}
+});

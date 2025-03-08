@@ -34,15 +34,13 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     isInitialized
   } = useHabitTracking(onHabitChange);
 
-  // Simplified retry handler
+  // Optimized retry handler
   const handleRetry = useCallback(() => {
-    toast({
-      title: "Refreshing",
-      description: "Refreshing your habit data..."
-    });
+    toast({ title: "Refreshing", description: "Refreshing your habit data..." });
     refreshData(true);
   }, [refreshData]);
 
+  // Optimized failure handling
   const onLogFailure = useCallback((habitId: string) => {
     const habit = habits.find(h => h.id === habitId);
     if (habit) {
@@ -56,45 +54,61 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     setHabitIdForFailure(null);
   }, [handleLogFailure]);
 
-  // Simplified content renderer
-  const renderContent = () => {
-    if (loading || !isInitialized) {
-      return <LoadingState />;
-    }
-    
-    if (error) {
-      return <ErrorState error={error} onRetry={handleRetry} />;
-    }
-    
-    if (habits.length === 0) {
-      return <EmptyState hasHabits={totalCount > 0} />;
-    }
-    
+  const onCancelFailure = useCallback(() => {
+    setHabitIdForFailure(null);
+  }, []);
+
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setHabitIdForFailure(null);
+  }, []);
+
+  // More efficient content rendering with early returns
+  if (loading || !isInitialized) {
     return (
-      <>
-        <ProgressBar 
-          progress={progress} 
-          completedCount={completedCount} 
-          totalCount={totalCount} 
-        />
-        
-        <HabitList
-          habits={habits}
-          completions={completions}
-          failures={failures}
-          onToggleCompletion={handleToggleCompletion}
-          onLogFailure={onLogFailure}
-        />
-      </>
+      <Card className="w-full">
+        <HabitTrackerHeader totalHabits={totalCount} isLoading={true} />
+        <CardContent>
+          <LoadingState />
+        </CardContent>
+      </Card>
     );
-  };
+  }
+  
+  if (error) {
+    return (
+      <Card className="w-full">
+        <HabitTrackerHeader totalHabits={totalCount} isLoading={false} />
+        <CardContent>
+          <ErrorState error={error} onRetry={handleRetry} />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
       <Card className="w-full">
-        <HabitTrackerHeader totalHabits={totalCount} isLoading={loading || !isInitialized} />
+        <HabitTrackerHeader totalHabits={totalCount} isLoading={false} />
         <CardContent>
-          {renderContent()}
+          {habits.length === 0 ? (
+            <EmptyState hasHabits={totalCount > 0} />
+          ) : (
+            <>
+              <ProgressBar 
+                progress={progress} 
+                completedCount={completedCount} 
+                totalCount={totalCount} 
+              />
+              
+              <HabitList
+                habits={habits}
+                completions={completions}
+                failures={failures}
+                onToggleCompletion={handleToggleCompletion}
+                onLogFailure={onLogFailure}
+              />
+            </>
+          )}
         </CardContent>
       </Card>
       
@@ -102,11 +116,9 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
         habitId={habitIdForFailure || ""}
         habitName={habitNameForFailure}
         open={!!habitIdForFailure}
-        onOpenChange={(open) => {
-          if (!open) setHabitIdForFailure(null);
-        }}
+        onOpenChange={handleDialogOpenChange}
         onConfirm={onConfirmFailure}
-        onCancel={() => setHabitIdForFailure(null)}
+        onCancel={onCancelFailure}
       />
     </>
   );

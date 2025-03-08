@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHabitData } from "./useHabitData";
 import { useHabitActions } from "./useHabitActions";
@@ -13,24 +13,29 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     refreshData
   } = useHabitData(onHabitChange);
   
-  // Pass the state and setState directly to useHabitActions
+  // Get actions with optimized state updates
   const { handleToggleCompletion, handleLogFailure } = useHabitActions(
     state,
-    setState => setState,
+    prev => prev,
     refreshData
   );
+
+  // Optimized refresh handler for external components
+  const handleRefresh = useCallback((showLoading = true) => {
+    refreshData(showLoading);
+  }, [refreshData]);
 
   // Load data on mount and when user changes
   useEffect(() => {
     if (user) {
       loadData(true);
       
-      // Set up periodic refresh
+      // Reduced frequency of background refreshes (10 minutes)
       const refreshInterval = window.setInterval(() => {
         if (user && document.visibilityState === 'visible') {
           refreshData(false); // Silent refresh
         }
-      }, 300000); // 5 minutes
+      }, 600000); // 10 minutes
       
       return () => {
         window.clearInterval(refreshInterval);
@@ -38,17 +43,18 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     }
   }, [user, loadData, refreshData]);
   
-  // Memoize calculated values
+  // Memoize calculations for better performance
   const { progress, completedCount } = useMemo(() => {
-    const completed = state.filteredHabits.length > 0 
-      ? state.filteredHabits.filter(habit => state.completions.some(c => c.habit_id === habit.id)).length 
-      : 0;
-      
-    const prog = state.filteredHabits.length > 0 
-      ? Math.round((completed / state.filteredHabits.length) * 100) 
-      : 0;
+    const { filteredHabits, completions } = state;
+    if (!filteredHabits.length) return { progress: 0, completedCount: 0 };
     
-    return { progress: prog, completedCount: completed };
+    const completed = filteredHabits.filter(
+      habit => completions.some(c => c.habit_id === habit.id)
+    ).length;
+    
+    const progress = Math.round((completed / filteredHabits.length) * 100);
+    
+    return { progress, completedCount: completed };
   }, [state.filteredHabits, state.completions]);
 
   return {
@@ -62,7 +68,7 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     totalCount: state.filteredHabits.length,
     handleToggleCompletion,
     handleLogFailure,
-    refreshData,
+    refreshData: handleRefresh,
     isInitialized: state.isInitialized,
   };
 }

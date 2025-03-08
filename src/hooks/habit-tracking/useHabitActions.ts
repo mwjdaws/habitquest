@@ -6,7 +6,7 @@ import { toggleHabitCompletion, logHabitFailure, getTodayFormatted } from "@/lib
 import { HabitTrackingState } from "./types";
 
 /**
- * Hook to manage habit completion and failure actions
+ * Hook to manage habit completion and failure actions with optimized state updates
  */
 export function useHabitActions(
   state: HabitTrackingState,
@@ -24,27 +24,29 @@ export function useHabitActions(
       const isCompleted = state.completions.some(c => c.habit_id === habitId);
       
       // Optimistic update - update UI immediately
-      if (isCompleted) {
-        setState(prev => ({
-          ...prev,
-          completions: prev.completions.filter(c => c.habit_id !== habitId)
-        }));
-      } else {
-        const newCompletion = {
-          id: crypto.randomUUID(),
-          habit_id: habitId,
-          user_id: user.id,
-          completed_date: today,
-          created_at: new Date().toISOString()
-        };
-        
-        setState(prev => ({
-          ...prev,
-          completions: [...prev.completions, newCompletion],
-          // Remove any failure for this habit on this day
-          failures: prev.failures.filter(f => f.habit_id !== habitId)
-        }));
-      }
+      setState(prev => {
+        if (isCompleted) {
+          return {
+            ...prev,
+            completions: prev.completions.filter(c => c.habit_id !== habitId)
+          };
+        } else {
+          const newCompletion = {
+            id: crypto.randomUUID(),
+            habit_id: habitId,
+            user_id: user.id,
+            completed_date: today,
+            created_at: new Date().toISOString()
+          };
+          
+          return {
+            ...prev,
+            completions: [...prev.completions, newCompletion],
+            // Remove any failure for this habit on this day
+            failures: prev.failures.filter(f => f.habit_id !== habitId)
+          };
+        }
+      });
       
       // Send update to server
       await toggleHabitCompletion(habitId, today, isCompleted);
@@ -70,7 +72,7 @@ export function useHabitActions(
     }
   }, [user, state.completions, state.failures, today, setState, refreshData]);
 
-  // Handle logging habit failure
+  // Handle logging habit failure with improved state management
   const handleLogFailure = useCallback(async (habitId: string, reason: string) => {
     if (!user) return;
     

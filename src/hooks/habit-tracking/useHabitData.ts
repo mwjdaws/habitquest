@@ -27,26 +27,24 @@ export function useHabitData(onHabitChange?: () => void) {
   const { filterHabitsForToday } = useHabitFiltering();
   const today = getTodayFormatted();
 
-  // Simplified data loading with error handling
+  // Optimized data loading with improved error handling
   const loadData = useCallback(async (showLoading = true) => {
     if (!isMountedRef.current) return;
     
-    // Simple throttling
+    // More efficient throttling (1 second)
     const now = Date.now();
-    if (now - lastFetchTimeRef.current < 500) {
+    if (now - lastFetchTimeRef.current < 1000) {
       return;
     }
     lastFetchTimeRef.current = now;
     
-    // Track loading state
+    // Only update loading state if explicitly requested
     if (showLoading) {
       setState(prev => ({ ...prev, loading: true, error: null }));
     }
     
     try {      
-      console.log('Fetching habit data');
-      
-      // Simplified data fetching with retry
+      // Optimized data fetching with parallel requests
       const [habitsData, completionsData, failuresData] = await Promise.all([
         withRetry(() => fetchHabits(), 3),
         withRetry(() => getCompletionsForDate(today), 3),
@@ -62,7 +60,7 @@ export function useHabitData(onHabitChange?: () => void) {
       
       const filtered = filterHabitsForToday(habitsData);
       
-      // Update state
+      // Update state in a single operation to reduce renders
       setState({
         habits: habitsData,
         filteredHabits: filtered,
@@ -82,15 +80,14 @@ export function useHabitData(onHabitChange?: () => void) {
       
       if (!isMountedRef.current) return;
       
-      // Set error state
+      // Set error state without changing other state values
       setState(prev => ({
         ...prev,
         loading: false,
         error: error instanceof Error ? error.message : "Failed to load habit data",
-        isInitialized: prev.isInitialized
       }));
       
-      // Show toast for user-initiated loads
+      // Only show toast for user-initiated loads
       if (showLoading) {
         toast({
           title: "Error",
@@ -101,16 +98,14 @@ export function useHabitData(onHabitChange?: () => void) {
     }
   }, [filterHabitsForToday, today, onHabitChange]);
 
-  // Simple wrapper for refresh with debounce
+  // Simplified refresh function without unnecessary setTimeout
   const refreshData = useCallback((showLoading = true) => {
-    setTimeout(() => {
-      if (isMountedRef.current) {
-        loadData(showLoading);
-      }
-    }, 100);
+    if (isMountedRef.current) {
+      loadData(showLoading);
+    }
   }, [loadData]);
 
-  // Cleanup
+  // Cleanup effect
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -118,11 +113,18 @@ export function useHabitData(onHabitChange?: () => void) {
     };
   }, []);
 
-  // Setup visibility change handler
+  // Optimized visibility change handler
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        refreshData(false);
+      if (document.visibilityState === 'visible' && isMountedRef.current) {
+        // Use a small delay to allow other visibility handlers to complete
+        const timeoutId = window.setTimeout(() => {
+          if (isMountedRef.current) {
+            refreshData(false);
+          }
+        }, 300);
+        
+        return () => window.clearTimeout(timeoutId);
       }
     };
     
