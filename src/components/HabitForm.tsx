@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +27,7 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
   const [color, setColor] = useState(habit?.color || "habit-purple");
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isEdit = !!habit;
 
@@ -41,6 +41,8 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    
     if (!name.trim()) {
       toast({
         title: "Error",
@@ -67,9 +69,10 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
       onSave();
     } catch (error) {
       console.error("Error saving habit:", error);
+      setError(error instanceof Error ? error.message : "Failed to save habit");
       toast({
         title: "Error",
-        description: `Failed to ${isEdit ? "update" : "create"} habit`,
+        description: error instanceof Error ? error.message : `Failed to ${isEdit ? "update" : "create"} habit`,
         variant: "destructive",
       });
     } finally {
@@ -102,6 +105,12 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="p-3 border border-red-300 bg-red-50 text-red-900 rounded-md text-sm">
+          {error}
+        </div>
+      )}
+      
       <div>
         <Label htmlFor="name">Habit Name</Label>
         <Input

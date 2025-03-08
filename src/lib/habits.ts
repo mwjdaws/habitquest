@@ -7,6 +7,7 @@ export type Habit = {
   description: string | null;
   frequency: string[];
   color: string;
+  user_id: string;
   created_at: string;
   updated_at: string;
 };
@@ -15,6 +16,7 @@ export type HabitCompletion = {
   id: string;
   habit_id: string;
   completed_date: string;
+  user_id: string;
   created_at: string;
 };
 
@@ -29,9 +31,16 @@ export const weekdays = [
 ];
 
 export const fetchHabits = async (): Promise<Habit[]> => {
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) {
+    console.error("No authenticated session found");
+    return [];
+  }
+
   const { data, error } = await supabase
     .from("habits")
     .select("*")
+    .eq("user_id", session.session.user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -42,8 +51,21 @@ export const fetchHabits = async (): Promise<Habit[]> => {
   return data || [];
 };
 
-export const createHabit = async (habit: Omit<Habit, "id" | "created_at" | "updated_at">) => {
-  const { data, error } = await supabase.from("habits").insert(habit).select().single();
+export const createHabit = async (habit: Omit<Habit, "id" | "created_at" | "updated_at" | "user_id">) => {
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) {
+    console.error("No authenticated session found");
+    throw new Error("User must be logged in to create habits");
+  }
+
+  const { data, error } = await supabase
+    .from("habits")
+    .insert({
+      ...habit,
+      user_id: session.session.user.id
+    })
+    .select()
+    .single();
 
   if (error) {
     console.error("Error creating habit:", error);
@@ -53,11 +75,18 @@ export const createHabit = async (habit: Omit<Habit, "id" | "created_at" | "upda
   return data;
 };
 
-export const updateHabit = async (id: string, habit: Partial<Omit<Habit, "id" | "created_at" | "updated_at">>) => {
+export const updateHabit = async (id: string, habit: Partial<Omit<Habit, "id" | "created_at" | "updated_at" | "user_id">>) => {
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) {
+    console.error("No authenticated session found");
+    throw new Error("User must be logged in to update habits");
+  }
+
   const { data, error } = await supabase
     .from("habits")
     .update({ ...habit, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .eq("user_id", session.session.user.id)
     .select()
     .single();
 
@@ -70,7 +99,17 @@ export const updateHabit = async (id: string, habit: Partial<Omit<Habit, "id" | 
 };
 
 export const deleteHabit = async (id: string) => {
-  const { error } = await supabase.from("habits").delete().eq("id", id);
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) {
+    console.error("No authenticated session found");
+    throw new Error("User must be logged in to delete habits");
+  }
+
+  const { error } = await supabase
+    .from("habits")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", session.session.user.id);
 
   if (error) {
     console.error("Error deleting habit:", error);
@@ -79,10 +118,17 @@ export const deleteHabit = async (id: string) => {
 };
 
 export const getCompletionsForDate = async (date: string): Promise<HabitCompletion[]> => {
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) {
+    console.error("No authenticated session found");
+    return [];
+  }
+
   const { data, error } = await supabase
     .from("habit_completions")
     .select("*")
-    .eq("completed_date", date);
+    .eq("completed_date", date)
+    .eq("user_id", session.session.user.id);
 
   if (error) {
     console.error("Error fetching completions:", error);
@@ -93,13 +139,20 @@ export const getCompletionsForDate = async (date: string): Promise<HabitCompleti
 };
 
 export const toggleHabitCompletion = async (habitId: string, date: string, isCompleted: boolean) => {
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) {
+    console.error("No authenticated session found");
+    throw new Error("User must be logged in to toggle habit completions");
+  }
+
   if (isCompleted) {
     // Delete the completion if it exists
     const { error } = await supabase
       .from("habit_completions")
       .delete()
       .eq("habit_id", habitId)
-      .eq("completed_date", date);
+      .eq("completed_date", date)
+      .eq("user_id", session.session.user.id);
 
     if (error) {
       console.error("Error removing habit completion:", error);
@@ -107,10 +160,13 @@ export const toggleHabitCompletion = async (habitId: string, date: string, isCom
     }
   } else {
     // Add a completion
-    const { error } = await supabase.from("habit_completions").insert({
-      habit_id: habitId,
-      completed_date: date,
-    });
+    const { error } = await supabase
+      .from("habit_completions")
+      .insert({
+        habit_id: habitId,
+        completed_date: date,
+        user_id: session.session.user.id
+      });
 
     if (error) {
       console.error("Error adding habit completion:", error);
@@ -120,6 +176,12 @@ export const toggleHabitCompletion = async (habitId: string, date: string, isCom
 };
 
 export const getHabitStats = async (habitId: string, days: number) => {
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) {
+    console.error("No authenticated session found");
+    return [];
+  }
+
   const endDate = new Date();
   const startDate = new Date();
   startDate.setDate(endDate.getDate() - days);
@@ -128,6 +190,7 @@ export const getHabitStats = async (habitId: string, days: number) => {
     .from("habit_completions")
     .select("*")
     .eq("habit_id", habitId)
+    .eq("user_id", session.session.user.id)
     .gte("completed_date", startDate.toISOString().split("T")[0])
     .lte("completed_date", endDate.toISOString().split("T")[0]);
 
@@ -154,4 +217,3 @@ export const getDayName = (date: Date): string => {
 export const shouldShowHabitForDay = (habit: Habit, dayName: string): boolean => {
   return habit.frequency.length === 0 || habit.frequency.includes(dayName.toLowerCase());
 };
-
