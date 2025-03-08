@@ -4,12 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 
-export function HabitTrackerHeader() {
+interface HabitTrackerHeaderProps {
+  totalHabits?: number;
+}
+
+export function HabitTrackerHeader({ totalHabits = 0 }: HabitTrackerHeaderProps) {
   return (
     <CardHeader className="flex flex-row items-start justify-between pb-2">
       <div>
         <CardTitle>Today's Habits</CardTitle>
-        <CardDescription>Your habit progress for today</CardDescription>
+        <CardDescription>
+          {totalHabits > 0 
+            ? `Your habit progress for today (${totalHabits} habit${totalHabits !== 1 ? 's' : ''})`
+            : 'Your habit progress for today'}
+        </CardDescription>
       </div>
       <Button variant="ghost" size="sm" asChild>
         <Link to="/habits" className="flex items-center text-sm font-medium">

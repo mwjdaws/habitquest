@@ -49,7 +49,14 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   };
 
   if (loading) {
-    return <LoadingState />;
+    return (
+      <Card>
+        <HabitTrackerHeader />
+        <CardContent>
+          <LoadingState />
+        </CardContent>
+      </Card>
+    );
   }
 
   if (error) {
@@ -63,7 +70,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   return (
     <>
       <Card>
-        <HabitTrackerHeader />
+        <HabitTrackerHeader totalHabits={totalCount} />
         <CardContent>
           <ProgressBar 
             progress={progress} 
