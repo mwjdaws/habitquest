@@ -24,22 +24,10 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     debouncedLoadData(showLoading);
   }, [debouncedLoadData]);
   
+  // Fix: Pass the state directly instead of trying to use a callback pattern incorrectly
   const { handleToggleCompletion, handleLogFailure } = useHabitActions(
     state,
-    prevState => {
-      // Fixed: properly handle the setState callback pattern
-      // We're now creating a proper updater function that returns a new state
-      return {
-        ...prevState,
-        habits: state.habits,
-        filteredHabits: state.filteredHabits,
-        completions: state.completions,
-        failures: state.failures,
-        loading: state.loading,
-        error: state.error,
-        isInitialized: state.isInitialized
-      };
-    },
+    setState => setState, // Just pass the setState function directly
     refreshData
   );
 
