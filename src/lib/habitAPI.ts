@@ -16,6 +16,14 @@ async function getAuthenticatedUser(): Promise<string> {
 }
 
 /**
+ * Base function to handle API errors consistently
+ */
+const handleApiError = (error: unknown, actionName: string): never => {
+  console.error(`Error ${actionName}:`, error);
+  throw new Error(formatErrorMessage(error));
+};
+
+/**
  * Fetches all habits for the authenticated user
  */
 export const fetchHabits = async (): Promise<Habit[]> => {
@@ -32,8 +40,7 @@ export const fetchHabits = async (): Promise<Habit[]> => {
     return data || [];
     
   } catch (error) {
-    console.error("Error fetching habits:", error);
-    throw new Error(formatErrorMessage(error));
+    return handleApiError(error, "fetching habits");
   }
 };
 
@@ -57,8 +64,7 @@ export const createHabit = async (habit: Omit<Habit, "id" | "created_at" | "upda
     return data;
     
   } catch (error) {
-    console.error("Error creating habit:", error);
-    throw new Error(formatErrorMessage(error));
+    return handleApiError(error, "creating habit");
   }
 };
 
@@ -81,8 +87,7 @@ export const updateHabit = async (id: string, habit: Partial<Omit<Habit, "id" | 
     return data;
     
   } catch (error) {
-    console.error("Error updating habit:", error);
-    throw new Error(formatErrorMessage(error));
+    return handleApiError(error, "updating habit");
   }
 };
 
@@ -102,8 +107,7 @@ export const deleteHabit = async (id: string) => {
     if (error) throw error;
     
   } catch (error) {
-    console.error("Error deleting habit:", error);
-    throw new Error(formatErrorMessage(error));
+    return handleApiError(error, "deleting habit");
   }
 };
 
@@ -124,8 +128,7 @@ export const getCompletionsForDate = async (date: string): Promise<HabitCompleti
     return data || [];
     
   } catch (error) {
-    console.error("Error fetching completions:", error);
-    throw new Error(formatErrorMessage(error));
+    return handleApiError(error, "fetching completions");
   }
 };
 
@@ -161,8 +164,7 @@ export const toggleHabitCompletion = async (habitId: string, date: string, isCom
     }
     
   } catch (error) {
-    console.error("Error toggling habit completion:", error);
-    throw new Error(formatErrorMessage(error));
+    return handleApiError(error, "toggling habit completion");
   }
 };
 
@@ -189,7 +191,6 @@ export const getHabitStats = async (habitId: string, days: number) => {
     return data || [];
     
   } catch (error) {
-    console.error("Error fetching habit stats:", error);
-    throw new Error(formatErrorMessage(error));
+    return handleApiError(error, "fetching habit stats");
   }
 };
