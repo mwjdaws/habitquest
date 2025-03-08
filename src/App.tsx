@@ -15,7 +15,7 @@ import Mood from "./pages/Mood";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,7 +44,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 // Error boundary component - Class-based to ensure proper error handling
-class ErrorBoundaryClass extends React.Component<
+class ErrorBoundaryClass extends Component<
   { children: React.ReactNode },
   { hasError: boolean; error: Error | null }
 > {
