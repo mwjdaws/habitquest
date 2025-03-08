@@ -1,7 +1,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { FailureDialog } from "@/components/habit/FailureDialog";
-import { useHabitTracking } from "@/hooks/useHabitTracking";
+import { useHabitTracking } from "@/hooks/habit-tracking/useHabitTracking";
 import { ProgressBar } from "./habit-tracker/ProgressBar";
 import { HabitList } from "./habit-tracker/HabitList";
 import { HabitTrackerHeader } from "./habit-tracker/HabitTrackerHeader";
