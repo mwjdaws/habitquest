@@ -19,7 +19,7 @@ export function HabitTrackerHeader({ totalHabits = 0, isLoading = false }: Habit
             ? 'Loading your habits for today...'
             : totalHabits > 0 
               ? `Your habit progress for today (${totalHabits} habit${totalHabits !== 1 ? 's' : ''})`
-              : 'Your habit progress for today'}
+              : 'No habits scheduled for today'}
         </CardDescription>
       </div>
       <Button variant="ghost" size="sm" asChild>

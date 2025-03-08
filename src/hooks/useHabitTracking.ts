@@ -42,11 +42,25 @@ export function useHabitTracking(onHabitChange?: () => void) {
       }
       
       console.log('Fetching habit data...');
-      const [habitsData, completionsData, failuresData] = await Promise.all([
+      
+      // Use Promise.allSettled to prevent one failure from failing the entire request
+      const results = await Promise.allSettled([
         fetchHabits(),
         getCompletionsForDate(today),
         getFailuresForDate(today)
       ]);
+      
+      // Process results safely
+      const habitsData = results[0].status === 'fulfilled' ? results[0].value : [];
+      const completionsData = results[1].status === 'fulfilled' ? results[1].value : [];
+      const failuresData = results[2].status === 'fulfilled' ? results[2].value : [];
+      
+      // Check if any promise was rejected and log it
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Failed to fetch data for request ${index}:`, result.reason);
+        }
+      });
       
       console.log(`Loaded ${habitsData.length} habits, ${completionsData.length} completions, ${failuresData.length} failures`);
       
@@ -70,27 +84,31 @@ export function useHabitTracking(onHabitChange?: () => void) {
       // Add a small delay to prevent flashing of loading state
       dataRefreshTimerRef.current = window.setTimeout(() => {
         setLoading(false);
-      }, 200);
+      }, 300);
     }
   };
 
   useEffect(() => {
-    if (user && !initialLoadAttemptedRef.current) {
+    if (user) {
       initialLoadAttemptedRef.current = true;
-      loadData();
-    }
-    
-    return () => {
-      // Clean up timer if component unmounts
-      if (dataRefreshTimerRef.current) {
-        clearTimeout(dataRefreshTimerRef.current);
-      }
+      
+      // Small delay before the initial load
+      const initialLoadTimer = setTimeout(() => {
+        loadData();
+      }, 100);
+      
+      return () => {
+        clearTimeout(initialLoadTimer);
+        if (dataRefreshTimerRef.current) {
+          clearTimeout(dataRefreshTimerRef.current);
+        }
+      };
     }
   }, [user]);
 
   // Ensure we reload data when the date changes
   useEffect(() => {
-    if (initialLoadAttemptedRef.current) {
+    if (initialLoadAttemptedRef.current && user) {
       loadData();
     }
   }, [today]);
