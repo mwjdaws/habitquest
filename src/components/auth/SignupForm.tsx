@@ -10,7 +10,7 @@ type SignupFormProps = {
   password: string;
   setPassword: (password: string) => void;
   loading: boolean;
-  handleAuth: (type: "signup") => void;
+  handleAuth: () => void;
   useTestCredentials: () => void;
 };
 
@@ -40,6 +40,7 @@ const SignupForm = ({
             placeholder="name@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
           />
         </div>
         <div className="space-y-2">
@@ -50,6 +51,7 @@ const SignupForm = ({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="6+ characters"
+            autoComplete="new-password"
           />
           <p className="text-xs text-muted-foreground">Password must be at least 6 characters</p>
         </div>
@@ -58,6 +60,7 @@ const SignupForm = ({
           size="sm" 
           className="w-full mt-2" 
           onClick={useTestCredentials}
+          type="button"
         >
           Use Test Credentials
         </Button>
@@ -65,8 +68,9 @@ const SignupForm = ({
       <CardFooter>
         <Button 
           className="w-full" 
-          onClick={() => handleAuth("signup")}
+          onClick={handleAuth}
           disabled={loading}
+          type="submit"
         >
           {loading ? "Creating account..." : "Create account"}
         </Button>

@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,7 @@ type LoginFormProps = {
   password: string;
   setPassword: (password: string) => void;
   loading: boolean;
-  handleAuth: (type: "login") => void;
+  handleAuth: () => void;
   useTestCredentials: () => void;
 };
 
@@ -41,6 +40,7 @@ const LoginForm = ({
             placeholder="name@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
           />
         </div>
         <div className="space-y-2">
@@ -50,6 +50,7 @@ const LoginForm = ({
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
           />
         </div>
         <Button 
@@ -57,6 +58,7 @@ const LoginForm = ({
           size="sm" 
           className="w-full mt-2" 
           onClick={useTestCredentials}
+          type="button"
         >
           Use Test Credentials
         </Button>
@@ -64,8 +66,9 @@ const LoginForm = ({
       <CardFooter>
         <Button 
           className="w-full" 
-          onClick={() => handleAuth("login")}
+          onClick={handleAuth}
           disabled={loading}
+          type="submit"
         >
           {loading ? "Logging in..." : "Login"}
         </Button>

@@ -7,11 +7,7 @@ import { toast } from "@/components/ui/use-toast";
  */
 export function handleError(error: unknown, fallbackMessage = "An unexpected error occurred"): string {
   // Extract error message
-  const errorMessage = error instanceof Error 
-    ? error.message 
-    : typeof error === 'string' 
-      ? error 
-      : fallbackMessage;
+  const errorMessage = formatErrorMessage(error) || fallbackMessage;
   
   // Log the error with details
   console.error("Error occurred:", error);
@@ -48,9 +44,12 @@ export async function safeAsync<T>(
  */
 export function isAuthError(error: unknown): boolean {
   if (error instanceof Error) {
-    return error.message.toLowerCase().includes('auth') || 
-           error.message.toLowerCase().includes('login') ||
-           error.message.toLowerCase().includes('permission');
+    const message = error.message.toLowerCase();
+    return message.includes('auth') || 
+           message.includes('login') ||
+           message.includes('permission') ||
+           message.includes('credentials') ||
+           message.includes('unauthorized');
   }
   return false;
 }
@@ -60,9 +59,13 @@ export function isAuthError(error: unknown): boolean {
  */
 export function isNetworkError(error: unknown): boolean {
   if (error instanceof Error) {
-    return error.message.toLowerCase().includes('network') ||
-           error.message.toLowerCase().includes('fetch') || 
-           error.message.toLowerCase().includes('connection');
+    const message = error.message.toLowerCase();
+    return message.includes('network') ||
+           message.includes('fetch') || 
+           message.includes('connection') ||
+           message.includes('offline') ||
+           message.includes('failed to') ||
+           message.includes('timeout');
   }
   return false;
 }
@@ -71,15 +74,39 @@ export function isNetworkError(error: unknown): boolean {
  * Formats a user-friendly error message based on the error type
  */
 export function formatErrorMessage(error: unknown): string {
+  if (!error) return "An unexpected error occurred";
+  
   if (isAuthError(error)) {
-    return "Authentication error. Please sign in again.";
-  } else if (isNetworkError(error)) {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      
+      if (message.includes('invalid login credentials') || message.includes('invalid email or password')) {
+        return "Invalid email or password. Please try again.";
+      }
+      
+      if (message.includes('email not confirmed')) {
+        return "Please confirm your email before logging in.";
+      }
+      
+      if (message.includes('already registered')) {
+        return "This email is already registered. Please log in instead.";
+      }
+      
+      return "Authentication error. Please sign in again.";
+    }
+  } 
+  
+  if (isNetworkError(error)) {
     return "Network error. Please check your connection and try again.";
-  } else if (error instanceof Error) {
+  } 
+  
+  if (error instanceof Error) {
     return error.message;
-  } else if (typeof error === 'string') {
+  } 
+  
+  if (typeof error === 'string') {
     return error;
-  } else {
-    return "An unexpected error occurred";
-  }
+  } 
+  
+  return "An unexpected error occurred";
 }

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { signIn, signUp, signOut as authSignOut } from '@/lib/authUtils';
+import { handleError } from '@/lib/error-utils';
 
 type AuthContextType = {
   user: User | null;
@@ -85,7 +86,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const handleSignUp = async (email: string, password: string) => {
-    return await signUp(email, password);
+    try {
+      return await signUp(email, password);
+    } catch (error) {
+      console.error('Error in handleSignUp:', error);
+      return {
+        error: error instanceof Error ? error : new Error('Unknown error during sign up'),
+        success: false,
+      };
+    }
   };
 
   const handleSignIn = async (email: string, password: string) => {
@@ -93,10 +102,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await signIn(email, password);
       
       if (result.success) {
-        // Both test account and regular user login now follow the same flow
-        // as both return user and session directly
-        console.log('Sign in successful, setting user and session');
-        
         // Set user and session data
         setUser(result.user);
         setSession(result.session);
@@ -119,8 +124,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
     } catch (error) {
       console.error('Error in handleSignIn:', error);
+      handleError(error, 'Login failed');
       return {
-        error: error as Error,
+        error: error instanceof Error ? error : new Error('Unknown error during sign in'),
         success: false,
       };
     }
@@ -129,19 +135,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleSignOut = async () => {
     console.log('Handling sign out');
     
-    // Handle test account signout
-    if (user?.email === 'test@example.com') {
-      setUser(null);
-      setSession(null);
-      toast({
-        title: "Signed Out",
-        description: "You have been successfully signed out of the test account.",
-      });
-      navigate('/login');
-      return;
-    }
-    
     try {
+      // Handle test account signout
+      if (user?.email === 'test@example.com') {
+        setUser(null);
+        setSession(null);
+        toast({
+          title: "Signed Out",
+          description: "You have been successfully signed out of the test account.",
+        });
+        navigate('/login');
+        return;
+      }
+      
+      // Handle regular account signout
       await authSignOut();
       toast({
         title: "Signed Out",
@@ -150,11 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       navigate('/login');
     } catch (error) {
       console.error('Error during sign out:', error);
-      toast({
-        title: "Sign Out Failed",
-        description: "There was a problem signing you out. Please try again.",
-        variant: "destructive"
-      });
+      handleError(error, 'Sign out failed');
     }
   };
 
@@ -170,7 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Export the useAuth hook from this file
+// Export the useAuth hook 
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

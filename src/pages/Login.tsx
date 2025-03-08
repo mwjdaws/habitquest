@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 import StatusMessage from "@/components/auth/StatusMessage";
+import { formatErrorMessage } from "@/lib/error-utils";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -19,13 +20,25 @@ const Login = () => {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
+  // Clear messages when tab changes
+  useEffect(() => {
+    setErrorMessage("");
+    setInfoMessage("");
+    setSuccessMessage("");
+  }, [activeTab]);
+
   // Redirect authenticated users to dashboard
-  if (user) {
-    navigate("/dashboard");
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
+  // If already authenticated, don't render the login page
+  if (user) return null;
 
   const validateInputs = () => {
+    // Clear previous messages
     setErrorMessage("");
     
     if (!email.trim()) {
@@ -71,52 +84,31 @@ const Login = () => {
             setErrorMessage("This email is already registered. Please log in instead.");
             setActiveTab("login");
           } else {
-            setErrorMessage(error.message);
+            setErrorMessage(formatErrorMessage(error));
           }
         } else if (success) {
-          if (email === 'test@example.com') {
-            setSuccessMessage("Test account is ready. You can now log in.");
-            setActiveTab("login");
-          } else {
-            setSuccessMessage("Account created successfully! You can now log in.");
-            setActiveTab("login");
-          }
+          setSuccessMessage("Account created successfully! You can now log in.");
+          setActiveTab("login");
         }
       } else {
         // Login
         setInfoMessage("Logging in...");
         
-        try {
-          const { error, success } = await signIn(email, password);
-          
-          if (error) {
-            console.error(`Login error:`, error);
-            
-            if (error.message.includes("Invalid login credentials")) {
-              setErrorMessage("Invalid email or password. Please try again or create an account.");
-            } else if (error.message.toLowerCase().includes("network") || 
-                      error.message.toLowerCase().includes("failed") ||
-                      error.message.toLowerCase().includes("connection")) {
-              setErrorMessage("Network error. Please check your connection and try again.");
-            } else if (error.message.includes("Email not confirmed")) {
-              setErrorMessage("Please confirm your email before logging in. Check your inbox for a confirmation link.");
-            } else {
-              setErrorMessage(error.message);
-            }
-          }
-          
-          // If success, the navigation happens in the auth context
-          if (!success) {
-            setInfoMessage("");
-          }
-        } catch (e) {
-          console.error("Unexpected error during login:", e);
-          setErrorMessage("An unexpected error occurred. Please try again.");
+        const { error, success } = await signIn(email, password);
+        
+        if (error) {
+          console.error(`Login error:`, error);
+          setErrorMessage(formatErrorMessage(error));
+        }
+        
+        // If success, the navigation happens in the auth context
+        if (!success) {
+          setInfoMessage("");
         }
       }
     } catch (error) {
       console.error("Unexpected error:", error);
-      setErrorMessage("An unexpected error occurred. Please try again.");
+      setErrorMessage(formatErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -141,6 +133,7 @@ const Login = () => {
           errorMessage={errorMessage}
           infoMessage={infoMessage}
           successMessage={successMessage}
+          className="mb-4"
         />
         
         <TabsContent value="login">
@@ -150,7 +143,7 @@ const Login = () => {
             password={password}
             setPassword={setPassword}
             loading={loading}
-            handleAuth={handleAuth}
+            handleAuth={() => handleAuth("login")}
             useTestCredentials={useTestCredentials}
           />
         </TabsContent>
@@ -162,7 +155,7 @@ const Login = () => {
             password={password}
             setPassword={setPassword}
             loading={loading}
-            handleAuth={handleAuth}
+            handleAuth={() => handleAuth("signup")}
             useTestCredentials={useTestCredentials}
           />
         </TabsContent>

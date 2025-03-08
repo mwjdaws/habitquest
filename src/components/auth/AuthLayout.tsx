@@ -8,8 +8,8 @@ type AuthLayoutProps = {
 
 const AuthLayout = ({ children }: AuthLayoutProps) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-habit-soft-purple to-habit-soft-blue">
-      <div className="max-w-md w-full px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-habit-soft-purple to-habit-soft-blue p-4">
+      <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-2">
             <Flame className="h-12 w-12 text-habit-purple" />
