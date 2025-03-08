@@ -3,8 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Check, ChevronRight, Flame, Tag, Zap, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ChevronRight } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { FailureDialog } from "@/components/habit/FailureDialog";
@@ -18,12 +17,17 @@ import {
   getDayName, 
   shouldShowHabitForDay
 } from "@/lib/habits";
-import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
+import { Habit } from "@/lib/habitTypes";
+import { HabitList } from "./habit-tracker/HabitList";
+import { ProgressBar } from "./habit-tracker/ProgressBar";
+import { LoadingState } from "./habit-tracker/LoadingState";
+import { ErrorState } from "./habit-tracker/ErrorState";
+import { EmptyState } from "./habit-tracker/EmptyState";
 
 export function HabitTracker() {
   const [habits, setHabits] = useState<Habit[]>([]);
-  const [completions, setCompletions] = useState<HabitCompletion[]>([]);
-  const [failures, setFailures] = useState<HabitFailure[]>([]);
+  const [completions, setCompletions] = useState([]);
+  const [failures, setFailures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [habitIdForFailure, setHabitIdForFailure] = useState<string | null>(null);
@@ -77,7 +81,7 @@ export function HabitTracker() {
       if (isCompleted) {
         setCompletions(completions.filter(c => c.habit_id !== habitId));
       } else {
-        const newCompletion: HabitCompletion = {
+        const newCompletion = {
           id: crypto.randomUUID(),
           habit_id: habitId,
           user_id: user.id,
@@ -123,7 +127,7 @@ export function HabitTracker() {
       await logHabitFailure(habitId, today, reason);
       
       // Update local state
-      const newFailure: HabitFailure = {
+      const newFailure = {
         id: crypto.randomUUID(),
         habit_id: habitId,
         user_id: user.id,
@@ -172,62 +176,15 @@ export function HabitTracker() {
     : 0;
 
   if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Today's Habits</CardTitle>
-          <CardDescription>Your habit progress for today</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Loading habits...</p>
-        </CardContent>
-      </Card>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Today's Habits</CardTitle>
-          <CardDescription>Your habit progress for today</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="p-3 border border-red-300 bg-red-50 text-red-900 rounded-md">
-            <p className="text-sm font-medium">{error}</p>
-            <Button variant="outline" size="sm" className="mt-2" onClick={() => window.location.reload()}>
-              Try again
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <ErrorState error={error} />;
   }
 
   if (todaysHabits.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Today's Habits</CardTitle>
-          <CardDescription>Your habit progress for today</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6">
-            <p className="text-sm text-muted-foreground mb-4">
-              {habits.length === 0 
-                ? "You don't have any habits set up yet." 
-                : "You don't have any habits scheduled for today."}
-            </p>
-            <Button asChild>
-              <Link to="/habits">
-                <Flame className="mr-2 h-4 w-4" />
-                {habits.length === 0 ? "Create Your First Habit" : "Manage Habits"}
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <EmptyState hasHabits={habits.length > 0} />;
   }
 
   return (
@@ -246,103 +203,19 @@ export function HabitTracker() {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm font-medium">{progress}% complete</span>
-              <span className="text-sm text-muted-foreground">
-                {completedCount}/{todaysHabits.length} habits
-              </span>
-            </div>
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary" 
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
+          <ProgressBar 
+            progress={progress} 
+            completedCount={completedCount} 
+            totalCount={todaysHabits.length} 
+          />
           
-          <div className="space-y-2">
-            {todaysHabits.map(habit => {
-              const isCompleted = completions.some(c => c.habit_id === habit.id);
-              const isFailed = failures.some(f => f.habit_id === habit.id);
-              
-              return (
-                <div 
-                  key={habit.id} 
-                  className={`p-2 rounded-md flex items-center justify-between gap-4 border ${
-                    isCompleted ? "bg-green-50 border-green-200" : 
-                    isFailed ? "bg-red-50 border-red-200" : "bg-background"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-1 h-10 rounded-full" 
-                      style={{ backgroundColor: `var(--${habit.color})` }}
-                    />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <div className="font-medium text-sm flex items-center gap-2">
-                          {habit.name}
-                          {habit.current_streak > 0 && (
-                            <Badge variant="secondary" className="text-xs font-normal flex items-center gap-1">
-                              <Zap className="h-3 w-3" />
-                              {habit.current_streak} day{habit.current_streak !== 1 ? 's' : ''}
-                            </Badge>
-                          )}
-                        </div>
-                        <Badge variant="outline" className="text-xs font-normal">
-                          <Tag className="h-3 w-3 mr-1" />
-                          {habit.category}
-                        </Badge>
-                      </div>
-                      {habit.description && (
-                        <div className="text-xs text-muted-foreground">
-                          {habit.description}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    {isFailed ? (
-                      <div className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded-md flex items-center">
-                        <X className="mr-1 h-3 w-3" />
-                        {failures.find(f => f.habit_id === habit.id)?.reason || "Failed"}
-                      </div>
-                    ) : (
-                      <>
-                        {!isCompleted && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-                            onClick={() => handleLogFailure(habit.id)}
-                          >
-                            <X className="mr-1 h-3 w-3" />
-                            Skip
-                          </Button>
-                        )}
-                        <Button
-                          variant={isCompleted ? "default" : "outline"}
-                          size="sm"
-                          className={isCompleted ? "bg-green-500 hover:bg-green-600" : ""}
-                          onClick={() => handleToggleCompletion(habit.id)}
-                        >
-                          {isCompleted ? (
-                            <>
-                              <Check className="mr-1 h-3 w-3" />
-                              Done
-                            </>
-                          ) : (
-                            "Complete"
-                          )}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <HabitList
+            habits={todaysHabits}
+            completions={completions}
+            failures={failures}
+            onToggleCompletion={handleToggleCompletion}
+            onLogFailure={handleLogFailure}
+          />
         </CardContent>
       </Card>
       
