@@ -1,3 +1,4 @@
+
 import { toast } from "@/components/ui/use-toast";
 
 /**
@@ -15,6 +16,62 @@ export const formatErrorMessage = (error: unknown): string => {
   } else {
     return 'An unknown error occurred.';
   }
+};
+
+/**
+ * Checks if an error is a network connection error
+ * @param error The error to check
+ * @returns Boolean indicating if it's a network error
+ */
+export const isNetworkError = (error: unknown): boolean => {
+  if (error instanceof Error) {
+    // Check common network error messages
+    const message = error.message.toLowerCase();
+    return (
+      message.includes('network') ||
+      message.includes('internet') ||
+      message.includes('offline') ||
+      message.includes('connection') ||
+      message.includes('unreachable') ||
+      message.includes('timeout') ||
+      message.includes('failed to fetch') ||
+      // Check for specific browser network error types
+      error.name === 'NetworkError' ||
+      error.name === 'AbortError' ||
+      error.name === 'TimeoutError'
+    );
+  }
+  return false;
+};
+
+/**
+ * General error handler that formats errors and shows toast notifications when needed
+ * @param error The error object
+ * @param actionContext Optional context about what action was being performed
+ * @param userFriendlyMessage Optional user-friendly message to display
+ * @param showToast Whether to show a toast notification
+ * @returns Formatted error message string
+ */
+export const handleError = (
+  error: unknown,
+  actionContext?: string,
+  userFriendlyMessage?: string,
+  showToast: boolean = true
+): string => {
+  const errorMessage = formatErrorMessage(error);
+  const contextMessage = actionContext ? `Error ${actionContext}: ${errorMessage}` : errorMessage;
+  
+  console.error(contextMessage);
+  
+  if (showToast && userFriendlyMessage) {
+    toast({
+      title: "Error",
+      description: userFriendlyMessage,
+      variant: "destructive",
+    });
+  }
+  
+  return errorMessage;
 };
 
 /**

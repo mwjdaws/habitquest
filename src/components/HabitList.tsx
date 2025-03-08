@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchHabits, getTodayFormatted, getCompletionsForDate, toggleHabitCompletion } from "@/lib/habits";
 import { toast } from "@/components/ui/use-toast";
-import { handleError } from "@/lib/error-utils";
+import { handleApiError } from "@/lib/error-utils";
 import { HabitCompletion } from "@/lib/habitTypes";
 import { HabitItem } from "./habit-list/HabitItem";
 import { NewHabitButton } from "./habit-list/NewHabitButton";
@@ -30,7 +29,7 @@ export function HabitList() {
 
   useEffect(() => {
     if (queryError) {
-      setError(handleError(queryError));
+      setError(handleApiError(queryError, "fetching habits", "Failed to load your habits"));
     }
   }, [queryError]);
 
@@ -40,7 +39,7 @@ export function HabitList() {
       setCompletions(data);
     } catch (error) {
       console.error("Error fetching completions:", error);
-      handleError(error, "Failed to load your habit completions");
+      handleApiError(error, "Failed to load your habit completions", "Failed to load your habit completions");
     }
   };
 
@@ -59,7 +58,7 @@ export function HabitList() {
         description: isCompleted ? "Keep working on it!" : "Great job!",
       });
     } catch (error) {
-      handleError(error, "Failed to update habit status");
+      handleApiError(error, "updating habit status", "Failed to update habit status");
     }
   };
 
