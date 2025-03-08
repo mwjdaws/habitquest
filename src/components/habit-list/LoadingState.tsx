@@ -13,7 +13,7 @@ export function LoadingState() {
         <Skeleton className="h-3 w-full rounded-full" />
       </div>
       
-      {/* Habit items skeletons with varied shapes for more realistic appearance */}
+      {/* Habit items skeletons */}
       <div className="space-y-3 w-full">
         {[...Array(3)].map((_, index) => (
           <div key={index} className="flex items-center w-full">

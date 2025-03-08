@@ -18,6 +18,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   const [habitIdForFailure, setHabitIdForFailure] = useState<string | null>(null);
   const [habitNameForFailure, setHabitNameForFailure] = useState<string>("");
   const [showLoading, setShowLoading] = useState(true);
+  const initialFetchCompleted = useRef(false);
   const loadingTimerRef = useRef<number | null>(null);
   
   const { 
@@ -35,35 +36,33 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     isInitialized
   } = useHabitTracking(onHabitChange);
 
-  // Force a refresh with controlled timing to prevent excessive calls
+  // One-time initial data fetch with proper cleanup
   useEffect(() => {
-    console.log('Setting up initial habit data fetch');
-    
-    // Clear any existing timers when component unmounts or remounts
-    const initialLoadTimer = window.setTimeout(() => {
-      console.log('Executing initial habit data fetch');
-      refreshData(true);
-    }, 800); // Increased delay to ensure auth is fully ready
-    
-    return () => {
-      window.clearTimeout(initialLoadTimer);
-    };
+    if (!initialFetchCompleted.current) {
+      console.log('Setting up initial habit data fetch (one-time)');
+      const initialLoadTimer = window.setTimeout(() => {
+        console.log('Executing initial habit data fetch');
+        refreshData(true);
+        initialFetchCompleted.current = true;
+      }, 500);
+      
+      return () => {
+        window.clearTimeout(initialLoadTimer);
+      };
+    }
   }, [refreshData]);
 
-  // Smoother transition for loading state with improved timing
+  // Handle loading state transitions with smoother timing
   useEffect(() => {
-    // Clear any existing timer
     if (loadingTimerRef.current) {
       window.clearTimeout(loadingTimerRef.current);
-      loadingTimerRef.current = null;
     }
     
-    if (loading && !isInitialized) {
-      // Immediately show loading state when loading starts and not initialized
+    if (loading) {
+      // Show loading state immediately when loading starts
       setShowLoading(true);
-    } else if (!loading && isInitialized) {
-      // Add a small delay before hiding the loading state
-      // to ensure content is fully ready (prevents flash of empty content)
+    } else if (isInitialized) {
+      // Add a small delay before hiding loading state to prevent flicker
       loadingTimerRef.current = window.setTimeout(() => {
         setShowLoading(false);
       }, 300);
@@ -72,7 +71,6 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     return () => {
       if (loadingTimerRef.current) {
         window.clearTimeout(loadingTimerRef.current);
-        loadingTimerRef.current = null;
       }
     };
   }, [loading, isInitialized]);
@@ -94,7 +92,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     setHabitIdForFailure(null);
   };
 
-  // Show appropriate content based on loading/error state
+  // Render appropriate content based on state
   const renderContent = () => {
     if (showLoading || !isInitialized) {
       return <LoadingState />;
@@ -129,7 +127,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
 
   return (
     <>
-      <Card>
+      <Card className="w-full">
         <HabitTrackerHeader totalHabits={totalCount} isLoading={showLoading || !isInitialized} />
         <CardContent>
           {renderContent()}

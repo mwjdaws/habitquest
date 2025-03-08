@@ -18,26 +18,31 @@ const Dashboard = () => {
   const dataFetchTimerRef = useRef<number | null>(null);
   const initialDataFetchedRef = useRef(false);
   const lastFetchTimeRef = useRef<number>(0);
+  const mountedRef = useRef(true);
   
+  // Improved streak data loading with better debouncing
   const loadStreaks = useCallback(async (showLoading = true) => {
-    if (!user) return;
+    if (!user || !mountedRef.current) return;
     
-    // Debounce frequent calls
+    // Stronger debouncing with 5-second interval
     const now = Date.now();
-    if (now - lastFetchTimeRef.current < 2000 && lastFetchTimeRef.current !== 0) {
-      console.log('Debouncing streak data fetch');
+    if (now - lastFetchTimeRef.current < 5000 && initialDataFetchedRef.current) {
+      console.log('Skipping streak data fetch - too soon since last fetch');
       return;
     }
     
     lastFetchTimeRef.current = now;
     
     try {
-      // Only set loading to true if it's going to take a while or it's the initial load
+      // Only show loading state for initial load
       if (showLoading && !initialDataFetchedRef.current) {
         setIsLoading(true);
       }
       
+      console.log('Fetching streaks data...');
       const habits = await fetchHabits();
+      
+      if (!mountedRef.current) return;
       
       // Get habits with streaks and sort by current streak
       const habitsWithStreaks = habits
@@ -48,53 +53,67 @@ const Dashboard = () => {
       initialDataFetchedRef.current = true;
       setDataInitialized(true);
       
-      // Add a small delay before setting loading to false
-      // to prevent UI flickering
+      // Add a small delay before hiding loading state to prevent UI jumps
       if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
+        window.clearTimeout(loadingTimerRef.current);
       }
+      
       loadingTimerRef.current = window.setTimeout(() => {
-        setIsLoading(false);
+        if (mountedRef.current) {
+          setIsLoading(false);
+        }
       }, 300);
     } catch (error) {
       console.error("Error fetching streak data:", error);
-      setIsLoading(false);
+      if (mountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [user]);
   
-  // Set up initial data fetch
+  // Set up initial data fetch and cleanup
   useEffect(() => {
-    // Clear any existing data fetch timer
+    mountedRef.current = true;
+    
+    // Clear any existing timers
     if (dataFetchTimerRef.current) {
-      clearTimeout(dataFetchTimerRef.current);
+      window.clearTimeout(dataFetchTimerRef.current);
     }
     
-    // Set a small delay before fetching to prevent rapid fetch cycles
+    // Set a small delay before fetching
     dataFetchTimerRef.current = window.setTimeout(() => {
-      loadStreaks(true);
-    }, 400);
+      if (mountedRef.current) {
+        loadStreaks(true);
+      }
+    }, 800); // Increased delay to ensure auth is ready
     
-    // Set up interval for periodic refresh (every 2 minutes)
+    // Set up interval for periodic refresh (every 5 minutes)
     const refreshInterval = window.setInterval(() => {
-      loadStreaks(false); // Don't show loading state for background refreshes
-    }, 120000);
+      if (mountedRef.current && initialDataFetchedRef.current) {
+        loadStreaks(false); // Don't show loading for background refreshes
+      }
+    }, 300000); // 5 minutes
     
     return () => {
-      // Clean up timers if component unmounts
+      mountedRef.current = false;
+      
+      // Clean up all timers
       if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
+        window.clearTimeout(loadingTimerRef.current);
       }
       if (dataFetchTimerRef.current) {
-        clearTimeout(dataFetchTimerRef.current);
+        window.clearTimeout(dataFetchTimerRef.current);
       }
-      clearInterval(refreshInterval);
+      window.clearInterval(refreshInterval);
     };
   }, [loadStreaks, lastRefresh]);
 
   // Function to trigger a refresh
-  const refreshData = () => {
-    setLastRefresh(Date.now());
-  };
+  const refreshData = useCallback(() => {
+    if (Date.now() - lastRefresh > 3000) { // Debounce refreshes
+      setLastRefresh(Date.now());
+    }
+  }, [lastRefresh]);
 
   const renderStreakStats = () => {
     if (isLoading || !dataInitialized) {
@@ -150,7 +169,7 @@ const Dashboard = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <HabitTracker onHabitChange={refreshData} key={`habit-tracker-${lastRefresh}`} />
         
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-yellow-500" />
@@ -163,7 +182,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle>Upcoming Tasks</CardTitle>
             <CardDescription>Tasks due soon</CardDescription>
@@ -176,7 +195,7 @@ const Dashboard = () => {
         </Card>
       </div>
       
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Goals Progress</CardTitle>
           <CardDescription>Track your progress towards your goals</CardDescription>
