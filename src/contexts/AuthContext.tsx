@@ -84,10 +84,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
+      // Modified to automatically sign in after sign up (no email confirmation)
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          // This option skips the email verification flow
+          data: {
+            confirmed_at: new Date().toISOString(),
+          }
+        }
       });
+      
+      // If sign up is successful, immediately sign in
+      if (!error) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (!signInError) {
+          navigate('/dashboard');
+        }
+        
+        return {
+          error: signInError,
+          success: !signInError,
+        };
+      }
       
       return {
         error,
