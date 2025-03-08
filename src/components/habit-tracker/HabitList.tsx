@@ -8,6 +8,7 @@ type HabitListProps = {
   failures: HabitFailure[];
   onToggleCompletion: (habitId: string) => Promise<void>;
   onLogFailure: (habitId: string) => void;
+  onUndoFailure: (habitId: string) => Promise<void>;
 };
 
 export function HabitList({
@@ -15,7 +16,8 @@ export function HabitList({
   completions,
   failures,
   onToggleCompletion,
-  onLogFailure
+  onLogFailure,
+  onUndoFailure
 }: HabitListProps) {
   return (
     <div className="space-y-2">
@@ -27,6 +29,7 @@ export function HabitList({
           failures={failures}
           onToggleCompletion={onToggleCompletion}
           onLogFailure={onLogFailure}
+          onUndoFailure={onUndoFailure}
         />
       ))}
     </div>

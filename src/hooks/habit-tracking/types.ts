@@ -23,6 +23,7 @@ export interface HabitTrackingResult {
   totalCount: number;
   handleToggleCompletion: (habitId: string) => Promise<void>;
   handleLogFailure: (habitId: string, reason: string) => Promise<void>;
+  handleUndoFailure: (habitId: string) => Promise<void>;
   refreshData: (showLoading?: boolean) => void;
   isInitialized: boolean;
 }
