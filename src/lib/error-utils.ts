@@ -28,13 +28,14 @@ export function handleError(
 }
 
 /**
- * Improved API error handler with better context
+ * Enhanced API error handler with better context and recovery options
+ * Combines both previous implementations into one unified function
  */
 export function handleApiError(
   error: unknown, 
   operation: string, 
   fallbackMessage = "An unexpected error occurred",
-  showToast = false
+  showToast = true
 ): string {
   const isNetwork = isNetworkError(error);
   const isAuth = isAuthError(error);
@@ -47,8 +48,11 @@ export function handleApiError(
     message = "We're having trouble connecting to the server. Please check your internet connection.";
   } else if (isAuth) {
     message = "Authentication error. Please sign in again.";
+    // Could trigger a refresh of auth token or redirect to login here
   } else if (error instanceof Error) {
     message = error.message;
+  } else {
+    message = `Failed to ${operation}. Please try again later.`;
   }
   
   if (showToast) {
@@ -184,35 +188,4 @@ export function formatErrorMessage(error: unknown): string {
   } 
   
   return "An unexpected error occurred";
-}
-
-/**
- * Gracefully handle API errors with recovery options
- */
-export function handleApiError(error: unknown, operation: string): void {
-  const isNetwork = isNetworkError(error);
-  const isAuth = isAuthError(error);
-  
-  console.error(`API Error during ${operation}:`, error);
-  
-  if (isNetwork) {
-    toast({
-      title: "Connection Issue",
-      description: "We're having trouble connecting to the server. Please check your internet connection.",
-      variant: "destructive",
-    });
-  } else if (isAuth) {
-    toast({
-      title: "Authentication Required",
-      description: "Please sign in again to continue.",
-      variant: "destructive",
-    });
-    // Could trigger a refresh of auth token or redirect to login here
-  } else {
-    toast({
-      title: "Error",
-      description: `Failed to ${operation}. Please try again later.`,
-      variant: "destructive",
-    });
-  }
 }
