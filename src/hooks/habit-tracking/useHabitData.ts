@@ -93,7 +93,7 @@ export function useHabitData(onHabitChange?: () => void) {
         throw new Error("Failed to fetch habits data");
       }
       
-      // Apply filtered habits
+      // Apply filtered habits - FIX: Don't call useMemo inside a regular function
       const filtered = filterHabitsForToday(habitsData);
       
       // Update state in a single operation with immutable update pattern

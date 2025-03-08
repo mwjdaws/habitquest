@@ -21,37 +21,29 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
   };
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Today's Habits</CardTitle>
-        <CardDescription>Your habit progress for today</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="p-4 border border-red-300 bg-red-50 text-red-900 rounded-md flex flex-col items-center">
-          <AlertCircle className="h-6 w-6 mb-2" />
-          <p className="text-sm font-medium text-center mb-3">{error}</p>
-          
-          {isConnectionError ? (
-            <p className="text-xs text-center mb-3">
-              Looks like you might be offline. Check your internet connection and try again.
-            </p>
-          ) : (
-            <p className="text-xs text-center mb-3">
-              We're having trouble loading your habits. Please try refreshing the page.
-            </p>
-          )}
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-1" 
-            onClick={handleRetry}
-          >
-            <RefreshCw className="h-3 w-3" />
-            Try again
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="p-4 border border-red-300 bg-red-50 text-red-900 rounded-md flex flex-col items-center">
+      <AlertCircle className="h-6 w-6 mb-2" />
+      <p className="text-sm font-medium text-center mb-3">{error}</p>
+      
+      {isConnectionError ? (
+        <p className="text-xs text-center mb-3">
+          Looks like you might be offline. Check your internet connection and try again.
+        </p>
+      ) : (
+        <p className="text-xs text-center mb-3">
+          We're having trouble loading your habits. Please try refreshing the page.
+        </p>
+      )}
+      
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="flex items-center gap-1" 
+        onClick={handleRetry}
+      >
+        <RefreshCw className="h-3 w-3" />
+        Try again
+      </Button>
+    </div>
   );
 }

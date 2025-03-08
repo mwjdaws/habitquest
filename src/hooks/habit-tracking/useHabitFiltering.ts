@@ -33,19 +33,16 @@ export function useHabitFiltering() {
     return filteredHabits;
   }, []);
 
-  // Add memoization wrapper for the filter function to prevent unnecessary recalculations
-  const memoizedFilterHabitsForToday = useCallback((habits: Habit[]) => {
-    // Create a cache key based on habits array and current date
-    const cacheKey = `${habits.length}:${habits.map(h => h.id).join(',')}:${new Date().toDateString()}`;
-    
-    // Use the memo cache to store and retrieve filtered results
-    return useMemo(() => {
+  // Create a memoized version of the function that will be returned
+  const memoizedFilterFn = useMemo(() => {
+    // Return a function that accepts habits and applies filtering
+    return (habits: Habit[]) => {
       console.log("Computing filtered habits (memoized)");
       return filterHabitsForToday(habits);
-    }, [habits, cacheKey, filterHabitsForToday]);
+    };
   }, [filterHabitsForToday]);
 
   return {
-    filterHabitsForToday: memoizedFilterHabitsForToday
+    filterHabitsForToday: memoizedFilterFn
   };
 }
