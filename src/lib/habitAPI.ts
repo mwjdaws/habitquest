@@ -194,8 +194,8 @@ const updateStreakOnCompletion = async (habitId: string, userId: string) => {
     
     if (!habit) return;
     
-    const newStreak = habit.current_streak + 1;
-    const newLongestStreak = Math.max(newStreak, habit.longest_streak);
+    const newStreak = (habit.current_streak || 0) + 1;
+    const newLongestStreak = Math.max(newStreak, habit.longest_streak || 0);
     
     // Update the streak
     const { error } = await supabase
@@ -211,7 +211,8 @@ const updateStreakOnCompletion = async (habitId: string, userId: string) => {
     if (error) throw error;
     
   } catch (error) {
-    return handleApiError(error, "updating streak on completion");
+    console.error("Error updating streak on completion:", error);
+    // We'll log the error but not throw it to avoid breaking the main completion flow
   }
 };
 
@@ -233,11 +234,11 @@ const updateStreakOnUncompletion = async (habitId: string, userId: string) => {
     if (!habit) return;
     
     // Only decrease if the streak is greater than 0
-    if (habit.current_streak > 0) {
+    if ((habit.current_streak || 0) > 0) {
       const { error } = await supabase
         .from("habits")
         .update({ 
-          current_streak: habit.current_streak - 1,
+          current_streak: (habit.current_streak || 0) - 1,
           updated_at: new Date().toISOString()
         })
         .eq("id", habitId)
@@ -247,7 +248,8 @@ const updateStreakOnUncompletion = async (habitId: string, userId: string) => {
     }
     
   } catch (error) {
-    return handleApiError(error, "updating streak on uncompletion");
+    console.error("Error updating streak on uncompletion:", error);
+    // We'll log the error but not throw it to avoid breaking the main completion flow
   }
 };
 

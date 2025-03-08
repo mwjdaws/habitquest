@@ -81,9 +81,11 @@ export type Database = {
           category: string
           color: string
           created_at: string
+          current_streak: number | null
           description: string | null
           frequency: string[]
           id: string
+          longest_streak: number | null
           name: string
           updated_at: string
           user_id: string
@@ -92,9 +94,11 @@ export type Database = {
           category?: string
           color?: string
           created_at?: string
+          current_streak?: number | null
           description?: string | null
           frequency?: string[]
           id?: string
+          longest_streak?: number | null
           name: string
           updated_at?: string
           user_id: string
@@ -103,9 +107,11 @@ export type Database = {
           category?: string
           color?: string
           created_at?: string
+          current_streak?: number | null
           description?: string | null
           frequency?: string[]
           id?: string
+          longest_streak?: number | null
           name?: string
           updated_at?: string
           user_id?: string
