@@ -41,7 +41,7 @@ export function useHabitData(onHabitChange?: () => void) {
     const now = Date.now();
     const minInterval = retryAttemptsRef.current > 0 
       ? Math.min(3000 * Math.pow(1.5, retryAttemptsRef.current), 15000)  // Exponential backoff, max 15 seconds
-      : 3000;
+      : 500;  // Reduced initial delay to improve responsiveness
       
     if (now - lastFetchTimeRef.current < minInterval) {
       console.log(`Skipping data fetch - too soon since last fetch (${Math.round((now - lastFetchTimeRef.current)/1000)}s < ${Math.round(minInterval/1000)}s)`);
@@ -61,13 +61,17 @@ export function useHabitData(onHabitChange?: () => void) {
       
       // Use withRetry for data fetching to improve reliability
       const [habitsData, completionsData, failuresData] = await Promise.all([
-        withRetry(() => fetchHabits(), 2),
-        withRetry(() => getCompletionsForDate(today), 2),
-        withRetry(() => getFailuresForDate(today), 2)
+        withRetry(() => fetchHabits(), 3),  // Increased retry attempts
+        withRetry(() => getCompletionsForDate(today), 3),
+        withRetry(() => getFailuresForDate(today), 3)
       ]);
       
       // Only update state if component is still mounted
       if (!isMountedRef.current) return;
+      
+      if (!habitsData) {
+        throw new Error("Failed to fetch habits data");
+      }
       
       const filtered = filterHabitsForToday(habitsData || []);
       console.log(`Loaded ${habitsData.length} habits, filtered to ${filtered.length} for today`);
@@ -109,7 +113,8 @@ export function useHabitData(onHabitChange?: () => void) {
       setState(prev => ({
         ...prev,
         loading: false,
-        error: errorMessage
+        error: errorMessage,
+        isInitialized: initialLoadCompletedRef.current // Keep initialized state if we had successfully loaded before
       }));
       
       // Only show toast for user-initiated loads

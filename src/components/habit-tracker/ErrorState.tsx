@@ -35,7 +35,11 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
             <p className="text-xs text-center mb-3">
               Looks like you might be offline. Check your internet connection and try again.
             </p>
-          ) : null}
+          ) : (
+            <p className="text-xs text-center mb-3">
+              We're having trouble loading your habits. Please try refreshing the page.
+            </p>
+          )}
           
           <Button 
             variant="outline" 
