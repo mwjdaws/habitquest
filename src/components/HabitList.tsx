@@ -2,16 +2,15 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchHabits, getTodayFormatted, getCompletionsForDate, toggleHabitCompletion } from "@/lib/habits";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Check, Plus, Tag, Zap } from "lucide-react";
-import { HabitForm } from "./HabitForm";
 import { toast } from "@/components/ui/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 import { handleError } from "@/lib/error-utils";
-import { Badge } from "@/components/ui/badge";
-import { Habit, HabitCompletion } from "@/lib/habitTypes";
+import { HabitCompletion } from "@/lib/habitTypes";
+import { HabitItem } from "./habit-list/HabitItem";
+import { NewHabitButton } from "./habit-list/NewHabitButton";
+import { HabitFormCard } from "./habit-list/HabitFormCard";
+import { EmptyState } from "./habit-list/EmptyState";
+import { ErrorAlert } from "./habit-list/ErrorAlert";
+import { LoadingState } from "./habit-list/LoadingState";
 
 export function HabitList() {
   const [showForm, setShowForm] = useState(false);
@@ -73,40 +72,25 @@ export function HabitList() {
     });
   };
 
-  if (isLoading) return <div className="py-8 text-center">Loading habits...</div>;
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
+  if (isLoading) return <LoadingState />;
+  if (error) return <ErrorAlert message={error} />;
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">My Habits</h2>
-        <Button onClick={() => setShowForm(!showForm)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Habit
-        </Button>
+        <NewHabitButton onClick={() => setShowForm(!showForm)} />
       </div>
 
       {showForm && (
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <HabitForm onSave={handleHabitSaved} onCancel={() => setShowForm(false)} />
-          </CardContent>
-        </Card>
+        <HabitFormCard 
+          onSave={handleHabitSaved} 
+          onCancel={() => setShowForm(false)} 
+        />
       )}
 
       {habits.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">You don't have any habits yet. Create your first one!</p>
-          </CardContent>
-        </Card>
+        <EmptyState />
       ) : (
         <div className="grid gap-4">
           {habits.map((habit) => (
@@ -121,98 +105,5 @@ export function HabitList() {
         </div>
       )}
     </div>
-  );
-}
-
-function HabitItem({ 
-  habit, 
-  isCompleted, 
-  onToggle, 
-  onUpdate 
-}: { 
-  habit: Habit; 
-  isCompleted: boolean; 
-  onToggle: (id: string) => void;
-  onUpdate: () => void;
-}) {
-  const [showEditForm, setShowEditForm] = useState(false);
-
-  const handleHabitSaved = () => {
-    onUpdate();
-    setShowEditForm(false);
-  };
-
-  return (
-    <Card className={`border-l-4 border-l-${habit.color}`}>
-      {showEditForm ? (
-        <CardContent className="pt-6">
-          <HabitForm 
-            habit={habit} 
-            onSave={handleHabitSaved} 
-            onCancel={() => setShowEditForm(false)} 
-          />
-        </CardContent>
-      ) : (
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-medium">{habit.name}</h3>
-              <Badge variant="outline" className="font-normal text-xs">
-                <Tag className="h-3 w-3 mr-1" />
-                {habit.category}
-              </Badge>
-              {habit.current_streak > 0 && (
-                <Badge variant="secondary" className="text-xs font-normal flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
-                  {habit.current_streak} day streak
-                </Badge>
-              )}
-              {habit.longest_streak > 0 && habit.longest_streak > habit.current_streak && (
-                <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
-                  Best: {habit.longest_streak}
-                </Badge>
-              )}
-            </div>
-            {habit.description && (
-              <p className="text-sm text-muted-foreground">{habit.description}</p>
-            )}
-            <div className="flex gap-1 mt-1">
-              {habit.frequency.length > 0 ? (
-                habit.frequency.map((day) => (
-                  <span 
-                    key={day} 
-                    className="px-1.5 py-0.5 bg-muted text-muted-foreground text-xs rounded"
-                  >
-                    {day.slice(0, 3)}
-                  </span>
-                ))
-              ) : (
-                <span className="px-1.5 py-0.5 bg-muted text-muted-foreground text-xs rounded">
-                  Daily
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowEditForm(true)}
-            >
-              Edit
-            </Button>
-            <Button 
-              variant={isCompleted ? "default" : "outline"} 
-              size="sm"
-              className={isCompleted ? "bg-green-500 hover:bg-green-600" : ""}
-              onClick={() => onToggle(habit.id)}
-            >
-              {isCompleted && <Check className="mr-1 h-4 w-4" />}
-              {isCompleted ? "Done" : "Mark Complete"}
-            </Button>
-          </div>
-        </CardContent>
-      )}
-    </Card>
   );
 }
