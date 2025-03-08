@@ -4,4 +4,9 @@
 
 export * from './habitTypes';
 export * from './habitUtils';
-export * from './habitAPI';
+
+// Re-export from the new API modules
+export * from './api/apiUtils';
+export * from './api/habitCrudAPI';
+export * from './api/completionAPI';
+export * from './api/failureAPI';
