@@ -64,7 +64,14 @@ export function HabitList() {
   };
 
   const handleHabitSaved = () => {
+    // Immediately refetch habits to ensure the list is up-to-date
     refetchHabits();
+    
+    // Force a refresh after a short delay to ensure all components have updated
+    setTimeout(() => {
+      refetchHabits();
+    }, 300);
+    
     setShowForm(false);
     toast({
       title: "Habit saved",

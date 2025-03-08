@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HabitTracker } from "@/components/HabitTracker";
 import { Zap } from "lucide-react";
@@ -11,35 +11,41 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [topStreaks, setTopStreaks] = useState<Habit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
 
-  useEffect(() => {
-    const loadStreaks = async () => {
-      if (!user) return;
-      
-      try {
-        setIsLoading(true);
-        const habits = await fetchHabits();
-        
-        // Get habits with streaks and sort by current streak
-        const habitsWithStreaks = habits
-          .filter(habit => habit.current_streak > 0)
-          .sort((a, b) => b.current_streak - a.current_streak);
-        
-        setTopStreaks(habitsWithStreaks.slice(0, 3));
-      } catch (error) {
-        console.error("Error fetching streak data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const loadStreaks = useCallback(async () => {
+    if (!user) return;
     
-    loadStreaks();
+    try {
+      setIsLoading(true);
+      const habits = await fetchHabits();
+      
+      // Get habits with streaks and sort by current streak
+      const habitsWithStreaks = habits
+        .filter(habit => habit.current_streak > 0)
+        .sort((a, b) => b.current_streak - a.current_streak);
+      
+      setTopStreaks(habitsWithStreaks.slice(0, 3));
+    } catch (error) {
+      console.error("Error fetching streak data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [user]);
+  
+  useEffect(() => {
+    loadStreaks();
+  }, [loadStreaks, lastRefresh]);
+
+  // Function to trigger a refresh
+  const refreshData = () => {
+    setLastRefresh(Date.now());
+  };
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <HabitTracker />
+        <HabitTracker onHabitChange={refreshData} key={lastRefresh} />
         
         <Card>
           <CardHeader>

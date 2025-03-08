@@ -24,7 +24,11 @@ import { LoadingState } from "./habit-list/LoadingState";
 import { ErrorState } from "./habit-tracker/ErrorState";
 import { EmptyState } from "./habit-tracker/EmptyState";
 
-export function HabitTracker() {
+interface HabitTrackerProps {
+  onHabitChange?: () => void;
+}
+
+export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [completions, setCompletions] = useState([]);
   const [failures, setFailures] = useState([]);
@@ -55,6 +59,11 @@ export function HabitTracker() {
       setHabits(habitsData);
       setCompletions(completionsData);
       setFailures(failuresData);
+      
+      // Notify parent components that data has changed
+      if (onHabitChange) {
+        onHabitChange();
+      }
     } catch (error) {
       console.error("Error loading habit data:", error);
       setError("Failed to load habit data. Please try again.");
@@ -72,7 +81,7 @@ export function HabitTracker() {
     loadData();
   }, [user, today]);
 
-  // Add a function to refresh data without showing loading state
+  // Refresh data without showing loading state
   const refreshData = () => {
     loadData(false);
   };
