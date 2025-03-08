@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHabitData } from "./useHabitData";
@@ -25,16 +26,19 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
   
   const { handleToggleCompletion, handleLogFailure } = useHabitActions(
     state,
-    setState => {
-      // This adapter pattern allows us to keep the same API while using the new structure
-      // useState setter function doesn't exist in the new structure, so we update the object directly
-      state.habits = setState(state).habits;
-      state.filteredHabits = setState(state).filteredHabits;
-      state.completions = setState(state).completions;
-      state.failures = setState(state).failures;
-      state.loading = setState(state).loading;
-      state.error = setState(state).error;
-      state.isInitialized = setState(state).isInitialized;
+    prevState => {
+      // Fixed: properly handle the setState callback pattern
+      // We're now creating a proper updater function that returns a new state
+      return {
+        ...prevState,
+        habits: state.habits,
+        filteredHabits: state.filteredHabits,
+        completions: state.completions,
+        failures: state.failures,
+        loading: state.loading,
+        error: state.error,
+        isInitialized: state.isInitialized
+      };
     },
     refreshData
   );
