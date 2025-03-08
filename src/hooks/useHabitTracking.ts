@@ -16,10 +16,13 @@ import { Habit } from "@/lib/habitTypes";
 
 export function useHabitTracking(onHabitChange?: () => void) {
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [filteredHabits, setFilteredHabits] = useState<Habit[]>([]);
   const [completions, setCompletions] = useState([]);
   const [failures, setFailures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
   const { user } = useAuth();
   const dataRefreshTimerRef = useRef<number | null>(null);
   const initialLoadAttemptedRef = useRef(false);
@@ -31,9 +34,9 @@ export function useHabitTracking(onHabitChange?: () => void) {
 
   // Add debounce to prevent multiple rapid data loads
   const debouncedLoadData = useCallback((showLoading = true) => {
-    // Prevent multiple rapid fetches - only fetch if it's been at least 2 seconds since last fetch
+    // Prevent multiple rapid fetches - only fetch if it's been at least 3 seconds since last fetch
     const now = Date.now();
-    if (now - lastFetchTimeRef.current < 2000 && lastFetchTimeRef.current !== 0) {
+    if (now - lastFetchTimeRef.current < 3000 && lastFetchTimeRef.current !== 0) {
       console.log('Debouncing data fetch - too soon since last fetch');
       return;
     }
@@ -52,6 +55,15 @@ export function useHabitTracking(onHabitChange?: () => void) {
     }, 300);
   }, []);
 
+  // Function to apply frequency filtering to habits
+  const filterHabitsForToday = useCallback((allHabits: Habit[]) => {
+    if (!allHabits || !allHabits.length) return [];
+    
+    const filtered = allHabits.filter(habit => shouldShowHabitForDay(habit, todayName));
+    console.log(`Today (${todayName}): Filtered ${allHabits.length} habits to ${filtered.length} for today`);
+    return filtered;
+  }, [todayName]);
+
   // Function to load data with optimized error handling
   const loadData = useCallback(async (showLoading = true) => {
     if (!user) return;
@@ -66,7 +78,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
     try {      
       console.log('Fetching habit data...');
       
-      // Use Promise.allSettled to handle partial failures
+      // Use Promise.all to fetch data in parallel
       const results = await Promise.allSettled([
         fetchHabits(),
         getCompletionsForDate(today),
@@ -89,8 +101,10 @@ export function useHabitTracking(onHabitChange?: () => void) {
       console.log(`Loaded ${habitsData.length} habits, ${completionsData.length} completions, ${failuresData.length} failures`);
       
       setHabits(habitsData || []);
+      setFilteredHabits(filterHabitsForToday(habitsData || []));
       setCompletions(completionsData || []);
       setFailures(failuresData || []);
+      setIsInitialized(true);
       
       // Notify parent components that data has changed
       if (onHabitChange) {
@@ -111,7 +125,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
         setLoading(false);
       }, 400);
     }
-  }, [user, today, onHabitChange]);
+  }, [user, today, onHabitChange, filterHabitsForToday]);
 
   // Initial load
   useEffect(() => {
@@ -135,10 +149,10 @@ export function useHabitTracking(onHabitChange?: () => void) {
 
   // Reload data when date changes
   useEffect(() => {
-    if (initialLoadAttemptedRef.current && user) {
+    if (initialLoadAttemptedRef.current && user && isInitialized) {
       debouncedLoadData(true);
     }
-  }, [today, user, debouncedLoadData]);
+  }, [today, user, debouncedLoadData, isInitialized]);
 
   // Public method to refresh data without showing loading state
   const refreshData = useCallback((showLoading = false) => {
@@ -172,7 +186,7 @@ export function useHabitTracking(onHabitChange?: () => void) {
       // Send update to server
       await toggleHabitCompletion(habitId, today, isCompleted);
       
-      // Refresh habit data to get updated streak
+      // Refresh habit data to get updated streak (but don't show loading state)
       refreshData(false);
       
       toast({
@@ -237,30 +251,27 @@ export function useHabitTracking(onHabitChange?: () => void) {
       });
     }
   };
-
-  // Filter habits for today
-  const todaysHabits = habits.filter(habit => shouldShowHabitForDay(habit, todayName));
-  console.log(`Today (${todayName}): Filtered ${habits.length} habits to ${todaysHabits.length} for today`);
   
   // Calculate progress
-  const completedCount = todaysHabits.length > 0 
-    ? todaysHabits.filter(habit => completions.some(c => c.habit_id === habit.id)).length 
+  const completedCount = filteredHabits.length > 0 
+    ? filteredHabits.filter(habit => completions.some(c => c.habit_id === habit.id)).length 
     : 0;
-  const progress = todaysHabits.length > 0 
-    ? Math.round((completedCount / todaysHabits.length) * 100) 
+  const progress = filteredHabits.length > 0 
+    ? Math.round((completedCount / filteredHabits.length) * 100) 
     : 0;
 
   return {
-    habits: todaysHabits,
+    habits: filteredHabits,
     completions,
     failures,
     loading: isLoadingRef.current, // Use ref for more stable loading state
     error,
     progress,
     completedCount,
-    totalCount: todaysHabits.length,
+    totalCount: filteredHabits.length,
     handleToggleCompletion,
     handleLogFailure,
     refreshData,
+    isInitialized,
   };
 }

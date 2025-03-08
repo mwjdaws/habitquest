@@ -32,12 +32,13 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     totalCount,
     handleToggleCompletion,
     handleLogFailure,
-    refreshData
+    refreshData,
+    isInitialized
   } = useHabitTracking(onHabitChange);
 
   // Force a refresh when the component mounts - with debounce to prevent excessive calls
   useEffect(() => {
-    // Clear any existing intervals when component remounts
+    // Clear any existing intervals when component unmounts or remounts
     if (refreshIntervalRef.current) {
       window.clearInterval(refreshIntervalRef.current);
       refreshIntervalRef.current = null;
@@ -48,12 +49,12 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
       console.log('Initial habit data fetch');
       refreshData(true);
       
-      // Set up regular refresh interval (every 60 seconds instead of 30 to reduce load)
+      // Set up regular refresh interval (every 2 minutes to reduce load)
       refreshIntervalRef.current = window.setInterval(() => {
         console.log('Silent refresh of habit data');
         refreshData(false); // Silent refresh
-      }, 60000);
-    }, 300);
+      }, 120000); // 2 minutes
+    }, 500);
     
     return () => {
       window.clearTimeout(initialLoadTimeout);
@@ -72,15 +73,15 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
       loadingTimerRef.current = null;
     }
     
-    if (loading) {
-      // Immediately show loading state when loading starts
+    if (loading && !isInitialized) {
+      // Immediately show loading state when loading starts and not initialized
       setShowLoading(true);
-    } else {
-      // Add a slightly longer delay before hiding the loading state
+    } else if (!loading && isInitialized) {
+      // Add a small delay before hiding the loading state
       // to ensure content is fully ready (prevents flash of empty content)
       loadingTimerRef.current = window.setTimeout(() => {
         setShowLoading(false);
-      }, 600);
+      }, 300);
     }
     
     return () => {
@@ -89,7 +90,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
         loadingTimerRef.current = null;
       }
     };
-  }, [loading]);
+  }, [loading, isInitialized]);
 
   const onLogFailure = (habitId: string) => {
     const habit = habits.find(h => h.id === habitId);
@@ -110,7 +111,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
 
   // Show appropriate content based on loading/error state
   const renderContent = () => {
-    if (showLoading) {
+    if (showLoading || !isInitialized) {
       return <LoadingState />;
     }
     
@@ -144,7 +145,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   return (
     <>
       <Card>
-        <HabitTrackerHeader totalHabits={totalCount} isLoading={showLoading} />
+        <HabitTrackerHeader totalHabits={totalCount} isLoading={showLoading || !isInitialized} />
         <CardContent>
           {renderContent()}
         </CardContent>

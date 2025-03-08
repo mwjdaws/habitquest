@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HabitTracker } from "@/components/HabitTracker";
@@ -12,16 +13,27 @@ const Dashboard = () => {
   const [topStreaks, setTopStreaks] = useState<Habit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const [dataInitialized, setDataInitialized] = useState(false);
   const loadingTimerRef = useRef<number | null>(null);
   const dataFetchTimerRef = useRef<number | null>(null);
   const initialDataFetchedRef = useRef(false);
+  const lastFetchTimeRef = useRef<number>(0);
   
-  const loadStreaks = useCallback(async () => {
+  const loadStreaks = useCallback(async (showLoading = true) => {
     if (!user) return;
+    
+    // Debounce frequent calls
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < 2000 && lastFetchTimeRef.current !== 0) {
+      console.log('Debouncing streak data fetch');
+      return;
+    }
+    
+    lastFetchTimeRef.current = now;
     
     try {
       // Only set loading to true if it's going to take a while or it's the initial load
-      if (!initialDataFetchedRef.current) {
+      if (showLoading && !initialDataFetchedRef.current) {
         setIsLoading(true);
       }
       
@@ -34,6 +46,7 @@ const Dashboard = () => {
       
       setTopStreaks(habitsWithStreaks.slice(0, 3));
       initialDataFetchedRef.current = true;
+      setDataInitialized(true);
       
       // Add a small delay before setting loading to false
       // to prevent UI flickering
@@ -49,6 +62,7 @@ const Dashboard = () => {
     }
   }, [user]);
   
+  // Set up initial data fetch
   useEffect(() => {
     // Clear any existing data fetch timer
     if (dataFetchTimerRef.current) {
@@ -57,8 +71,13 @@ const Dashboard = () => {
     
     // Set a small delay before fetching to prevent rapid fetch cycles
     dataFetchTimerRef.current = window.setTimeout(() => {
-      loadStreaks();
-    }, 200);
+      loadStreaks(true);
+    }, 400);
+    
+    // Set up interval for periodic refresh (every 2 minutes)
+    const refreshInterval = window.setInterval(() => {
+      loadStreaks(false); // Don't show loading state for background refreshes
+    }, 120000);
     
     return () => {
       // Clean up timers if component unmounts
@@ -68,6 +87,7 @@ const Dashboard = () => {
       if (dataFetchTimerRef.current) {
         clearTimeout(dataFetchTimerRef.current);
       }
+      clearInterval(refreshInterval);
     };
   }, [loadStreaks, lastRefresh]);
 
@@ -77,7 +97,7 @@ const Dashboard = () => {
   };
 
   const renderStreakStats = () => {
-    if (isLoading) {
+    if (isLoading || !dataInitialized) {
       return (
         <div className="space-y-4">
           <Skeleton className="h-12 w-full" />
@@ -128,7 +148,7 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <HabitTracker onHabitChange={refreshData} key={lastRefresh} />
+        <HabitTracker onHabitChange={refreshData} key={`habit-tracker-${lastRefresh}`} />
         
         <Card>
           <CardHeader>
