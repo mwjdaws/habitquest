@@ -22,6 +22,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   const initialFetchCompleted = useRef(false);
   const loadingTimerRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
+  const lastVisibilityChange = useRef<number>(Date.now());
   
   const { 
     habits,
@@ -51,25 +52,20 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   // One-time initial data fetch with proper cleanup and retry capability
   useEffect(() => {
     mountedRef.current = true;
+    console.log('HabitTracker mounted, setting up data fetch');
     
+    // Force immediate data load on mount
     if (!initialFetchCompleted.current) {
-      console.log('Setting up initial habit data fetch (one-time)');
-      const initialLoadTimer = window.setTimeout(() => {
-        if (mountedRef.current) {
-          console.log('Executing initial habit data fetch');
-          refreshData(true);
-          initialFetchCompleted.current = true;
-        }
-      }, 300); // Reduced from 500ms for faster loading
-      
-      return () => {
-        mountedRef.current = false;
-        window.clearTimeout(initialLoadTimer);
-      };
+      console.log('Forcing immediate habit data fetch');
+      initialFetchCompleted.current = true;
+      refreshData(true);
     }
     
     return () => {
       mountedRef.current = false;
+      if (loadingTimerRef.current) {
+        window.clearTimeout(loadingTimerRef.current);
+      }
     };
   }, [refreshData]);
 
@@ -92,7 +88,7 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
         if (mountedRef.current) {
           setShowLoading(false);
         }
-      }, 300);
+      }, 200);
     }
     
     return () => {
@@ -152,12 +148,19 @@ export function HabitTracker({ onHabitChange }: HabitTrackerProps) {
     );
   };
 
-  // Force refresh on visibility change (tab becomes active)
+  // Force refresh on visibility change (tab becomes active) with debounce
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && initialFetchCompleted.current) {
-        console.log('Page became visible, refreshing habit data');
-        refreshData(false);
+      if (document.visibilityState === 'visible') {
+        const now = Date.now();
+        const timeSinceLastChange = now - lastVisibilityChange.current;
+        
+        // Only refresh if at least 5 seconds have passed since last visibility change
+        if (timeSinceLastChange > 5000 && initialFetchCompleted.current) {
+          console.log('Page became visible, refreshing habit data');
+          lastVisibilityChange.current = now;
+          refreshData(false);
+        }
       }
     };
     

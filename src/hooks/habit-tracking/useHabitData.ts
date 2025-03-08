@@ -40,8 +40,8 @@ export function useHabitData(onHabitChange?: () => void) {
     // Strict debouncing: Prevent rapid successive calls with exponential backoff for errors
     const now = Date.now();
     const minInterval = retryAttemptsRef.current > 0 
-      ? Math.min(3000 * Math.pow(1.5, retryAttemptsRef.current), 15000)  // Exponential backoff, max 15 seconds
-      : 500;  // Reduced initial delay to improve responsiveness
+      ? Math.min(2000 * Math.pow(1.5, retryAttemptsRef.current), 10000)  // Exponential backoff, max 10 seconds
+      : 300;  // Further reduced initial delay to improve responsiveness
       
     if (now - lastFetchTimeRef.current < minInterval) {
       console.log(`Skipping data fetch - too soon since last fetch (${Math.round((now - lastFetchTimeRef.current)/1000)}s < ${Math.round(minInterval/1000)}s)`);
@@ -57,20 +57,21 @@ export function useHabitData(onHabitChange?: () => void) {
     }
     
     try {      
-      console.log('Fetching habit data...');
+      console.log('Fetching habit data with timestamp:', now);
       
-      // Use withRetry for data fetching to improve reliability
+      // Use withRetry for data fetching to improve reliability, increased retry attempts
       const [habitsData, completionsData, failuresData] = await Promise.all([
-        withRetry(() => fetchHabits(), 3),  // Increased retry attempts
-        withRetry(() => getCompletionsForDate(today), 3),
-        withRetry(() => getFailuresForDate(today), 3)
+        withRetry(() => fetchHabits(), 5),  // Increased retry attempts
+        withRetry(() => getCompletionsForDate(today), 5),
+        withRetry(() => getFailuresForDate(today), 5)
       ]);
       
       // Only update state if component is still mounted
       if (!isMountedRef.current) return;
       
-      if (!habitsData) {
-        throw new Error("Failed to fetch habits data");
+      // Explicitly handle null or undefined data
+      if (!habitsData || habitsData.length === undefined) {
+        throw new Error("Failed to fetch habits data - received invalid response");
       }
       
       const filtered = filterHabitsForToday(habitsData || []);
@@ -106,6 +107,10 @@ export function useHabitData(onHabitChange?: () => void) {
       
       // Provide more specific error messages based on retry attempts
       let errorMessage = "Failed to load habit data. Please try again.";
+      if (error instanceof Error) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
       if (retryAttemptsRef.current > 1) {
         errorMessage = `We're having trouble connecting to the server (Attempt ${retryAttemptsRef.current}). Please check your connection.`;
       }
@@ -127,8 +132,8 @@ export function useHabitData(onHabitChange?: () => void) {
       }
       
       // Try again automatically if it's not a user-initiated load and within retry limit
-      if (!showLoading && retryAttemptsRef.current <= 3) {
-        const retryDelay = 5000 * Math.pow(1.5, retryAttemptsRef.current - 1);
+      if (!showLoading && retryAttemptsRef.current <= 5) {
+        const retryDelay = 3000 * Math.pow(1.5, retryAttemptsRef.current - 1);
         console.log(`Scheduling automatic retry in ${Math.round(retryDelay/1000)}s...`);
         
         if (dataLoadTimerRef.current) {
@@ -153,7 +158,7 @@ export function useHabitData(onHabitChange?: () => void) {
     
     dataLoadTimerRef.current = window.setTimeout(() => {
       loadData(showLoading);
-    }, 300);
+    }, 100); // Reduced timing for quicker response
   }, [loadData]);
 
   return {
