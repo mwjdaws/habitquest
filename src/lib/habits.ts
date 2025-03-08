@@ -10,3 +10,4 @@ export * from './api/apiUtils';
 export * from './api/habitCrudAPI';
 export * from './api/completionAPI';
 export * from './api/failureAPI';
+export * from './api/trendAPI';
