@@ -8,7 +8,7 @@ import { HabitTrackerHeader } from "./habit-tracker/HabitTrackerHeader";
 import { LoadingState } from "./habit-list/LoadingState";
 import { ErrorState } from "./habit-tracker/ErrorState";
 import { EmptyState } from "./habit-tracker/EmptyState";
-import { useState, useCallback, memo, useMemo } from "react";
+import { useState, useCallback, memo, useMemo, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 
 interface HabitTrackerProps {
@@ -40,6 +40,12 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     isInitialized
   } = useHabitTracking(onHabitChange);
 
+  // Force load data on component mount
+  useEffect(() => {
+    console.log("HabitTracker mounted, triggering data refresh");
+    refreshData(true);
+  }, [refreshData]);
+  
   // Optimized retry handler with debounce
   const handleRetry = useCallback(() => {
     toast({ title: "Refreshing", description: "Refreshing your habit data..." });
@@ -79,6 +85,17 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     onConfirm: onConfirmFailure,
     onCancel: onCancelFailure
   }), [failureState, handleDialogOpenChange, onConfirmFailure, onCancelFailure]);
+
+  // Debug output to help troubleshoot
+  useEffect(() => {
+    console.log("Habit tracker state:", {
+      habitCount: habits.length,
+      isLoading: loading,
+      isInitialized,
+      hasError: !!error,
+      completionsCount: completions.length,
+    });
+  }, [habits, loading, isInitialized, error, completions]);
 
   // More efficient content rendering with early returns
   if (loading || !isInitialized) {

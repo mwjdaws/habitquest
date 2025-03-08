@@ -73,7 +73,9 @@ export function useHabitData(onHabitChange?: () => void) {
         throw new Error("Failed to fetch habits data");
       }
       
+      // Apply filtered habits
       const filtered = filterHabitsForToday(habitsData);
+      console.log('Filtered habits for today:', filtered.length, 'out of', habitsData.length);
       
       // Update state in a single operation with immutable update pattern
       setState(prev => ({

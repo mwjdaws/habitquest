@@ -13,8 +13,8 @@ export function useHabitFiltering() {
     
     const todayName = getDayName(new Date());
     return allHabits.filter(habit => {
-      const shouldShow = shouldShowHabitForDay(habit, todayName);
-      return shouldShow;
+      // Empty frequency array means the habit should show every day
+      return habit.frequency.length === 0 || habit.frequency.includes(todayName.toLowerCase());
     });
   }, []);
 

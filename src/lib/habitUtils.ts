@@ -36,5 +36,6 @@ export const getDayName = (date: Date): string => {
  * based on its frequency settings
  */
 export const shouldShowHabitForDay = (habit: Habit, dayName: string): boolean => {
+  // Empty frequency array means the habit should show every day
   return habit.frequency.length === 0 || habit.frequency.includes(dayName.toLowerCase());
 };
