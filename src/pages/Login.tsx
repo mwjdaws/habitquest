@@ -15,6 +15,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
+  const [activeTab, setActiveTab] = useState("login");
   const { toast } = useToast();
   const { signIn, signUp } = useAuth();
 
@@ -58,18 +59,23 @@ const Login = () => {
         
         if (error) {
           console.error(`Signup error:`, error);
-          setErrorMessage(error.message);
+          
+          // Handle already registered users
+          if (error.message.includes("already registered")) {
+            setErrorMessage("This email is already registered. Please log in instead.");
+            setActiveTab("login");
+          } else {
+            setErrorMessage(error.message);
+          }
         } else if (success) {
           toast({
             title: "Account Created",
-            description: "Please check your email for a confirmation link.",
+            description: "Please check your email for a confirmation link before logging in.",
           });
           
           // Switch to login tab after successful signup
-          const loginTab = document.querySelector('[data-state="inactive"][value="login"]') as HTMLElement;
-          if (loginTab) loginTab.click();
-          
-          setInfoMessage("Account created successfully. You can now log in.");
+          setActiveTab("login");
+          setInfoMessage("Account created successfully. Please check your email for confirmation, then you can log in.");
         }
       } else {
         // Login
@@ -81,11 +87,13 @@ const Login = () => {
           console.error(`Login error:`, error);
           
           if (error.message.includes("Invalid login credentials")) {
-            setErrorMessage("Invalid email or password. Please try again.");
+            setErrorMessage("Invalid email or password. Please try again or create an account.");
+          } else if (error.message.includes("Email not confirmed")) {
+            setErrorMessage("Please confirm your email before logging in. Check your inbox for a confirmation link.");
           } else {
             setErrorMessage(error.message);
           }
-        } else if (success) {
+        } else if (success && !window.location.pathname.includes('/dashboard')) {
           toast({
             title: "Login Successful",
             description: "Welcome back!",
@@ -103,7 +111,7 @@ const Login = () => {
   const useTestCredentials = () => {
     setEmail("test@example.com");
     setPassword("password123");
-    setInfoMessage("Using test credentials. Click Login to continue.");
+    setInfoMessage("Using test credentials. Sign up first if this is your first time using the test account.");
   };
 
   return (
@@ -117,7 +125,7 @@ const Login = () => {
           <p className="text-muted-foreground">Track habits, achieve goals</p>
         </div>
         
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -216,6 +224,14 @@ const Login = () => {
                   />
                   <p className="text-xs text-muted-foreground">Password must be at least 6 characters</p>
                 </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-2" 
+                  onClick={useTestCredentials}
+                >
+                  Use Test Credentials
+                </Button>
               </CardContent>
               <CardFooter>
                 <Button 
@@ -234,6 +250,7 @@ const Login = () => {
           <p>For testing, use these credentials:</p>
           <p className="mt-1"><strong>Email:</strong> test@example.com</p>
           <p><strong>Password:</strong> password123</p>
+          <p className="mt-2 text-xs">If using test account for the first time, click "Sign Up" first</p>
         </div>
       </div>
     </div>

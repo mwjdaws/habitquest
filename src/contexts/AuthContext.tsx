@@ -124,66 +124,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Signing in with email:', email);
       
-      // For testing purposes, we'll allow a test user
-      if (email === 'test@example.com' && password === 'password123') {
-        console.log('Using test credentials');
-        
-        // Try to sign in with test credentials
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        // If sign in fails because user doesn't exist, create the test account
-        if (error) {
-          console.log('Test account not found or error occurred, creating it now');
-          
-          // Create the test account with auto verification
-          const { error: signUpError } = await supabase.auth.admin.createUser({
-            email,
-            password,
-            email_confirm: true
-          });
-          
-          if (signUpError) {
-            console.error('Failed to create test account:', signUpError);
-            return {
-              error: signUpError,
-              success: false,
-            };
-          }
-          
-          // Try signing in again
-          const { error: retryError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-          
-          if (retryError) {
-            console.error('Failed to sign in with newly created test account:', retryError);
-            return {
-              error: retryError,
-              success: false,
-            };
-          }
-        }
-        
-        console.log('Sign in successful with test account');
-        navigate('/dashboard');
-        return {
-          error: null,
-          success: true,
-        };
-      }
-      
-      // Normal sign in process
-      const { error } = await supabase.auth.signInWithPassword({
+      // Standard sign in process
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
         console.error('Sign in failed:', error);
+        
+        // Special case for test account
+        if (email === 'test@example.com' && password === 'password123') {
+          console.log('Test credentials detected, attempting sign up');
+          
+          // Try to sign up with test credentials
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+          });
+          
+          if (signUpError) {
+            console.error('Test account sign up failed:', signUpError);
+            return {
+              error: signUpError,
+              success: false,
+            };
+          }
+          
+          toast({
+            title: "Test Account Created",
+            description: "Please check your email for confirmation or try logging in again.",
+          });
+          
+          return {
+            error: null,
+            success: true,
+          };
+        }
+        
         return {
           error,
           success: false,
