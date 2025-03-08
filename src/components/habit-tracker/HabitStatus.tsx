@@ -1,4 +1,3 @@
-
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HabitFailure } from "@/lib/habitTypes";
@@ -20,17 +19,22 @@ export function HabitStatus({
   onLogFailure,
   failures
 }: HabitStatusProps) {
-  const failure = failures.find(f => f.habit_id === habitId);
+  // Get failure reason if available
+  const failureReason = isFailed ? 
+    failures.find(f => f.habit_id === habitId)?.reason || "Failed" : 
+    null;
   
+  // Return failure status if failed
   if (isFailed) {
     return (
       <div className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded-md flex items-center">
         <X className="mr-1 h-3 w-3" />
-        {failure?.reason || "Failed"}
+        {failureReason}
       </div>
     );
   }
   
+  // Otherwise show buttons
   return (
     <>
       {!isCompleted && (

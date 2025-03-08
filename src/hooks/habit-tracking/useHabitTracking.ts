@@ -10,27 +10,8 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
   const { 
     state,
     loadData,
-    debouncedLoadData,
-    dataLoadTimerRef,
-    isMountedRef,
-    initialLoadCompletedRef,
-    lastFetchTimeRef
+    refreshData
   } = useHabitData(onHabitChange);
-  
-  const [isInitialLoadSetUp, setIsInitialLoadSetUp] = useState(false);
-
-  // Public method to refresh data with improved throttling
-  const refreshData = useCallback((showLoading = false) => {
-    // Add timestamp-based throttling to prevent excessive refreshes
-    const now = Date.now();
-    if (now - lastFetchTimeRef.current < 800) {
-      console.log('Throttling refresh - too many calls in short period');
-      return;
-    }
-    lastFetchTimeRef.current = now;
-    
-    debouncedLoadData(showLoading);
-  }, [debouncedLoadData, lastFetchTimeRef]);
   
   // Pass the state and setState directly to useHabitActions
   const { handleToggleCompletion, handleLogFailure } = useHabitActions(
@@ -39,40 +20,25 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     refreshData
   );
 
-  // Optimize initial data loading with better cleanup
+  // Load data on mount and when user changes
   useEffect(() => {
-    isMountedRef.current = true;
-    
-    if (!isInitialLoadSetUp && user) {
-      setIsInitialLoadSetUp(true);
+    if (user) {
+      loadData(true);
       
-      // Small delay before initial load to ensure everything is ready
-      dataLoadTimerRef.current = window.setTimeout(() => {
-        if (isMountedRef.current) {
-          loadData(true);
+      // Set up periodic refresh
+      const refreshInterval = window.setInterval(() => {
+        if (user && document.visibilityState === 'visible') {
+          refreshData(false); // Silent refresh
         }
-      }, 500);
+      }, 300000); // 5 minutes
+      
+      return () => {
+        window.clearInterval(refreshInterval);
+      };
     }
-    
-    // Set up sensible interval for periodic refreshes with a longer interval
-    const refreshInterval = window.setInterval(() => {
-      if (user && initialLoadCompletedRef.current && isMountedRef.current) {
-        loadData(false); // Silent refresh
-      }
-    }, 300000); // 5 minutes
-    
-    return () => {
-      isMountedRef.current = false;
-      
-      if (dataLoadTimerRef.current) {
-        window.clearTimeout(dataLoadTimerRef.current);
-      }
-      
-      window.clearInterval(refreshInterval);
-    };
-  }, [user, loadData, dataLoadTimerRef, isInitialLoadSetUp, initialLoadCompletedRef]);
+  }, [user, loadData, refreshData]);
   
-  // Memoize calculated values to prevent unnecessary recalculations
+  // Memoize calculated values
   const { progress, completedCount } = useMemo(() => {
     const completed = state.filteredHabits.length > 0 
       ? state.filteredHabits.filter(habit => state.completions.some(c => c.habit_id === habit.id)).length 
