@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchTasks } from '@/lib/api/taskAPI';
 import { useAuth } from '@/contexts/AuthContext';
+import { extractUniqueTags } from '@/lib/utils/tagUtils';
 
 /**
  * Hook to manage task tags with fetching and caching functionality
@@ -23,11 +24,7 @@ export function useTaskTags() {
       setError(null);
       const tasks = await fetchTasks();
       
-      const tags = tasks
-        .filter(task => task.tag) // Filter out tasks without tags
-        .map(task => task.tag as string) // Extract the tag
-        .filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
-        .sort(); // Sort alphabetically
+      const tags = extractUniqueTags(tasks);
       
       setAvailableTags(tags);
     } catch (err) {

@@ -1,14 +1,7 @@
-
 import { supabase } from '../supabase';
 import { CreateTaskData, Task, UpdateTaskData } from '../taskTypes';
 import { getAuthenticatedUser, handleApiError } from './apiUtils';
-
-/**
- * Helper function to format tag data consistently
- */
-const formatTagValue = (tag: string | undefined | null): string | null => {
-  return tag?.trim() || null;
-};
+import { formatTagValue } from '../utils/tagUtils';
 
 /**
  * Fetches all tasks for the current user

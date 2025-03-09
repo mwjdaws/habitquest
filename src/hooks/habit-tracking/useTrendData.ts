@@ -4,8 +4,7 @@ import { fetchHabits } from "@/lib/api/habitCrudAPI";
 import { getCompletionTrends, getFailureTrends, getStreakRecords } from "@/lib/api/trendAPI";
 import { Habit } from "@/lib/habitTypes";
 import { toast } from "@/components/ui/use-toast";
-
-export type TimeFilter = "week" | "month" | "all";
+import { useTimeFilter, TimeFilter } from "./utils/useTimeFilter";
 
 export interface TrendData {
   habits: Habit[];
@@ -16,24 +15,9 @@ export interface TrendData {
   error: string | null;
 }
 
-/**
- * Helper function to determine days from time filter
- */
-const getDaysFromFilter = (filter: TimeFilter): number => {
-  switch (filter) {
-    case "week":
-      return 7;
-    case "month":
-      return 30;
-    case "all":
-      return 365; // Using a year as "all" time to prevent too large requests
-    default:
-      return 7;
-  }
-};
-
 export function useTrendData() {
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("week");
+  const { timeFilter, setTimeFilter, getDays } = useTimeFilter("week");
+  
   const [data, setData] = useState<TrendData>({
     habits: [],
     completions: [],
@@ -47,7 +31,7 @@ export function useTrendData() {
     try {
       setData(prev => ({ ...prev, loading: true, error: null }));
       
-      const days = getDaysFromFilter(timeFilter);
+      const days = getDays();
       
       const [habitsData, completionsData, failuresData, streakRecordsData] = await Promise.all([
         fetchHabits(),
@@ -78,7 +62,7 @@ export function useTrendData() {
         variant: "destructive"
       });
     }
-  }, [timeFilter]);
+  }, [getDays]);
 
   useEffect(() => {
     fetchTrendData();

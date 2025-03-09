@@ -1,9 +1,10 @@
 
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
 import { Badge } from "@/components/ui/badge";
 import { Tag, Zap } from "lucide-react";
 import { HabitStatus } from "./HabitStatus";
+import { habitItemPropsAreEqual, useHabitStatus } from "@/hooks/habit-tracking/utils/useHabitMemoization";
 
 type HabitItemProps = {
   habit: Habit;
@@ -23,35 +24,13 @@ export const HabitItem = memo(function HabitItem({
   onLogFailure,
   onUndoFailure
 }: HabitItemProps) {
-  // Memoize status checks to prevent recalculations
-  const { isCompleted, isFailed, failureReason } = useMemo(() => {
-    const isCompleted = completions.some(c => c.habit_id === habit.id);
-    const isFailed = failures.some(f => f.habit_id === habit.id);
-    const failureReason = isFailed 
-      ? failures.find(f => f.habit_id === habit.id)?.reason || "" 
-      : "";
-    
-    return { isCompleted, isFailed, failureReason };
-  }, [habit.id, completions, failures]);
+  // Use our custom hook for status calculations
+  const { isCompleted, isFailed, bgColorClass } = useHabitStatus(habit, completions, failures);
   
   // Memoize handlers to prevent new function references on each render
   const handleToggle = useCallback(() => onToggleCompletion(habit.id), [habit.id, onToggleCompletion]);
   const handleFailure = useCallback(() => onLogFailure(habit.id), [habit.id, onLogFailure]);
   const handleUndo = useCallback(() => onUndoFailure(habit.id), [habit.id, onUndoFailure]);
-  
-  // Determine background color based on status - memoized
-  const bgColorClass = useMemo(() => 
-    isCompleted 
-      ? "bg-green-50 border-green-200" 
-      : isFailed 
-        ? "bg-red-50 border-red-200" 
-        : "bg-background"
-  , [isCompleted, isFailed]);
-  
-  // Performance tracking helper - uncomment for debugging
-  // useEffect(() => {
-  //   console.log(`HabitItem ${habit.name} rendered`);
-  // });
   
   return (
     <div 
@@ -98,45 +77,4 @@ export const HabitItem = memo(function HabitItem({
       </div>
     </div>
   );
-}, (prevProps, nextProps) => {
-  // Enhanced comparison function to prevent unnecessary re-renders
-  
-  // First, check identity of core habit properties that affect rendering
-  if (prevProps.habit.id !== nextProps.habit.id ||
-      prevProps.habit.name !== nextProps.habit.name ||
-      prevProps.habit.color !== nextProps.habit.color ||
-      prevProps.habit.description !== nextProps.habit.description ||
-      prevProps.habit.category !== nextProps.habit.category ||
-      prevProps.habit.current_streak !== nextProps.habit.current_streak) {
-    return false; // Render if any of these changed
-  }
-  
-  // Then check completion status
-  const prevCompleted = prevProps.completions.some(c => c.habit_id === prevProps.habit.id);
-  const nextCompleted = nextProps.completions.some(c => c.habit_id === nextProps.habit.id);
-  if (prevCompleted !== nextCompleted) {
-    return false; // Render if completion status changed
-  }
-  
-  // Then check failure status and reason
-  const prevFailure = prevProps.failures.find(f => f.habit_id === prevProps.habit.id);
-  const nextFailure = nextProps.failures.find(f => f.habit_id === nextProps.habit.id);
-  
-  // If both are undefined or null, they're equal
-  if (!prevFailure && !nextFailure) {
-    return true;
-  }
-  
-  // If one is defined and the other isn't, they're not equal
-  if ((!prevFailure && nextFailure) || (prevFailure && !nextFailure)) {
-    return false;
-  }
-  
-  // If both are defined, compare their reasons
-  if (prevFailure && nextFailure) {
-    return prevFailure.reason === nextFailure.reason;
-  }
-  
-  // Default to re-rendering if we can't determine equality
-  return false;
-});
+}, habitItemPropsAreEqual);
