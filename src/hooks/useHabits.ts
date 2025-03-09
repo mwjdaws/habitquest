@@ -19,6 +19,7 @@ export function useHabits() {
       const { data, error: fetchError } = await supabase
         .from('habits')
         .select('*')
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
       
       if (fetchError) throw new Error(fetchError.message);
