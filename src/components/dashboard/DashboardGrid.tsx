@@ -8,46 +8,42 @@ import { toast } from "sonner";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// Default layouts for different screen sizes
+// Default layouts for different screen sizes with improved spacing
 const DEFAULT_LAYOUTS = {
   lg: [
-    // First row - Main habit tracker
+    // Row 1 - Main habit tracker and Task stats
     { i: "habit-tracker", x: 0, y: 0, w: 2, h: 2, minW: 1, minH: 1 },
-    
-    // First row right side - Task stats
     { i: "task-stats", x: 2, y: 0, w: 1, h: 1, minW: 1, minH: 1 },
     
-    // Second row right - Goals progress
+    // Row 2 - Goals progress (right side)
     { i: "goals-progress", x: 2, y: 1, w: 1, h: 1, minW: 1, minH: 1 },
     
-    // Third row - Stats widgets
-    { i: "streak-stats", x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
-    { i: "upcoming-tasks", x: 1, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
+    // Row 3 - Streak stats and upcoming tasks
+    { i: "streak-stats", x: 0, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
+    { i: "upcoming-tasks", x: 1, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
     
-    // Fourth row - Full-width analytics
-    { i: "habit-trends", x: 0, y: 3, w: 3, h: 2, minW: 2, minH: 2 },
+    // Row 4 - Full-width habit trends
+    { i: "habit-trends", x: 0, y: 4, w: 3, h: 2, minW: 2, minH: 2 },
     
-    // Fifth row - Full-width journal stats
-    { i: "journal-stats", x: 0, y: 5, w: 3, h: 2, minW: 2, minH: 2 },
+    // Row 5 - Full-width journal stats
+    { i: "journal-stats", x: 0, y: 6, w: 3, h: 2, minW: 2, minH: 2 },
   ],
   md: [
-    // First row - Habit tracker
+    // Row 1 - Main components
     { i: "habit-tracker", x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 1 },
-    
-    // First row right - Task stats
     { i: "task-stats", x: 1, y: 0, w: 1, h: 1, minW: 1, minH: 1 },
     
-    // Second row right - Upcoming tasks
+    // Row 2 - Secondary components
     { i: "upcoming-tasks", x: 1, y: 1, w: 1, h: 1, minW: 1, minH: 1 },
     
-    // Third row - Stats widgets
+    // Row 3 - Stats widgets
     { i: "streak-stats", x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
     { i: "goals-progress", x: 1, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
     
-    // Fourth row - Full-width analytics
+    // Row 4 - Full-width analytics
     { i: "habit-trends", x: 0, y: 3, w: 2, h: 2, minW: 1, minH: 2 },
     
-    // Fifth row - Full-width journal stats
+    // Row 5 - Full-width journal stats
     { i: "journal-stats", x: 0, y: 5, w: 2, h: 2, minW: 1, minH: 2 },
   ],
   sm: [
@@ -95,6 +91,7 @@ export function DashboardGrid({ children }: DashboardGridProps) {
     }
   }, [layouts, layoutChanged]);
 
+  // Handle layout changes and prevent collisions
   const handleLayoutChange = (_, allLayouts) => {
     setLayouts(allLayouts);
     setLayoutChanged(true);
@@ -162,6 +159,8 @@ export function DashboardGrid({ children }: DashboardGridProps) {
         isResizable={isResizable}
         onLayoutChange={handleLayoutChange}
         margin={[16, 16]}
+        preventCollision={true}
+        compactType="vertical"
       >
         {gridItems}
       </ResponsiveGridLayout>
