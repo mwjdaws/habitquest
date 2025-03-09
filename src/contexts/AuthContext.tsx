@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -52,25 +52,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getInitialSession();
 
-    try {
-      // Listen for auth changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          console.log('Auth state changed:', _event);
-          setSession(session);
-          setUser(session?.user ?? null);
-          setIsLoading(false);
-        }
-      );
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        console.log('Auth state changed:', _event);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      }
+    );
 
-      return () => {
-        subscription.unsubscribe();
-      };
-    } catch (error) {
-      console.error('Error setting up auth subscription:', error);
-      setInitError(error instanceof Error ? error : new Error('Unknown error during authentication setup'));
-      setIsLoading(false);
-    }
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Show initialization error if auth setup failed
