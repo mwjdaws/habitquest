@@ -4,12 +4,13 @@ import { Goal, KeyResult, useGoals } from "@/hooks/useGoals";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { KeyResultItem } from "./KeyResultItem";
 import { GoalEditForm } from "./GoalEditForm";
 import { toast } from "@/components/ui/use-toast";
 import { GoalHeader } from "./goal-item/GoalHeader";
 import { GoalProgress } from "./goal-item/GoalProgress";
 import { GoalItemActions } from "./goal-item/GoalItemActions";
+import { GoalObjective } from "./goal-item/GoalObjective";
+import { KeyResultsSection } from "./goal-item/KeyResultsSection";
 import { getCurrentTorontoDate } from "@/lib/dateUtils";
 
 interface GoalItemProps {
@@ -62,6 +63,7 @@ export function GoalItem({ goal }: GoalItemProps) {
 
   const isComplete = goal.progress >= 100;
   const currentDate = getCurrentTorontoDate();
+  const isGoalActive = currentDate >= new Date(goal.start_date) && currentDate <= new Date(goal.end_date);
 
   return (
     <Card className="overflow-hidden">
@@ -95,24 +97,8 @@ export function GoalItem({ goal }: GoalItemProps) {
         
         {expanded && (
           <div className="mt-4 space-y-4">
-            <div>
-              <h4 className="text-sm font-medium mb-1">Objective</h4>
-              <p className="text-sm text-muted-foreground">{goal.objective}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium mb-2">Key Results</h4>
-              <div className="space-y-3">
-                {goal.key_results && goal.key_results.map((keyResult) => (
-                  <KeyResultItem 
-                    key={keyResult.id} 
-                    keyResult={keyResult as KeyResult} 
-                    goalProgress={goal.progress}
-                    isGoalActive={currentDate >= new Date(goal.start_date) && currentDate <= new Date(goal.end_date)}
-                  />
-                ))}
-              </div>
-            </div>
+            <GoalObjective objective={goal.objective} />
+            <KeyResultsSection goal={goal} isGoalActive={isGoalActive} />
           </div>
         )}
       </CardContent>
