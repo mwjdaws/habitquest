@@ -19,24 +19,6 @@ export function useHabitStateManager() {
   
   const { filterHabitsForToday } = useHabitFiltering();
   
-  // Update state with new data
-  const updateState = useCallback((updates: Partial<HabitTrackingState>) => {
-    setState(prev => ({
-      ...prev,
-      ...updates
-    }));
-  }, []);
-  
-  // Set loading state
-  const setLoading = useCallback((loading: boolean) => {
-    setState(prev => ({ ...prev, loading }));
-  }, []);
-  
-  // Set error state
-  const setError = useCallback((error: string | null) => {
-    setState(prev => ({ ...prev, error, loading: false }));
-  }, []);
-  
   // Update habits with filtering
   const updateHabits = useCallback((habits: any[]) => {
     const filteredHabits = filterHabitsForToday(habits);
@@ -51,12 +33,21 @@ export function useHabitStateManager() {
     }));
   }, [filterHabitsForToday]);
   
+  // Set loading state
+  const setLoading = useCallback((loading: boolean) => {
+    setState(prev => ({ ...prev, loading }));
+  }, []);
+  
+  // Set error state
+  const setError = useCallback((error: string | null) => {
+    setState(prev => ({ ...prev, error, loading: false }));
+  }, []);
+  
   return {
     state,
     setState,
-    updateState,
+    updateHabits,
     setLoading,
-    setError,
-    updateHabits
+    setError
   };
 }

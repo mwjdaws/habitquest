@@ -1,6 +1,6 @@
 
+import { FormFieldComponent } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { CategorySelector } from "@/components/habit/CategorySelector";
 
 type HabitBasicFieldsProps = {
@@ -22,8 +22,10 @@ export function HabitBasicFields({
 }: HabitBasicFieldsProps) {
   return (
     <>
-      <div>
-        <Label htmlFor="name">Habit Name</Label>
+      <FormFieldComponent
+        id="name"
+        label="Habit Name"
+      >
         <Input
           id="name"
           value={name}
@@ -31,17 +33,19 @@ export function HabitBasicFields({
           placeholder="What habit do you want to track?"
           required
         />
-      </div>
+      </FormFieldComponent>
 
-      <div>
-        <Label htmlFor="description">Description (Optional)</Label>
+      <FormFieldComponent
+        id="description"
+        label="Description (Optional)"
+      >
         <Input
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Add details about your habit"
         />
-      </div>
+      </FormFieldComponent>
       
       <CategorySelector 
         selectedCategory={category}

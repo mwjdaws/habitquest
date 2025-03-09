@@ -1,8 +1,7 @@
 
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { cn } from '@/lib/utils';
+import { FormFieldComponent } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface FormFieldProps {
   id: string;
@@ -26,15 +25,19 @@ export function FormField({
   description
 }: FormFieldProps) {
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+    <FormFieldComponent
+      id={id}
+      label={label}
+      error={error}
+      description={description}
+    >
       {multiline ? (
         <Textarea
           id={id}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={cn("min-h-[100px]", error ? "border-destructive" : "")}
+          className={error ? "border-destructive" : ""}
         />
       ) : (
         <Input
@@ -45,8 +48,6 @@ export function FormField({
           className={error ? "border-destructive" : ""}
         />
       )}
-      {description && <p className="text-sm text-muted-foreground">{description}</p>}
-      {error && <p className="text-destructive text-sm">{error}</p>}
-    </div>
+    </FormFieldComponent>
   );
 }
