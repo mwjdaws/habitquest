@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { ToastProvider } from './contexts/ToastContext';
+import { Toaster } from './components/ui/toaster';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -19,7 +20,7 @@ import Sleep from "./pages/Sleep";
 export default function App() {
   return (
     <AuthProvider>
-      <ToastProvider />
+      <Toaster />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
