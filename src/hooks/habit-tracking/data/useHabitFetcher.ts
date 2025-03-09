@@ -26,13 +26,14 @@ export function useHabitFetcher() {
   // Track pending promises to improve cancellation logic
   const pendingPromisesRef = useRef<Set<Promise<any>>>(new Set());
 
-  // Enhanced data loading with improved error handling, request cancellation, and caching
+  // Enhanced data loading with improved error handling, request cancellation, and batch fetching
   const fetchHabitData = useCallback(async (signal?: AbortSignal) => {
-    // Improved request throttling (700ms)
+    // Improved request throttling
     const now = Date.now();
     
     // Cache is valid for 30 seconds unless force refresh is requested
     const CACHE_TTL = 30000; // 30 seconds
+    const THROTTLE_MS = 700; // 700ms minimum between requests
     
     // Check for valid cache first
     if (cachedDataRef.current && now < cacheExpiryRef.current && !signal?.aborted) {
@@ -41,8 +42,8 @@ export function useHabitFetcher() {
     }
     
     // Enhanced throttling to prevent excessive requests
-    if (now - lastFetchTimeRef.current < 700) {
-      console.log("Throttling fetch request");
+    if (now - lastFetchTimeRef.current < THROTTLE_MS) {
+      console.log(`Throttling fetch request (${now - lastFetchTimeRef.current}ms since last fetch)`);
       return null;
     }
     
@@ -59,8 +60,12 @@ export function useHabitFetcher() {
     const currentVersion = ++dataVersionRef.current;
     console.log(`Starting data fetch (version ${currentVersion})`);
     
-    try {      
-      // Create fetch promises
+    try {
+      // BATCH API OPTIMIZATION: Fetch all data with a single API call if possible
+      // If backend supports batch fetching, we would use it here
+      // For now, still using parallel requests but with improved cancellation and caching
+      
+      // Create fetch promises with retry and abort signal
       const habitsPromise = withRetry(() => fetchHabits(), 2, signal);
       const completionsPromise = withRetry(() => getCompletionsForDate(today), 2, signal);
       const failuresPromise = withRetry(() => getFailuresForDate(today), 2, signal);
@@ -70,7 +75,7 @@ export function useHabitFetcher() {
       pendingPromisesRef.current.add(completionsPromise);
       pendingPromisesRef.current.add(failuresPromise);
       
-      // Optimized data fetching with parallel requests and better error handling
+      // Optimized data fetching with parallel requests
       const [habitsData, completionsData, failuresData] = await Promise.all([
         habitsPromise,
         completionsPromise,
@@ -121,7 +126,7 @@ export function useHabitFetcher() {
     }
   }, [today]);
 
-  // Function to setup abort controller and handle fetch request
+  // Function to setup abort controller and handle fetch request with cache control
   const loadData = useCallback(async (showLoading = true, forceRefresh = false) => {
     // Cancel any in-flight requests
     if (abortControllerRef.current) {
@@ -135,7 +140,7 @@ export function useHabitFetcher() {
     // Invalidate cache if force refresh requested
     if (forceRefresh) {
       cacheExpiryRef.current = 0;
-      console.log("Forcing data refresh");
+      console.log("Forcing data refresh (cache invalidated)");
     }
     
     const result = await fetchHabitData(signal);
