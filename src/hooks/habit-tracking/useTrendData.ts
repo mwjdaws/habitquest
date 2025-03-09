@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { fetchHabits } from "@/lib/api/habitCrudAPI";
+import { fetchHabits } from "@/lib/api/habit"; // Updated import path
 import { getCompletionTrends, getFailureTrends, getStreakRecords } from "@/lib/api/trendAPI";
 import { Habit } from "@/lib/habitTypes";
 import { toast } from "@/components/ui/use-toast";

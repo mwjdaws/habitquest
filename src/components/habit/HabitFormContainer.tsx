@@ -6,7 +6,7 @@ import { toast } from "@/components/ui/use-toast";
 import { 
   createHabit, 
   updateHabit
-} from "@/lib/api/habitCrudAPI";
+} from "@/lib/api/habit"; // Updated import path
 import { Habit } from "@/lib/habitTypes";
 import { HabitBasicFields } from "./form-fields/HabitBasicFields";
 import { HabitFrequencyFields } from "./form-fields/HabitFrequencyFields";
