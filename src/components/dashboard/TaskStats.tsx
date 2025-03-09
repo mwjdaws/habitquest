@@ -1,12 +1,12 @@
 
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BarChart, Filter, CheckCircle, XCircle } from "lucide-react";
 import { useTasks } from "@/hooks/useTasks";
 import { useTaskTags } from "@/hooks/useTaskTags";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { TaskStatsFilter } from "./task-stats/TaskStatsFilter";
+import { TaskStatsOverview } from "./task-stats/TaskStatsOverview";
+import { TaskStatsProgressBar } from "./task-stats/TaskStatsProgressBar";
 
 interface TaskStatistic {
   completed: number;
@@ -54,72 +54,18 @@ export function TaskStats() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Tag filter */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="tagFilter">Filter by Tag</Label>
-            </div>
-            <Select
-              value={selectedTag || "all_tags"}
-              onValueChange={(value) => setSelectedTag(value === "all_tags" ? null : value)}
-            >
-              <SelectTrigger id="tagFilter">
-                <SelectValue placeholder="All Tags" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all_tags">All Tags</SelectItem>
-                {availableTags.map((tag) => (
-                  <SelectItem key={tag} value={tag}>{tag}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <TaskStatsFilter 
+            selectedTag={selectedTag}
+            setSelectedTag={setSelectedTag}
+            availableTags={availableTags}
+          />
 
-          {/* Stats overview */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-md border p-2 text-center">
-              <p className="text-xs text-muted-foreground">Total</p>
-              <p className="text-lg font-bold">{stats.total}</p>
-            </div>
-            <div className="rounded-md border p-2 text-center bg-green-50">
-              <p className="text-xs text-muted-foreground flex items-center justify-center">
-                <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                Completed
-              </p>
-              <p className="text-lg font-bold text-green-600">{stats.completed}</p>
-            </div>
-            <div className="rounded-md border p-2 text-center bg-orange-50">
-              <p className="text-xs text-muted-foreground flex items-center justify-center">
-                <XCircle className="h-3 w-3 mr-1 text-orange-500" />
-                Pending
-              </p>
-              <p className="text-lg font-bold text-orange-500">{stats.pending}</p>
-            </div>
-          </div>
+          <TaskStatsOverview stats={stats} />
 
-          {/* Bar chart visualization */}
-          <div className="mt-4 space-y-2">
-            <p className="text-sm font-medium">Completion Rate</p>
-            <div className="h-8 w-full bg-muted rounded-full overflow-hidden">
-              {stats.completionPercentage > 0 && (
-                <div
-                  className="h-full bg-green-500 transition-all duration-500 ease-in-out"
-                  style={{ width: `${stats.completionPercentage}%` }}
-                />
-              )}
-            </div>
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span className="flex items-center">
-                <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                {stats.completionPercentage}%
-              </span>
-              <span className="flex items-center">
-                <XCircle className="h-3 w-3 mr-1 text-orange-500" />
-                {stats.pendingPercentage}%
-              </span>
-            </div>
-          </div>
+          <TaskStatsProgressBar 
+            completionPercentage={stats.completionPercentage} 
+            pendingPercentage={stats.pendingPercentage}
+          />
 
           {/* Additional information about filtered tasks */}
           <div className="text-xs text-muted-foreground pt-2 border-t">
