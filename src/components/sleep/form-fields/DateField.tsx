@@ -3,7 +3,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { SleepFormData } from "@/lib/sleepTypes";
-import { FormFieldWrapper } from "./FormFieldWrapper";
+import { FormFieldComponent } from "@/components/ui/form-field";
 
 interface DateFieldProps {
   form: UseFormReturn<SleepFormData>;
@@ -11,7 +11,7 @@ interface DateFieldProps {
 
 export const DateField: React.FC<DateFieldProps> = ({ form }) => {
   return (
-    <FormFieldWrapper
+    <FormFieldComponent
       form={form}
       name="sleep_date"
       label="Date"
@@ -20,6 +20,6 @@ export const DateField: React.FC<DateFieldProps> = ({ form }) => {
       {field => (
         <Input type="date" {...field} />
       )}
-    </FormFieldWrapper>
+    </FormFieldComponent>
   );
 };

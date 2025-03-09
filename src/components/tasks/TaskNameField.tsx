@@ -1,6 +1,6 @@
 
 import { Input } from '@/components/ui/input';
-import { TaskFormFieldWrapper } from './form-fields/TaskFormFieldWrapper';
+import { FormFieldComponent } from '@/components/ui/form-field';
 
 interface TaskNameFieldProps {
   name: string;
@@ -11,7 +11,7 @@ interface TaskNameFieldProps {
 
 export function TaskNameField({ name, nameError, onNameChange, onErrorClear }: TaskNameFieldProps) {
   return (
-    <TaskFormFieldWrapper
+    <FormFieldComponent
       id="taskName"
       label="Task Name *"
       error={nameError}
@@ -26,6 +26,6 @@ export function TaskNameField({ name, nameError, onNameChange, onErrorClear }: T
         placeholder="Enter task name"
         className={nameError ? 'border-destructive' : ''}
       />
-    </TaskFormFieldWrapper>
+    </FormFieldComponent>
   );
 }
