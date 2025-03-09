@@ -41,7 +41,8 @@ export function TaskForm({ onSubmit, onCancel, initialData, title }: TaskFormPro
         const tags = tasks
           .filter(task => task.tag) // Filter out tasks without tags
           .map(task => task.tag as string) // Extract the tag
-          .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
+          .filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
+          .sort(); // Sort alphabetically
         
         setAvailableTags(tags);
       } catch (error) {
@@ -53,12 +54,7 @@ export function TaskForm({ onSubmit, onCancel, initialData, title }: TaskFormPro
   }, [user]);
   
   const handleTagChange = (newTag: string | undefined) => {
-    // Handle special "no-tag" value to clear tag
-    if (newTag === "no-tag") {
-      setTag(undefined);
-    } else {
-      setTag(newTag);
-    }
+    setTag(newTag);
   };
   
   const handleClearNameError = () => {

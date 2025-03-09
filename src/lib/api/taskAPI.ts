@@ -31,9 +31,16 @@ export async function createTask(taskData: CreateTaskData): Promise<Task> {
   try {
     const userId = await getAuthenticatedUser();
     
+    // Ensure tag is properly formatted (null if undefined or empty)
+    const formattedData = {
+      ...taskData,
+      tag: taskData.tag?.trim() || null,
+      user_id: userId
+    };
+    
     const { data, error } = await supabase
       .from('tasks')
-      .insert({ ...taskData, user_id: userId })
+      .insert(formattedData)
       .select()
       .single();
       
@@ -52,9 +59,15 @@ export async function updateTask(taskId: string, updates: UpdateTaskData): Promi
   try {
     const userId = await getAuthenticatedUser();
     
+    // Ensure tag is properly formatted (null if undefined or empty)
+    const formattedUpdates = {
+      ...updates,
+      tag: updates.tag?.trim() || null
+    };
+    
     const { data, error } = await supabase
       .from('tasks')
-      .update(updates)
+      .update(formattedUpdates)
       .eq('id', taskId)
       .eq('user_id', userId) // Extra security check
       .select()

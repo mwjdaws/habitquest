@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { Task } from '@/lib/taskTypes';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Tag as TagIcon } from 'lucide-react';
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -16,6 +16,7 @@ import {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 
 interface TaskItemProps {
   task: Task;
@@ -68,11 +69,20 @@ export function TaskItem({ task, onToggleComplete, onEdit, onDelete }: TaskItemP
           </div>
         )}
         
-        {task.due_date && (
-          <div className="mt-2 text-xs text-muted-foreground">
-            Due: {format(new Date(task.due_date), 'PPP')}
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2 mt-2">
+          {task.due_date && (
+            <div className="text-xs text-muted-foreground">
+              Due: {format(new Date(task.due_date), 'PPP')}
+            </div>
+          )}
+          
+          {task.tag && (
+            <Badge variant="outline" className="flex items-center gap-1 text-xs">
+              <TagIcon className="h-3 w-3" />
+              {task.tag}
+            </Badge>
+          )}
+        </div>
       </div>
       
       <div className="flex-shrink-0 flex space-x-1">
