@@ -1,5 +1,5 @@
 
-import { Calendar, CheckSquare, BarChart, Flame, BookOpen, Heart, Home, Code } from "lucide-react";
+import { Calendar, CheckSquare, BarChart, Diamond, BookOpen, Heart, Home, Code } from "lucide-react";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -26,7 +26,7 @@ export function AppSidebar() {
     {
       title: "Habits",
       path: "/habits",
-      icon: Flame,
+      icon: Diamond,
     },
     {
       title: "Tasks",
@@ -64,8 +64,8 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <Link to="/dashboard" className="flex items-center space-x-2">
-          <Flame className="h-6 w-6 text-habit-purple" />
-          <span className="text-xl font-bold">HabitQuest</span>
+          <Diamond className="h-6 w-6 text-habit-purple" />
+          <span className="text-xl font-bold">Perfectio</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>

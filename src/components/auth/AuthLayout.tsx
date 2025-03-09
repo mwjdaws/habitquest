@@ -1,5 +1,5 @@
 
-import { Flame } from "lucide-react";
+import { Diamond } from "lucide-react";
 import { ReactNode } from "react";
 
 type AuthLayoutProps = {
@@ -12,9 +12,9 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-2">
-            <Flame className="h-12 w-12 text-habit-purple" />
+            <Diamond className="h-12 w-12 text-habit-purple" />
           </div>
-          <h1 className="text-3xl font-bold">HabitQuest</h1>
+          <h1 className="text-3xl font-bold">Perfectio</h1>
           <p className="text-muted-foreground">Track habits, achieve goals</p>
         </div>
         
