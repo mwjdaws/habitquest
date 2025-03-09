@@ -19,26 +19,28 @@ import Sleep from "./pages/Sleep";
 
 export default function App() {
   return (
-    <AuthProvider>
+    <>
       <Toaster />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/habits" element={<Habits />} />
-            <Route path="/tasks" element={<Tasks />} />
-            <Route path="/goals" element={<Goals />} />
-            <Route path="/journal" element={<Journal />} />
-            <Route path="/mood" element={<Mood />} />
-            <Route path="/sleep" element={<Sleep />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/developer" element={<Developer />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/habits" element={<Habits />} />
+              <Route path="/tasks" element={<Tasks />} />
+              <Route path="/goals" element={<Goals />} />
+              <Route path="/journal" element={<Journal />} />
+              <Route path="/mood" element={<Mood />} />
+              <Route path="/sleep" element={<Sleep />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/developer" element={<Developer />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
-    </AuthProvider>
+    </>
   );
 }
