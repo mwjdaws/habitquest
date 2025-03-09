@@ -1,47 +1,14 @@
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Lightbulb, Star, BookOpen, MessageSquare, CheckCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-
-interface JournalPrompt {
-  id: string;
-  text: string;
-  tag: string;
-}
+import { useJournalPrompts, JournalPrompt } from '@/hooks/useJournalPrompts';
 
 interface QuickPromptCardsProps {
   onSelectPrompt: (text: string, tag: string) => void;
 }
 
 export function QuickPromptCards({ onSelectPrompt }: QuickPromptCardsProps) {
-  const [prompts, setPrompts] = useState<JournalPrompt[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchPrompts() {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('journal_prompts')
-          .select('*');
-        
-        if (error) {
-          console.error('Error fetching prompts:', error);
-          return;
-        }
-        
-        setPrompts(data || []);
-      } catch (err) {
-        console.error('Failed to fetch prompts:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    fetchPrompts();
-  }, []);
+  const { prompts, loading } = useJournalPrompts();
   
   // Get icon based on tag
   const getIconForTag = (tag: string) => {
