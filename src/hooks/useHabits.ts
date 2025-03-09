@@ -1,43 +1,49 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Habit } from '@/lib/habitTypes';
-import { fetchHabits } from '@/lib/api/habit';
+import { useHabitFetcher } from './habit-tracking/data/useHabitFetcher';
 import { useLoadingError } from './useLoadingError';
 
+/**
+ * Hook for managing habits data with optimized fetching and caching
+ */
 export function useHabits() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
-  const { loading, error, handleLoading } = useLoadingError();
+  const { loading, error, setLoading, setError } = useLoadingError();
   
-  // Cache duration in milliseconds (30 seconds)
-  const CACHE_DURATION = 30000;
-
+  // Use the more robust implementation from useHabitFetcher
+  const { loadData, clearCache } = useHabitFetcher();
+  
+  // Fetch habits with robust error handling and caching
   const fetchHabitsData = useCallback(async (forceRefresh = false) => {
     try {
-      // Only fetch if cache is expired or force refresh is requested
-      const now = Date.now();
-      if (forceRefresh || now - lastFetchTime > CACHE_DURATION) {
-        console.log("Fetching habits: cache expired or force refresh requested");
-        const data = await handleLoading(fetchHabits(false));
-        setHabits(data || []);
-        setLastFetchTime(now);
-      } else {
-        console.log("Using cached habits data, age:", Math.round((now - lastFetchTime)/1000), "seconds");
+      setLoading(true);
+      
+      // Use the advanced loadData function that handles caching and cancellation
+      const result = await loadData(true, forceRefresh);
+      
+      if (result && !result.error) {
+        setHabits(result.habits || []);
+        setError(null);
+      } else if (result?.error) {
+        setError(new Error(result.error));
       }
     } catch (err) {
-      // Error is already handled by the hook
       console.error('Failed to fetch habits:', err);
+      setError(err instanceof Error ? err : new Error('An unknown error occurred'));
+    } finally {
+      setLoading(false);
     }
-  }, [handleLoading, lastFetchTime]);
+  }, [loadData, setLoading, setError]);
 
-  // Force a refresh by incrementing the refresh trigger and resetting cache
+  // Force a refresh by incrementing the refresh trigger
   const refreshHabits = useCallback((forceRefresh = true) => {
     if (forceRefresh) {
-      setLastFetchTime(0); // Reset cache
+      clearCache(); // Reset cache through the habit fetcher
     }
     setRefreshTrigger(prev => prev + 1);
-  }, []);
+  }, [clearCache]);
 
   // Load habits on component mount or when refreshTrigger changes
   useEffect(() => {
