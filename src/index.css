@@ -37,12 +37,15 @@
 
     --sidebar-background: 260 100% 99%;
     --sidebar-foreground: 260 10% 30%;
-    --sidebar-primary: 260 96% 66%;
+    --sidebar-primary: hsl(260 96% 66%);
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 260 80% 96%;
     --sidebar-accent-foreground: 260 30% 30%;
     --sidebar-border: 260 20% 92%;
     --sidebar-ring: 260 96% 66%;
+    
+    /* For habit colors */
+    --habit-purple: #8B5CF6;
   }
 
   .dark {
@@ -109,4 +112,16 @@
   [style*="--habit-"] {
     transition: background-color 0.3s ease, border-color 0.3s ease;
   }
+}
+
+/* Add this to make sure the theme transition is smooth */
+:root {
+  transition: --primary 0.3s ease, 
+              --accent 0.3s ease, 
+              --secondary 0.3s ease,
+              --ring 0.3s ease,
+              --muted 0.3s ease,
+              --border 0.3s ease,
+              --sidebar-primary 0.3s ease,
+              --habit-purple 0.3s ease;
 }

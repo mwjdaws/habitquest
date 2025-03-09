@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Palette } from "lucide-react";
+import { toast } from "sonner";
 
 type ColorTheme = {
   name: string;
@@ -129,26 +130,43 @@ export function ThemeSwitcher() {
   useEffect(() => {
     const theme = colorThemes.find(theme => theme.name === currentTheme);
     if (theme) {
-      // Convert colors to HSL values for CSS variables
-      const primaryHSL = extractHSL(theme.primaryColor);
-      const accentHSL = extractHSL(theme.accentColor);
-      
-      // Update CSS variables for the theme
-      document.documentElement.style.setProperty('--primary', primaryHSL);
-      document.documentElement.style.setProperty('--accent', accentHSL);
-      document.documentElement.style.setProperty('--secondary', primaryHSL.replace(/\d+%$/, match => `${parseInt(match) - 16}%`));
-      
-      // Update habit colors and sidebar
-      if (theme.primaryColor.startsWith('#')) {
-        document.documentElement.style.setProperty('--habit-purple', theme.primaryColor);
-        document.documentElement.style.setProperty('--sidebar-primary', theme.primaryColor);
-      } else {
-        // If it's HSL, convert to hex for habits and sidebar
-        document.documentElement.style.setProperty('--habit-purple', `hsl(${primaryHSL})`);
-        document.documentElement.style.setProperty('--sidebar-primary', `hsl(${primaryHSL})`);
+      try {
+        // Convert colors to HSL values for CSS variables
+        const primaryHSL = extractHSL(theme.primaryColor);
+        const accentHSL = extractHSL(theme.accentColor);
+        
+        // Update CSS variables for the theme
+        document.documentElement.style.setProperty('--primary', primaryHSL);
+        document.documentElement.style.setProperty('--accent', accentHSL);
+        
+        // Set secondary based on primary (slightly darker)
+        const secondaryHSL = primaryHSL.replace(/\d+%$/, match => `${Math.max(parseInt(match) - 16, 0)}%`);
+        document.documentElement.style.setProperty('--secondary', secondaryHSL);
+        
+        // Update other dependent variables
+        document.documentElement.style.setProperty('--ring', primaryHSL);
+        
+        // Update habit colors and sidebar
+        if (theme.primaryColor.startsWith('#')) {
+          // For hex colors, set the CSS property with the hsl() function format
+          document.documentElement.style.setProperty('--habit-purple', theme.primaryColor);
+          document.documentElement.style.setProperty('--sidebar-primary', theme.primaryColor);
+        } else {
+          // If it's already HSL, format properly
+          document.documentElement.style.setProperty('--habit-purple', `hsl(${primaryHSL})`);
+          document.documentElement.style.setProperty('--sidebar-primary', `hsl(${primaryHSL})`);
+        }
+        
+        console.log(`Theme changed to ${currentTheme}`);
+        console.log(`Primary HSL: ${primaryHSL}`);
+        console.log(`Accent HSL: ${accentHSL}`);
+        console.log(`Secondary HSL: ${secondaryHSL}`);
+
+        toast.success(`Theme changed to ${currentTheme}`);
+      } catch (error) {
+        console.error('Error applying theme:', error);
+        toast.error('Failed to apply theme');
       }
-      
-      console.log(`Theme changed to ${currentTheme} with primary: ${primaryHSL}, accent: ${accentHSL}`);
     }
   }, [currentTheme]);
 
@@ -171,7 +189,10 @@ export function ThemeSwitcher() {
                 className={`h-8 p-0 border ${
                   currentTheme === theme.name ? "ring-2 ring-primary ring-offset-2" : ""
                 }`}
-                style={{ backgroundColor: theme.primaryColor }}
+                style={{ 
+                  backgroundColor: theme.primaryColor,
+                  transition: "all 0.2s ease" 
+                }}
                 onClick={() => setCurrentTheme(theme.name)}
                 title={theme.name}
               >
