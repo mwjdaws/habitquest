@@ -2,7 +2,7 @@
 import { Check, Undo, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HabitFailure } from "@/lib/habitTypes";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type HabitStatusProps = {
@@ -15,6 +15,13 @@ type HabitStatusProps = {
   failures: HabitFailure[];
 };
 
+// Animation variants
+const buttonVariants = {
+  initial: { scale: 0.95, opacity: 0 },
+  animate: { scale: 1, opacity: 1, transition: { duration: 0.2 } },
+  exit: { scale: 0.95, opacity: 0, transition: { duration: 0.15 } }
+};
+
 // Using memo with custom comparison to prevent unnecessary re-renders
 export const HabitStatus = memo(function HabitStatus({
   habitId,
@@ -25,22 +32,17 @@ export const HabitStatus = memo(function HabitStatus({
   onUndoFailure,
   failures
 }: HabitStatusProps) {
-  // Get failure reason if available
-  const failureReason = isFailed ? 
-    failures.find(f => f.habit_id === habitId)?.reason || "Failed" : 
-    null;
+  // Get failure reason if available - using useMemo for consistency
+  const failureInfo = useMemo(() => {
+    if (!isFailed) return null;
+    const failure = failures.find(f => f.habit_id === habitId);
+    return failure ? failure.reason || "Failed" : "Failed";
+  }, [isFailed, failures, habitId]);
   
   // Memoize handlers to prevent new function references on each render
   const handleSkip = useCallback(() => onLogFailure(habitId), [habitId, onLogFailure]);
   const handleToggle = useCallback(() => onToggleCompletion(habitId), [habitId, onToggleCompletion]);
   const handleUndo = useCallback(() => onUndoFailure(habitId), [habitId, onUndoFailure]);
-  
-  // Animation variants
-  const buttonVariants = {
-    initial: { scale: 0.95, opacity: 0 },
-    animate: { scale: 1, opacity: 1, transition: { duration: 0.2 } },
-    exit: { scale: 0.95, opacity: 0, transition: { duration: 0.15 } }
-  };
   
   // Early return pattern for improved readability and performance
   if (isFailed) {
@@ -54,7 +56,7 @@ export const HabitStatus = memo(function HabitStatus({
           className="text-xs px-2 py-1 bg-red-100 text-red-800 rounded-md flex items-center"
         >
           <X className="mr-1 h-3 w-3" />
-          {failureReason}
+          {failureInfo}
         </motion.div>
         <motion.div 
           key="undo-button" 
@@ -114,11 +116,23 @@ export const HabitStatus = memo(function HabitStatus({
     </AnimatePresence>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison function to prevent unnecessary re-renders
-  return prevProps.isCompleted === nextProps.isCompleted &&
-    prevProps.isFailed === nextProps.isFailed &&
-    prevProps.habitId === nextProps.habitId &&
-    // Only compare the relevant failure for this habit
-    JSON.stringify(prevProps.failures.find(f => f.habit_id === prevProps.habitId)) === 
-    JSON.stringify(nextProps.failures.find(f => f.habit_id === nextProps.habitId));
+  // More precise comparison using only what matters
+  if (prevProps.isCompleted !== nextProps.isCompleted ||
+      prevProps.isFailed !== nextProps.isFailed ||
+      prevProps.habitId !== nextProps.habitId) {
+    return false;
+  }
+  
+  // Only compare the relevant failure
+  const prevFailure = prevProps.failures.find(f => f.habit_id === prevProps.habitId);
+  const nextFailure = nextProps.failures.find(f => f.habit_id === nextProps.habitId);
+  
+  // If both are undefined, they're equal
+  if (!prevFailure && !nextFailure) return true;
+  
+  // If one exists and the other doesn't, they're not equal
+  if ((!prevFailure && nextFailure) || (prevFailure && !nextFailure)) return false;
+  
+  // Compare the reason if both exist
+  return prevFailure?.reason === nextFailure?.reason;
 });

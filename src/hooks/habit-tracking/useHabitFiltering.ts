@@ -7,42 +7,26 @@ import { getDayName } from "@/lib/habitUtils";
  * Hook to handle habit filtering logic with improved performance
  */
 export function useHabitFiltering() {
+  // Get today's name once
+  const todayName = useMemo(() => getDayName(new Date()).toLowerCase(), []);
+  
   // Create a dedicated function to filter habits for today with memoization
   const filterHabitsForToday = useCallback((allHabits: Habit[]) => {
-    if (!allHabits || !allHabits.length) {
-      console.log("No habits to filter");
+    if (!allHabits?.length) {
       return [];
     }
     
-    const todayName = getDayName(new Date());
     console.log(`Filtering for ${todayName}:`, allHabits.length, "total habits");
     
-    const filteredHabits = allHabits.filter(habit => {
+    return allHabits.filter(habit => {
       // Empty frequency array means the habit should show every day
-      const shouldShow = habit.frequency.length === 0 || 
-                         habit.frequency.includes(todayName.toLowerCase());
-      
-      if (shouldShow) {
-        console.log(`Including habit: ${habit.name} [${habit.frequency.join(', ') || 'daily'}]`);
-      }
-      
-      return shouldShow;
+      return habit.frequency.length === 0 || 
+             habit.frequency.includes(todayName);
     });
-    
-    console.log(`Filtered to ${filteredHabits.length} habits for today`);
-    return filteredHabits;
-  }, []);
+  }, [todayName]);
 
-  // Create a memoized version of the function that will be returned
-  const memoizedFilterFn = useMemo(() => {
-    // Return a function that accepts habits and applies filtering
-    return (habits: Habit[]) => {
-      console.log("Computing filtered habits (memoized)");
-      return filterHabitsForToday(habits);
-    };
-  }, [filterHabitsForToday]);
-
-  return {
-    filterHabitsForToday: memoizedFilterFn
-  };
+  // Return a stable reference to the filter function
+  return useMemo(() => ({
+    filterHabitsForToday
+  }), [filterHabitsForToday]);
 }

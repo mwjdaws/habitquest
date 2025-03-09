@@ -4,7 +4,7 @@ import { fetchHabits } from "@/lib/api/habitCrudAPI";
 import { getCompletionTrends, getFailureTrends, getStreakRecords } from "@/lib/api/trendAPI";
 import { Habit } from "@/lib/habitTypes";
 import { toast } from "@/components/ui/use-toast";
-import { useTimeFilter, TimeFilter } from "./utils/useTimeFilter";
+import { useTimeFilter } from "./utils/useTimeFilter";
 
 export interface TrendData {
   habits: Habit[];
@@ -15,7 +15,11 @@ export interface TrendData {
   error: string | null;
 }
 
+/**
+ * Hook for fetching and managing habit trend data with time filtering
+ */
 export function useTrendData() {
+  // Use the improved useTimeFilter hook
   const { timeFilter, setTimeFilter, getDays } = useTimeFilter("week");
   
   const [data, setData] = useState<TrendData>({
@@ -33,6 +37,7 @@ export function useTrendData() {
       
       const days = getDays();
       
+      // Use Promise.all for concurrent fetching
       const [habitsData, completionsData, failuresData, streakRecordsData] = await Promise.all([
         fetchHabits(),
         getCompletionTrends(days),
@@ -64,6 +69,7 @@ export function useTrendData() {
     }
   }, [getDays]);
 
+  // Fetch data when the time filter changes
   useEffect(() => {
     fetchTrendData();
   }, [fetchTrendData]);

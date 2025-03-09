@@ -22,3 +22,24 @@ export const extractUniqueTags = (tasks: any[]): string[] => {
     .sort(); // Sort alphabetically
 };
 
+/**
+ * Validates if a tag is valid (non-empty after trimming)
+ */
+export const isValidTag = (tag: string | undefined | null): boolean => {
+  return Boolean(tag?.trim());
+};
+
+/**
+ * Processes a new custom tag, ensuring it's properly formatted
+ */
+export const processCustomTag = (tag: string | undefined | null): string | null => {
+  const trimmed = tag?.trim() || '';
+  
+  // Reject empty tags
+  if (!trimmed) return null;
+  
+  // Enforce custom tag formatting rules
+  return trimmed
+    .toLowerCase()
+    .replace(/\s+/g, '-'); // Replace spaces with hyphens
+};

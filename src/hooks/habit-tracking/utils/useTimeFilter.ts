@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 export type TimeFilter = "week" | "month" | "all";
 
@@ -25,13 +25,27 @@ export const getDaysFromFilter = (filter: TimeFilter): number => {
 export function useTimeFilter(initialFilter: TimeFilter = "week") {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(initialFilter);
   
-  const getDays = useCallback(() => {
-    return getDaysFromFilter(timeFilter);
-  }, [timeFilter]);
+  // Memoize the days calculation to prevent unnecessary calculations
+  const days = useMemo(() => getDaysFromFilter(timeFilter), [timeFilter]);
+  
+  // Create a memoized getter function for compatibility with existing code
+  const getDays = useCallback(() => days, [days]);
+  
+  // Create a safe setter that validates the input
+  const setValidatedTimeFilter = useCallback((newFilter: TimeFilter | string) => {
+    // Validate that the filter is a valid TimeFilter
+    if (newFilter === "week" || newFilter === "month" || newFilter === "all") {
+      setTimeFilter(newFilter);
+    } else {
+      console.warn(`Invalid time filter: ${newFilter}, using default (week)`);
+      setTimeFilter("week");
+    }
+  }, []);
   
   return {
     timeFilter,
-    setTimeFilter,
+    setTimeFilter: setValidatedTimeFilter,
+    days,
     getDays
   };
 }
