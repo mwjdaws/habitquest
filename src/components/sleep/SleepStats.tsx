@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CircleOff, Clock, Heart, Loader, Pulse, Zap } from "lucide-react";
+import { CircleOff, Clock, Heart, Loader, Activity, Zap } from "lucide-react";
 import { SleepEntry } from "@/lib/sleepTypes";
 
 interface SleepStatsProps {
@@ -78,7 +78,7 @@ export const SleepStats: React.FC<SleepStatsProps> = ({ sleepEntries, isLoading 
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-            <Pulse className="h-4 w-4" />
+            <Activity className="h-4 w-4" />
             Avg. Quality
           </CardTitle>
         </CardHeader>

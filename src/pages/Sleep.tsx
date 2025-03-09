@@ -99,7 +99,7 @@ export default function Sleep() {
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Sleep Tracker</h1>
       
-      <SleepStats entries={sleepEntries} />
+      <SleepStats sleepEntries={sleepEntries} isLoading={false} />
       
       <SleepEntryList
         entries={sleepEntries}
@@ -118,10 +118,11 @@ export default function Sleep() {
             </DialogDescription>
           </DialogHeader>
           <SleepForm
-            initialData={entryToEdit || undefined}
+            defaultValues={entryToEdit || undefined}
             onSubmit={handleFormSubmit}
             isSubmitting={isCreating || isUpdating}
-            onCancel={() => setIsFormOpen(false)}
+            title={entryToEdit ? "Edit Sleep Entry" : "Add Sleep Entry"}
+            submitLabel={entryToEdit ? "Update Entry" : "Save Entry"}
           />
         </DialogContent>
       </Dialog>
