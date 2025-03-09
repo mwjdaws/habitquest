@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { Goal, KeyResult, CreateGoalData } from '@/lib/goalTypes';
 import { fetchGoals, createGoal, updateKeyResult } from '@/lib/api/goalAPI';
 
-export { Goal, KeyResult, CreateGoalData } from '@/lib/goalTypes';
+// Use 'export type' for re-exporting types when isolatedModules is enabled
+export type { Goal, KeyResult, CreateGoalData } from '@/lib/goalTypes';
 
 export function useGoals() {
   const [goals, setGoals] = useState<Goal[]>([]);
