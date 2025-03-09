@@ -65,15 +65,16 @@ export function useTrendData() {
       });
     } catch (error) {
       console.error("Error fetching trend data:", error);
-      setData(prev => ({ 
-        ...prev,
-        habits: Array.isArray(prev.habits) ? prev.habits : [],
-        completions: Array.isArray(prev.completions) ? prev.completions : [],
-        failures: Array.isArray(prev.failures) ? prev.failures : [],
-        streakRecords: Array.isArray(prev.streakRecords) ? prev.streakRecords : [],
-        loading: false, 
-        error: error instanceof Error ? error.message : "Failed to load habit trend data" 
-      }));
+      
+      // Create a completely new object with properly typed array properties
+      setData({
+        habits: [],
+        completions: [],
+        failures: [],
+        streakRecords: [],
+        loading: false,
+        error: error instanceof Error ? error.message : "Failed to load habit trend data"
+      });
     }
   }, [getDays]);
 
