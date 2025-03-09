@@ -8,53 +8,46 @@ import { toast } from "sonner";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// Default layouts for different screen sizes with improved spacing
+// Improved default layouts with better spacing and no overlapping
 const DEFAULT_LAYOUTS = {
   lg: [
-    // Row 1 - Main habit tracker and Task stats
+    // Row 1 - Main habit tracker
     { i: "habit-tracker", x: 0, y: 0, w: 2, h: 2, minW: 1, minH: 1 },
+    // Row 1 - Right side with Task stats
     { i: "task-stats", x: 2, y: 0, w: 1, h: 1, minW: 1, minH: 1 },
-    
-    // Row 2 - Goals progress (right side)
+    // Row 2 - Right side with Goals progress
     { i: "goals-progress", x: 2, y: 1, w: 1, h: 1, minW: 1, minH: 1 },
-    
-    // Row 3 - Streak stats and upcoming tasks
-    { i: "streak-stats", x: 0, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
-    { i: "upcoming-tasks", x: 1, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
-    
+    // Row 3 - Stats widgets spread evenly
+    { i: "streak-stats", x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
+    { i: "upcoming-tasks", x: 1, y: 2, w: 2, h: 1, minW: 1, minH: 1 },
     // Row 4 - Full-width habit trends
-    { i: "habit-trends", x: 0, y: 4, w: 3, h: 2, minW: 2, minH: 2 },
-    
-    // Row 5 - Full-width journal stats
-    { i: "journal-stats", x: 0, y: 6, w: 3, h: 2, minW: 2, minH: 2 },
+    { i: "habit-trends", x: 0, y: 3, w: 3, h: 2, minW: 2, minH: 2 },
+    // Row 5 - Full-width journal stats with more height
+    { i: "journal-stats", x: 0, y: 5, w: 3, h: 3, minW: 2, minH: 2 },
   ],
   md: [
-    // Row 1 - Main components
+    // Row 1 - Habit tracker with more space
     { i: "habit-tracker", x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 1 },
     { i: "task-stats", x: 1, y: 0, w: 1, h: 1, minW: 1, minH: 1 },
-    
-    // Row 2 - Secondary components
     { i: "upcoming-tasks", x: 1, y: 1, w: 1, h: 1, minW: 1, minH: 1 },
-    
-    // Row 3 - Stats widgets
+    // Row 2 - Stats widgets evenly spaced
     { i: "streak-stats", x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
     { i: "goals-progress", x: 1, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
-    
-    // Row 4 - Full-width analytics
+    // Row 3 - Full-width analytics
     { i: "habit-trends", x: 0, y: 3, w: 2, h: 2, minW: 1, minH: 2 },
-    
-    // Row 5 - Full-width journal stats
+    // Row 4 - Full-width journal stats with more height
     { i: "journal-stats", x: 0, y: 5, w: 2, h: 2, minW: 1, minH: 2 },
   ],
   sm: [
-    // Stack everything vertically for mobile with proper spacing
+    // Stack everything vertically with adequate spacing
     { i: "habit-tracker", x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 1 },
     { i: "task-stats", x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
     { i: "upcoming-tasks", x: 0, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
     { i: "streak-stats", x: 0, y: 4, w: 1, h: 1, minW: 1, minH: 1 },
     { i: "goals-progress", x: 0, y: 5, w: 1, h: 1, minW: 1, minH: 1 },
     { i: "habit-trends", x: 0, y: 6, w: 1, h: 2, minW: 1, minH: 2 },
-    { i: "journal-stats", x: 0, y: 8, w: 1, h: 2, minW: 1, minH: 2 },
+    // Give journal stats more height on mobile
+    { i: "journal-stats", x: 0, y: 8, w: 1, h: 3, minW: 1, minH: 2 },
   ],
 };
 
@@ -91,7 +84,7 @@ export function DashboardGrid({ children }: DashboardGridProps) {
     }
   }, [layouts, layoutChanged]);
 
-  // Handle layout changes and prevent collisions
+  // Handle layout changes and enforce no collision
   const handleLayoutChange = (_, allLayouts) => {
     setLayouts(allLayouts);
     setLayoutChanged(true);
@@ -158,9 +151,11 @@ export function DashboardGrid({ children }: DashboardGridProps) {
         isDraggable={isDraggable}
         isResizable={isResizable}
         onLayoutChange={handleLayoutChange}
-        margin={[16, 16]}
+        margin={[20, 20]}
+        containerPadding={[10, 10]}
         preventCollision={true}
         compactType="vertical"
+        useCSSTransforms={true}
       >
         {gridItems}
       </ResponsiveGridLayout>
