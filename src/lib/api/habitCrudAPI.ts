@@ -1,4 +1,3 @@
-
 import { supabase } from "../supabase";
 import { Habit } from "../habitTypes";
 import { getAuthenticatedUser, handleApiError } from "./apiUtils";
@@ -18,7 +17,7 @@ export const fetchHabits = async (includeArchived: boolean = false): Promise<Hab
     
     // Filter out archived habits by default
     if (!includeArchived) {
-      query = query.is('archived', null).or('archived.eq.false');
+      query = query.eq('archived', false);
     }
       
     const { data, error } = await query.order("created_at", { ascending: false });
@@ -34,7 +33,7 @@ export const fetchHabits = async (includeArchived: boolean = false): Promise<Hab
 /**
  * Creates a new habit for the authenticated user
  */
-export const createHabit = async (habit: Omit<Habit, "id" | "created_at" | "updated_at" | "user_id" | "current_streak" | "longest_streak">) => {
+export const createHabit = async (habit: Omit<Habit, "id" | "created_at" | "updated_at" | "user_id" | "current_streak" | "longest_streak" | "archived">) => {
   try {
     const userId = await getAuthenticatedUser();
 

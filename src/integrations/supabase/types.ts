@@ -114,6 +114,7 @@ export type Database = {
       }
       habits: {
         Row: {
+          archived: boolean | null
           category: string
           color: string
           created_at: string
@@ -127,6 +128,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived?: boolean | null
           category?: string
           color?: string
           created_at?: string
@@ -140,6 +142,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived?: boolean | null
           category?: string
           color?: string
           created_at?: string
