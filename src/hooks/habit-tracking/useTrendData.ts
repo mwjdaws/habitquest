@@ -55,6 +55,7 @@ export function useTrendData() {
         throw new Error(firstError);
       }
       
+      // Ensure we're setting arrays for each property, even if the API returned undefined
       setData({
         habits: habitsResult.data || [],
         completions: completionsResult.data || [],
@@ -66,7 +67,7 @@ export function useTrendData() {
     } catch (error) {
       console.error("Error fetching trend data:", error);
       
-      // Create a completely new object with properly typed array properties
+      // Explicitly create a new object with all array fields properly initialized
       setData({
         habits: [],
         completions: [],
