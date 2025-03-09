@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -102,14 +103,14 @@ export function JournalEntryForm({ onSave, availableTags, isSaving }: JournalEnt
             ) : (
               <div className="flex gap-2">
                 <Select
-                  value={tag || ""}
-                  onValueChange={(value) => setTag(value === "" ? null : value)}
+                  value={tag || "no-tag"}
+                  onValueChange={(value) => setTag(value === "no-tag" ? null : value)}
                 >
                   <SelectTrigger id="tag" className="flex-1">
                     <SelectValue placeholder="Select a tag (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No tag</SelectItem>
+                    <SelectItem value="no-tag">No tag</SelectItem>
                     {availableTags.map((t) => (
                       <SelectItem key={t} value={t}>
                         <div className="flex items-center">
