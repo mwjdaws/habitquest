@@ -1,5 +1,5 @@
 
-import { Calendar, CheckSquare, BarChart, Diamond, BookOpen, Heart, Home, Code } from "lucide-react";
+import { Calendar, CheckSquare, BarChart, Diamond, BookOpen, Heart, Home, Code, Moon } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 export interface NavigationItem {
@@ -38,6 +38,11 @@ export const navigationItems: NavigationItem[] = [
     title: "Mood",
     path: "/mood",
     icon: Heart,
+  },
+  {
+    title: "Sleep",
+    path: "/sleep",
+    icon: Moon,
   },
   {
     title: "Analytics",

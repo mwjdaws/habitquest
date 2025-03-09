@@ -1,7 +1,7 @@
-
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import Sleep from "./pages/Sleep";
 
 // Basic error handling for the entire app
 try {

@@ -253,6 +253,57 @@ export type Database = {
           },
         ]
       }
+      sleep_entries: {
+        Row: {
+          bedtime: string
+          breath_rate: number | null
+          created_at: string | null
+          heart_rate: number | null
+          hrv: number | null
+          id: string
+          quality_score: number | null
+          routine_score: number | null
+          sleep_date: string
+          sleep_latency_minutes: number | null
+          snoring_percentage: number | null
+          time_slept_minutes: number
+          user_id: string | null
+          wake_time: string
+        }
+        Insert: {
+          bedtime: string
+          breath_rate?: number | null
+          created_at?: string | null
+          heart_rate?: number | null
+          hrv?: number | null
+          id?: string
+          quality_score?: number | null
+          routine_score?: number | null
+          sleep_date: string
+          sleep_latency_minutes?: number | null
+          snoring_percentage?: number | null
+          time_slept_minutes: number
+          user_id?: string | null
+          wake_time: string
+        }
+        Update: {
+          bedtime?: string
+          breath_rate?: number | null
+          created_at?: string | null
+          heart_rate?: number | null
+          hrv?: number | null
+          id?: string
+          quality_score?: number | null
+          routine_score?: number | null
+          sleep_date?: string
+          sleep_latency_minutes?: number | null
+          snoring_percentage?: number | null
+          time_slept_minutes?: number
+          user_id?: string | null
+          wake_time?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           created_at: string
