@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -126,15 +127,15 @@ const App = () => {
   return (
     <ErrorBoundaryClass>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <BrowserRouter>
-            <AuthProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <TooltipProvider>
               <AppWithAuth />
-            </AuthProvider>
-          </BrowserRouter>
-          <Toaster />
-          <Sonner />
-        </TooltipProvider>
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </QueryClientProvider>
     </ErrorBoundaryClass>
   );
