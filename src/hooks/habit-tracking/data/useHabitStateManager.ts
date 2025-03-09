@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { HabitTrackingState } from "../types";
 import { useHabitFiltering } from "../useHabitFiltering";
 import { useHabitStateUpdate } from "../utils/useHabitStateUpdate";
@@ -35,11 +35,12 @@ export function useHabitStateManager() {
     }));
   }, [filterHabitsForToday]);
   
-  return {
+  // Memoize the return value to prevent unnecessary re-renders
+  return useMemo(() => ({
     state,
     setState,
     updateHabits,
     setLoading,
     setError
-  };
+  }), [state, updateHabits, setLoading, setError]);
 }

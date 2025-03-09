@@ -1,5 +1,5 @@
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useHabitData } from "./useHabitData";
 import { useHabitActions } from "./useHabitActions";
 import { HabitTrackingResult } from "./types";
@@ -16,8 +16,8 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     handleUndoFailure
   } = useHabitActions(state, setState, refreshData);
 
-  // Calculate UI metrics once per render
-  const { totalCount, completedCount, progress } = useMemo(() => {
+  // Calculate UI metrics once per render with proper dependencies
+  const metrics = useMemo(() => {
     const totalCount = state.filteredHabits.length;
     const completedCount = state.filteredHabits.filter(habit => 
       state.completions.some(c => c.habit_id === habit.id)
@@ -30,20 +30,25 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     return { totalCount, completedCount, progress };
   }, [state.filteredHabits, state.completions]);
 
-  // Return a stable object to prevent unnecessary re-renders
+  // Wrap refreshData with useCallback to stabilize reference
+  const stableRefreshData = useCallback((showLoading = true) => {
+    refreshData(showLoading);
+  }, [refreshData]);
+
+  // Return a more efficiently memoized object with flattened metrics
   return useMemo(() => ({
     habits: state.filteredHabits,
     completions: state.completions,
     failures: state.failures,
     loading: state.loading,
     error: state.error,
-    progress,
-    completedCount,
-    totalCount,
+    progress: metrics.progress,
+    completedCount: metrics.completedCount,
+    totalCount: metrics.totalCount,
     handleToggleCompletion,
     handleLogFailure,
     handleUndoFailure,
-    refreshData,
+    refreshData: stableRefreshData,
     isInitialized: state.isInitialized
   }), [
     state.filteredHabits,
@@ -52,12 +57,10 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     state.loading,
     state.error,
     state.isInitialized,
-    progress,
-    completedCount,
-    totalCount,
+    metrics,
     handleToggleCompletion,
     handleLogFailure,
     handleUndoFailure,
-    refreshData
+    stableRefreshData
   ]);
 }

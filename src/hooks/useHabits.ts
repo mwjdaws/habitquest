@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Habit } from '@/lib/habitTypes';
 import { fetchHabits } from '@/lib/api/habit';
 import { useLoadingError } from './useLoadingError';
@@ -29,5 +29,11 @@ export function useHabits() {
     fetchHabitsData();
   }, [fetchHabitsData, refreshTrigger]);
 
-  return { habits, loading, error, refreshHabits };
+  // Memoize return value to prevent unnecessary re-renders
+  return useMemo(() => ({ 
+    habits, 
+    loading, 
+    error, 
+    refreshHabits 
+  }), [habits, loading, error, refreshHabits]);
 }

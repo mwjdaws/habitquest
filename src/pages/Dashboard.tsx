@@ -10,6 +10,9 @@ import { DashboardGrid } from "@/components/dashboard/DashboardGrid";
 import { JournalStats } from "@/components/dashboard/JournalStats";
 import { AnimatePresence, motion } from "framer-motion";
 
+// Minimum interval between refreshes (ms)
+const REFRESH_COOLDOWN = 3000;
+
 const Dashboard = () => {
   const lastRefreshRef = useRef(Date.now());
   const [refreshKey, setRefreshKey] = useState(0);
@@ -18,8 +21,8 @@ const Dashboard = () => {
   // Optimize refresh data with improved throttling
   const refreshData = useCallback(() => {
     const now = Date.now();
-    // Prevent refresh spam with a 3-second cooldown
-    if (now - lastRefreshRef.current > 3000) {
+    // Prevent refresh spam with a cooldown
+    if (now - lastRefreshRef.current > REFRESH_COOLDOWN) {
       lastRefreshRef.current = now;
       setRefreshKey(prev => prev + 1);
     } else {
@@ -35,53 +38,79 @@ const Dashboard = () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  // Memoize the stagger delay to prevent recalculation
+  // Memoize stagger delay to prevent recalculation
   const staggerDelay = useMemo(() => 0.1, []);
 
-  // Use memoized dashboard content to prevent unnecessary re-rendering
-  const dashboardContent = useMemo(() => (
-    <DashboardGrid>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-        transition={{ duration: 0.4, delay: staggerDelay * 0 }}
-      >
-        <HabitTracker onHabitChange={refreshData} key={`habit-tracker-${refreshKey}`} />
-      </motion.div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-        transition={{ duration: 0.4, delay: staggerDelay * 1 }}
-      >
-        <TaskStats />
-      </motion.div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-        transition={{ duration: 0.4, delay: staggerDelay * 2 }}
-      >
-        <StreakStats onDataChange={refreshData} />
-      </motion.div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-        transition={{ duration: 0.4, delay: staggerDelay * 3 }}
-      >
-        <UpcomingTasks />
-      </motion.div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-        transition={{ duration: 0.4, delay: staggerDelay * 4 }}
-      >
-        <GoalsProgress />
-      </motion.div>
-    </DashboardGrid>
+  // Memoize components to reduce re-renders
+  const HabitTrackerMemo = useMemo(() => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+      transition={{ duration: 0.4, delay: staggerDelay * 0 }}
+    >
+      <HabitTracker onHabitChange={refreshData} key={`habit-tracker-${refreshKey}`} />
+    </motion.div>
   ), [isLoaded, staggerDelay, refreshData, refreshKey]);
+
+  const TaskStatsMemo = useMemo(() => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+      transition={{ duration: 0.4, delay: staggerDelay * 1 }}
+    >
+      <TaskStats />
+    </motion.div>
+  ), [isLoaded, staggerDelay]);
+
+  const StreakStatsMemo = useMemo(() => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+      transition={{ duration: 0.4, delay: staggerDelay * 2 }}
+    >
+      <StreakStats onDataChange={refreshData} />
+    </motion.div>
+  ), [isLoaded, staggerDelay, refreshData]);
+
+  const UpcomingTasksMemo = useMemo(() => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+      transition={{ duration: 0.4, delay: staggerDelay * 3 }}
+    >
+      <UpcomingTasks />
+    </motion.div>
+  ), [isLoaded, staggerDelay]);
+
+  const GoalsProgressMemo = useMemo(() => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+      transition={{ duration: 0.4, delay: staggerDelay * 4 }}
+    >
+      <GoalsProgress />
+    </motion.div>
+  ), [isLoaded, staggerDelay]);
+
+  const HabitTrendsMemo = useMemo(() => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+      transition={{ duration: 0.4, delay: staggerDelay * 5 }}
+    >
+      <HabitTrends />
+    </motion.div>
+  ), [isLoaded, staggerDelay]);
+
+  const JournalStatsMemo = useMemo(() => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+      transition={{ duration: 0.4, delay: staggerDelay * 6 }}
+    >
+      <JournalStats />
+    </motion.div>
+  ), [isLoaded, staggerDelay]);
 
   return (
     <AnimatePresence mode="wait">
@@ -91,23 +120,16 @@ const Dashboard = () => {
         transition={{ duration: 0.5 }}
       >
         <div className="space-y-6">
-          {dashboardContent}
+          <DashboardGrid>
+            {HabitTrackerMemo}
+            {TaskStatsMemo}
+            {StreakStatsMemo}
+            {UpcomingTasksMemo}
+            {GoalsProgressMemo}
+          </DashboardGrid>
           
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-            transition={{ duration: 0.4, delay: staggerDelay * 5 }}
-          >
-            <HabitTrends />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-            transition={{ duration: 0.4, delay: staggerDelay * 6 }}
-          >
-            <JournalStats />
-          </motion.div>
+          {HabitTrendsMemo}
+          {JournalStatsMemo}
         </div>
       </motion.div>
     </AnimatePresence>
