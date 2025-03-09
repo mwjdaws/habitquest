@@ -1,6 +1,7 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UserMenu } from "./UserMenu";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 export function AppHeader() {
   return (
@@ -9,7 +10,10 @@ export function AppHeader() {
         <SidebarTrigger />
         <h1 className="text-2xl font-bold ml-4">Perfectio</h1>
       </div>
-      <UserMenu />
+      <div className="flex items-center gap-2">
+        <ThemeSwitcher />
+        <UserMenu />
+      </div>
     </div>
   );
 }

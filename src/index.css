@@ -92,5 +92,21 @@
 
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Add transitions for theme color changes */
+  .card,
+  .button,
+  .badge,
+  .sidebar,
+  .sidebar-menu-button {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  /* Theme color transitions for habit items */
+  [class*="bg-habit-"],
+  [style*="--habit-"] {
+    transition: background-color 0.3s ease, border-color 0.3s ease;
   }
 }
