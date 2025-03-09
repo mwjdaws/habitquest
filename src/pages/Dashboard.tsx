@@ -41,14 +41,17 @@ const Dashboard = () => {
   // Memoize stagger delay to prevent recalculation
   const staggerDelay = useMemo(() => 0.1, []);
 
-  // Memoize components to reduce re-renders
+  // Memoize components to reduce re-renders and apply animations
   const HabitTrackerMemo = useMemo(() => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
       transition={{ duration: 0.4, delay: staggerDelay * 0 }}
+      className="h-full"
     >
-      <HabitTracker onHabitChange={refreshData} key={`habit-tracker-${refreshKey}`} />
+      <div className="h-full">
+        <HabitTracker onHabitChange={refreshData} key={`habit-tracker-${refreshKey}`} />
+      </div>
     </motion.div>
   ), [isLoaded, staggerDelay, refreshData, refreshKey]);
 
