@@ -12,21 +12,40 @@ import { withRetry, handleApiError } from "@/lib/error-utils";
 import { Habit } from "@/lib/habitTypes";
 
 /**
- * Hook to handle habit data fetching with improved error handling and cancellation
+ * Hook to handle habit data fetching with improved error handling, cancellation, and caching
  */
 export function useHabitFetcher() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const fetchInProgressRef = useRef(false);
   const lastFetchTimeRef = useRef(0);
   const dataVersionRef = useRef(0);
+  const cacheExpiryRef = useRef(0);
+  const cachedDataRef = useRef<any>(null);
   const today = getTodayFormatted();
 
-  // Enhanced data loading with improved error handling, request cancellation, and versioning
+  // Enhanced data loading with improved error handling, request cancellation, and caching
   const fetchHabitData = useCallback(async (signal?: AbortSignal) => {
-    // Request throttling (500ms)
+    // Improved request throttling (700ms)
     const now = Date.now();
-    if (now - lastFetchTimeRef.current < 500) {
+    
+    // Cache is valid for 30 seconds unless force refresh is requested
+    const CACHE_TTL = 30000; // 30 seconds
+    
+    // Check for valid cache first
+    if (cachedDataRef.current && now < cacheExpiryRef.current && !signal?.aborted) {
+      console.log("Using cached habit data, age:", Math.round((now - (cacheExpiryRef.current - CACHE_TTL))/1000), "seconds");
+      return cachedDataRef.current;
+    }
+    
+    // Enhanced throttling to prevent excessive requests
+    if (now - lastFetchTimeRef.current < 700) {
       console.log("Throttling fetch request");
+      return null;
+    }
+    
+    // Prevent concurrent fetches
+    if (fetchInProgressRef.current) {
+      console.log("Fetch already in progress, waiting...");
       return null;
     }
     
@@ -49,12 +68,19 @@ export function useHabitFetcher() {
         throw new Error("Failed to fetch habits data");
       }
       
-      return {
+      // Cache the result
+      const result = {
         habits: habitsData,
         completions: completionsData || [],
         failures: failuresData || [],
         version: currentVersion
       };
+      
+      // Update cache with new data
+      cachedDataRef.current = result;
+      cacheExpiryRef.current = now + CACHE_TTL;
+      
+      return result;
       
     } catch (error) {
       // Only process error if the request wasn't aborted
@@ -73,7 +99,7 @@ export function useHabitFetcher() {
   }, [today]);
 
   // Function to setup abort controller and handle fetch request
-  const loadData = useCallback(async (showLoading = true) => {
+  const loadData = useCallback(async (showLoading = true, forceRefresh = false) => {
     // Cancel any in-flight requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -82,6 +108,12 @@ export function useHabitFetcher() {
     
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
+    
+    // Invalidate cache if force refresh requested
+    if (forceRefresh) {
+      cacheExpiryRef.current = 0;
+      console.log("Forcing data refresh");
+    }
     
     const result = await fetchHabitData(signal);
     
@@ -102,10 +134,17 @@ export function useHabitFetcher() {
       abortControllerRef.current = null;
     }
   }, []);
+
+  // Added ability to clear cache explicitly
+  const clearCache = useCallback(() => {
+    cachedDataRef.current = null;
+    cacheExpiryRef.current = 0;
+  }, []);
   
   return {
     loadData,
     cancelPendingRequests,
-    getCurrentVersion: () => dataVersionRef.current
+    getCurrentVersion: () => dataVersionRef.current,
+    clearCache
   };
 }
