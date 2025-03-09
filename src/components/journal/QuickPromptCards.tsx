@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LightBulb, Star, BookOpen, MessageSquare, CheckCircle } from 'lucide-react';
+import { Lightbulb, Star, BookOpen, MessageSquare, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface JournalPrompt {
@@ -55,7 +55,7 @@ export function QuickPromptCards({ onSelectPrompt }: QuickPromptCardsProps) {
       case 'mood':
         return <MessageSquare className="h-4 w-4 mr-2" />;
       default:
-        return <LightBulb className="h-4 w-4 mr-2" />;
+        return <Lightbulb className="h-4 w-4 mr-2" />;
     }
   };
   
