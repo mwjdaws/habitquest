@@ -61,14 +61,14 @@ export function TaskStats() {
               <Label htmlFor="tagFilter">Filter by Tag</Label>
             </div>
             <Select
-              value={selectedTag || ""}
-              onValueChange={(value) => setSelectedTag(value === "" ? null : value)}
+              value={selectedTag || "all_tags"}
+              onValueChange={(value) => setSelectedTag(value === "all_tags" ? null : value)}
             >
               <SelectTrigger id="tagFilter">
                 <SelectValue placeholder="All Tags" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Tags</SelectItem>
+                <SelectItem value="all_tags">All Tags</SelectItem>
                 {availableTags.map((tag) => (
                   <SelectItem key={tag} value={tag}>{tag}</SelectItem>
                 ))}
