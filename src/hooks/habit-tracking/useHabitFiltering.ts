@@ -7,26 +7,22 @@ import { getDayName } from "@/lib/habitUtils";
  * Hook to handle habit filtering logic with improved performance
  */
 export function useHabitFiltering() {
-  // Get today's name once
+  // Get today's name once - memoized to prevent recalculation
   const todayName = useMemo(() => getDayName(new Date()).toLowerCase(), []);
   
-  // Create a dedicated function to filter habits for today with memoization
+  // Create a more efficient filtering function with better optimization
   const filterHabitsForToday = useCallback((allHabits: Habit[]) => {
-    if (!allHabits?.length) {
+    // Early return for empty arrays to avoid unnecessary processing
+    if (!allHabits || allHabits.length === 0) {
       return [];
     }
     
-    console.log(`Filtering for ${todayName}:`, allHabits.length, "total habits");
-    
-    return allHabits.filter(habit => {
-      // Empty frequency array means the habit should show every day
-      return habit.frequency.length === 0 || 
-             habit.frequency.includes(todayName);
-    });
+    // Use direct array filtering without intermediate variables
+    return allHabits.filter(habit => 
+      habit.frequency.length === 0 || habit.frequency.includes(todayName)
+    );
   }, [todayName]);
 
   // Return a stable reference to the filter function
-  return useMemo(() => ({
-    filterHabitsForToday
-  }), [filterHabitsForToday]);
+  return { filterHabitsForToday };
 }

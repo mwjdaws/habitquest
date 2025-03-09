@@ -1,4 +1,3 @@
-
 import { Check, Undo, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HabitFailure } from "@/lib/habitTypes";
@@ -15,7 +14,7 @@ type HabitStatusProps = {
   failures: HabitFailure[];
 };
 
-// Animation variants
+// Predefine animation variants to avoid object creation on each render
 const buttonVariants = {
   initial: { scale: 0.95, opacity: 0 },
   animate: { scale: 1, opacity: 1, transition: { duration: 0.2 } },
@@ -35,6 +34,7 @@ export const HabitStatus = memo(function HabitStatus({
   // Get failure reason if available - using useMemo for consistency
   const failureInfo = useMemo(() => {
     if (!isFailed) return null;
+    // Find only runs when needed
     const failure = failures.find(f => f.habit_id === habitId);
     return failure ? failure.reason || "Failed" : "Failed";
   }, [isFailed, failures, habitId]);
@@ -44,7 +44,7 @@ export const HabitStatus = memo(function HabitStatus({
   const handleToggle = useCallback(() => onToggleCompletion(habitId), [habitId, onToggleCompletion]);
   const handleUndo = useCallback(() => onUndoFailure(habitId), [habitId, onUndoFailure]);
   
-  // Early return pattern for improved readability and performance
+  // Early return pattern for improved rendering performance
   if (isFailed) {
     return (
       <motion.div 
@@ -58,10 +58,7 @@ export const HabitStatus = memo(function HabitStatus({
           <X className="mr-1 h-3 w-3" />
           {failureInfo}
         </motion.div>
-        <motion.div 
-          key="undo-button" 
-          {...buttonVariants}
-        >
+        <motion.div {...buttonVariants}>
           <Button
             variant="outline"
             size="sm"
@@ -116,23 +113,18 @@ export const HabitStatus = memo(function HabitStatus({
     </AnimatePresence>
   );
 }, (prevProps, nextProps) => {
-  // More precise comparison using only what matters
-  if (prevProps.isCompleted !== nextProps.isCompleted ||
-      prevProps.isFailed !== nextProps.isFailed ||
-      prevProps.habitId !== nextProps.habitId) {
-    return false;
+  // Optimized comparison logic that short-circuits early
+  if (prevProps.habitId !== nextProps.habitId) return false;
+  if (prevProps.isCompleted !== nextProps.isCompleted) return false;
+  if (prevProps.isFailed !== nextProps.isFailed) return false;
+  
+  // Only compare the relevant failure when needed
+  if (prevProps.isFailed && nextProps.isFailed) {
+    const prevFailure = prevProps.failures.find(f => f.habit_id === prevProps.habitId);
+    const nextFailure = nextProps.failures.find(f => f.habit_id === nextProps.habitId);
+    return prevFailure?.reason === nextFailure?.reason;
   }
   
-  // Only compare the relevant failure
-  const prevFailure = prevProps.failures.find(f => f.habit_id === prevProps.habitId);
-  const nextFailure = nextProps.failures.find(f => f.habit_id === nextProps.habitId);
-  
-  // If both are undefined, they're equal
-  if (!prevFailure && !nextFailure) return true;
-  
-  // If one exists and the other doesn't, they're not equal
-  if ((!prevFailure && nextFailure) || (prevFailure && !nextFailure)) return false;
-  
-  // Compare the reason if both exist
-  return prevFailure?.reason === nextFailure?.reason;
+  // If we get here, other props are unchanged
+  return true;
 });

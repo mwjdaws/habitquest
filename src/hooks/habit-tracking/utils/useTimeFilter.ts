@@ -8,14 +8,10 @@ export type TimeFilter = "week" | "month" | "all";
  */
 export const getDaysFromFilter = (filter: TimeFilter): number => {
   switch (filter) {
-    case "week":
-      return 7;
-    case "month":
-      return 30;
-    case "all":
-      return 365; // Using a year as "all" time to prevent too large requests
-    default:
-      return 7;
+    case "week": return 7;
+    case "month": return 30;
+    case "all": return 365;
+    default: return 7;
   }
 };
 
@@ -25,22 +21,23 @@ export const getDaysFromFilter = (filter: TimeFilter): number => {
 export function useTimeFilter(initialFilter: TimeFilter = "week") {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(initialFilter);
   
-  // Memoize the days calculation to prevent unnecessary calculations
+  // Directly memoize the days value to avoid recalculation
   const days = useMemo(() => getDaysFromFilter(timeFilter), [timeFilter]);
   
-  // Create a memoized getter function for compatibility with existing code
+  // Simplified getter that returns the memoized value directly
   const getDays = useCallback(() => days, [days]);
   
-  // Create a safe setter that validates the input
+  // Optimized setter that avoids unnecessary state updates
   const setValidatedTimeFilter = useCallback((newFilter: TimeFilter | string) => {
-    // Validate that the filter is a valid TimeFilter
+    if (newFilter === timeFilter) return; // Skip update if value hasn't changed
+    
     if (newFilter === "week" || newFilter === "month" || newFilter === "all") {
       setTimeFilter(newFilter);
     } else {
       console.warn(`Invalid time filter: ${newFilter}, using default (week)`);
       setTimeFilter("week");
     }
-  }, []);
+  }, [timeFilter]);
   
   return {
     timeFilter,
