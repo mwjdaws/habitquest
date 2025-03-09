@@ -19,18 +19,36 @@ interface TaskTagSelectProps {
 }
 
 export function TaskTagSelect({ tag, onTagChange, availableTags }: TaskTagSelectProps) {
-  const [inputValue, setInputValue] = useState(tag === "no-tag" ? "" : (tag || ""));
+  // Track the input value separately from the selected tag
+  const [inputValue, setInputValue] = useState('');
   
-  // Update input value when the tag prop changes
+  // When tag changes from parent component, update input if needed
   useEffect(() => {
-    setInputValue(tag === "no-tag" ? "" : (tag || ""));
+    if (tag && tag !== "no-tag") {
+      setInputValue(tag);
+    } else if (tag === "no-tag") {
+      setInputValue('');
+    }
   }, [tag]);
   
-  // Handle input change separately from tag selection
-  const handleInputChange = (value: string) => {
+  // Handle direct tag selection from dropdown
+  const handleTagSelect = (value: string) => {
+    if (value === "no-tag") {
+      onTagChange(undefined);
+      setInputValue('');
+    } else {
+      onTagChange(value);
+      setInputValue(value);
+    }
+  };
+  
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setInputValue(value);
     
-    if (value) {
+    // Only update the tag if there's actual content
+    if (value.trim()) {
       onTagChange(value);
     } else {
       onTagChange(undefined);
@@ -43,8 +61,8 @@ export function TaskTagSelect({ tag, onTagChange, availableTags }: TaskTagSelect
       <div className="flex flex-col space-y-2">
         {/* Main Select component for choosing from existing tags */}
         <Select 
-          value={tag} 
-          onValueChange={onTagChange}
+          value={tag || "no-tag"} 
+          onValueChange={handleTagSelect}
         >
           <SelectTrigger id="taskTag" className="w-full">
             <SelectValue placeholder="Select or enter a tag">
@@ -59,7 +77,7 @@ export function TaskTagSelect({ tag, onTagChange, availableTags }: TaskTagSelect
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {/* Option to clear the tag - use "no-tag" instead of empty string */}
+            {/* Option to clear the tag */}
             <SelectItem value="no-tag">
               <span className="text-muted-foreground">No tag</span>
             </SelectItem>
@@ -92,7 +110,7 @@ export function TaskTagSelect({ tag, onTagChange, availableTags }: TaskTagSelect
             id="newTag"
             placeholder="Or type a new tag here"
             value={inputValue}
-            onChange={(e) => handleInputChange(e.target.value)}
+            onChange={handleInputChange}
             className="flex-1"
           />
         </div>
