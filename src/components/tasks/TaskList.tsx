@@ -1,5 +1,5 @@
 
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { Task } from '@/lib/taskTypes';
 import { TaskItem } from './TaskItem';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -61,7 +61,7 @@ export function TaskList({ tasks, isLoading, onToggleComplete, onEdit, onDelete 
           {filteredTasks.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">No tasks found</div>
           ) : (
-            <Fragment>
+            <div className="space-y-2">
               {filteredTasks.map(task => (
                 <TaskItem 
                   key={task.id}
@@ -71,7 +71,7 @@ export function TaskList({ tasks, isLoading, onToggleComplete, onEdit, onDelete 
                   onDelete={onDelete}
                 />
               ))}
-            </Fragment>
+            </div>
           )}
         </TabsContent>
         
@@ -79,7 +79,7 @@ export function TaskList({ tasks, isLoading, onToggleComplete, onEdit, onDelete 
           {filteredTasks.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">No pending tasks</div>
           ) : (
-            <Fragment>
+            <div className="space-y-2">
               {filteredTasks.map(task => (
                 <TaskItem 
                   key={task.id}
@@ -89,7 +89,7 @@ export function TaskList({ tasks, isLoading, onToggleComplete, onEdit, onDelete 
                   onDelete={onDelete}
                 />
               ))}
-            </Fragment>
+            </div>
           )}
         </TabsContent>
         
@@ -97,7 +97,7 @@ export function TaskList({ tasks, isLoading, onToggleComplete, onEdit, onDelete 
           {filteredTasks.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">No completed tasks</div>
           ) : (
-            <Fragment>
+            <div className="space-y-2">
               {filteredTasks.map(task => (
                 <TaskItem 
                   key={task.id}
@@ -107,7 +107,7 @@ export function TaskList({ tasks, isLoading, onToggleComplete, onEdit, onDelete 
                   onDelete={onDelete}
                 />
               ))}
-            </Fragment>
+            </div>
           )}
         </TabsContent>
       </Tabs>
