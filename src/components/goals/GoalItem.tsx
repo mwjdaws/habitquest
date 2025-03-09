@@ -10,6 +10,7 @@ import { toast } from "@/components/ui/use-toast";
 import { GoalHeader } from "./goal-item/GoalHeader";
 import { GoalProgress } from "./goal-item/GoalProgress";
 import { GoalItemActions } from "./goal-item/GoalItemActions";
+import { getCurrentTorontoDate } from "@/lib/dateUtils";
 
 interface GoalItemProps {
   goal: Goal;
@@ -60,6 +61,7 @@ export function GoalItem({ goal }: GoalItemProps) {
   }
 
   const isComplete = goal.progress >= 100;
+  const currentDate = getCurrentTorontoDate();
 
   return (
     <Card className="overflow-hidden">
