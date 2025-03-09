@@ -27,7 +27,7 @@ export function useSafeQuery<T>(
     const result = await safeApiCall(
       fetchFn,
       options?.errorMessage || 'fetching data',
-      options?.defaultValue
+      undefined // Changed from options?.defaultValue to undefined
     );
 
     if (result.success) {
