@@ -8,7 +8,7 @@ export const applyTheme = (themeName: string, themes: ColorTheme[]): void => {
   if (!theme) return;
   
   try {
-    // Convert colors to HSL values
+    // Convert colors to HSL values - do this once outside the loop
     const primaryHSL = extractHSL(theme.primaryColor);
     const accentHSL = extractHSL(theme.accentColor);
     const backgroundHSL = extractHSL(theme.backgroundColor);
@@ -16,12 +16,21 @@ export const applyTheme = (themeName: string, themes: ColorTheme[]): void => {
     const cardHSL = extractHSL(theme.cardColor);
     const cardForegroundHSL = extractHSL(theme.cardForegroundColor);
     
-    // Create a single batch of CSS variable updates for better performance
+    // Pre-calculate derived colors to avoid repeated operations
+    const mutedHSL = backgroundHSL.replace(/\d+%$/, match => `${Math.max(parseInt(match) - 3, 0)}%`);
+    const mutedForegroundHSL = foregroundHSL.replace(/\d+%$/, match => `${Math.min(parseInt(match) + 45, 100)}%`);
+    const borderHSL = backgroundHSL.replace(/\d+%$/, match => `${Math.max(parseInt(match) - 7, 0)}%`);
+    const secondaryHSL = primaryHSL.replace(/\d+%$/, match => `${Math.max(parseInt(match) - 16, 0)}%`);
+    
+    // Using a single CSS update with CSS variables for better performance
+    const root = document.documentElement;
+    
+    // Batch operations by modifying the style object only once
     const cssVars = {
-      // Primary theme colors
+      // Primary and derived colors
       '--primary': primaryHSL,
       '--accent': accentHSL,
-      '--secondary': primaryHSL.replace(/\d+%$/, match => `${Math.max(parseInt(match) - 16, 0)}%`),
+      '--secondary': secondaryHSL,
       '--ring': primaryHSL,
       
       // Background and text colors
@@ -35,31 +44,30 @@ export const applyTheme = (themeName: string, themes: ColorTheme[]): void => {
       '--popover-foreground': cardForegroundHSL,
       
       // Derived colors
-      '--muted': backgroundHSL.replace(/\d+%$/, match => `${Math.max(parseInt(match) - 3, 0)}%`),
-      '--muted-foreground': foregroundHSL.replace(/\d+%$/, match => `${Math.min(parseInt(match) + 45, 100)}%`),
-      '--border': backgroundHSL.replace(/\d+%$/, match => `${Math.max(parseInt(match) - 7, 0)}%`)
+      '--muted': mutedHSL,
+      '--muted-foreground': mutedForegroundHSL,
+      '--border': borderHSL,
+      
+      // Format habit colors properly for direct application
+      '--habit-purple': theme.primaryColor.startsWith('#') ? theme.primaryColor : `hsl(${primaryHSL})`,
+      
+      // Sidebar variables
+      '--sidebar-primary': theme.primaryColor.startsWith('#') ? theme.primaryColor : `hsl(${primaryHSL})`,
+      '--sidebar-background': backgroundHSL,
+      '--sidebar-foreground': foregroundHSL,
+      '--sidebar-border': borderHSL
     };
     
-    // Apply all CSS variables at once to minimize repaints
-    Object.entries(cssVars).forEach(([prop, value]) => {
-      document.documentElement.style.setProperty(prop, value);
-    });
+    // Apply all CSS variables in a batch using fewer DOM operations
+    const rootStyle = root.style;
+    for (const [property, value] of Object.entries(cssVars)) {
+      rootStyle.setProperty(property, value);
+    }
     
-    // Handle habit colors and sidebar primary color
-    const formattedPrimaryColor = theme.primaryColor.startsWith('#') 
-      ? theme.primaryColor 
-      : `hsl(${primaryHSL})`;
-      
-    document.documentElement.style.setProperty('--habit-purple', formattedPrimaryColor);
-    document.documentElement.style.setProperty('--sidebar-primary', formattedPrimaryColor);
-    
-    // Apply background-based sidebar variables
-    document.documentElement.style.setProperty('--sidebar-background', backgroundHSL);
-    document.documentElement.style.setProperty('--sidebar-foreground', foregroundHSL);
-    document.documentElement.style.setProperty('--sidebar-border', cssVars['--border']);
-    
-    // Log for debugging
-    console.log(`Theme applied: ${themeName}`);
+    // Console log only in development environments
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Theme applied: ${themeName}`);
+    }
     
     toast.success(`Theme changed to ${themeName}`);
   } catch (error) {
