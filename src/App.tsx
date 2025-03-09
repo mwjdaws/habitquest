@@ -85,7 +85,8 @@ class ErrorBoundaryClass extends Component<
   }
 }
 
-const AppWithAuth = () => {
+// Separate the routes from the auth logic to avoid hook conditionals
+const AppRoutes = () => {
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
@@ -130,7 +131,7 @@ const App = () => {
         <BrowserRouter>
           <AuthProvider>
             <TooltipProvider>
-              <AppWithAuth />
+              <AppRoutes />
               <Toaster />
               <Sonner />
             </TooltipProvider>

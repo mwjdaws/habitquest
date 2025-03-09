@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from "react";
 import { HabitTracker } from "@/components/HabitTracker";
 import { StreakStats } from "@/components/dashboard/StreakStats";
@@ -31,7 +32,7 @@ const Dashboard = () => {
   const staggerDelay = 0.1;
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

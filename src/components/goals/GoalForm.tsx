@@ -7,6 +7,7 @@ import { useGoals } from '@/hooks/useGoals';
 import { FormField } from './FormField';
 import { DatePickerField } from './DatePickerField';
 import { KeyResultsList } from './KeyResultsList';
+import { format } from 'date-fns';
 
 interface GoalFormProps {
   onGoalCreated: () => void;
@@ -220,6 +221,3 @@ export function GoalForm({ onGoalCreated, onCancel }: GoalFormProps) {
     </form>
   );
 }
-
-// Import format from date-fns
-import { format } from 'date-fns';
