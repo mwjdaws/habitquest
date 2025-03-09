@@ -23,17 +23,22 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
       setIsProcessing(true);
       console.log(`HabitForm - Starting delete operation for habit ID: ${habit.id}`);
       
-      await deleteHabit(habit.id);
+      const success = await deleteHabit(habit.id);
       
-      toast({
-        title: "Habit deleted",
-        description: "Your habit has been permanently deleted",
-      });
-      
-      if (onDelete) {
-        onDelete();
+      if (success) {
+        toast({
+          title: "Habit deleted",
+          description: "Your habit has been permanently deleted",
+        });
+        
+        // Let the parent component know about the deletion
+        if (onDelete) {
+          onDelete();
+        } else {
+          onSave();
+        }
       } else {
-        onSave();
+        throw new Error("Failed to delete habit");
       }
     } catch (error) {
       console.error("Error deleting habit:", error);

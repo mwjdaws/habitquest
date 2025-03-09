@@ -35,22 +35,30 @@ export function DeleteConfirmation({
 }: DeleteConfirmationProps) {
   const [actionType, setActionType] = useState<'delete' | 'archive' | null>(null);
 
+  // Handle delete confirmation
   const handleConfirmDelete = () => {
-    onConfirm();
-    setActionType(null);
+    if (!isLoading) {
+      console.log("Confirming delete action");
+      onConfirm();
+      setActionType(null);
+    }
   };
 
+  // Handle archive confirmation
   const handleConfirmArchive = () => {
-    if (onArchive) {
+    if (!isLoading && onArchive) {
+      console.log("Confirming archive action");
       onArchive();
+      setActionType(null);
     }
-    setActionType(null);
   };
 
   return (
     <div className="flex gap-2">
       {/* Delete Button with Dialog */}
-      <AlertDialog open={actionType === 'delete'} onOpenChange={(open) => !open && setActionType(null)}>
+      <AlertDialog open={actionType === 'delete'} onOpenChange={(open) => {
+        if (!isLoading) setActionType(open ? 'delete' : null);
+      }}>
         <AlertDialogTrigger asChild>
           <Button 
             type="button" 
@@ -85,7 +93,9 @@ export function DeleteConfirmation({
       
       {/* Archive Button with Dialog */}
       {showArchive && onArchive && (
-        <AlertDialog open={actionType === 'archive'} onOpenChange={(open) => !open && setActionType(null)}>
+        <AlertDialog open={actionType === 'archive'} onOpenChange={(open) => {
+          if (!isLoading) setActionType(open ? 'archive' : null);
+        }}>
           <AlertDialogTrigger asChild>
             <Button 
               type="button" 
