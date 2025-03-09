@@ -1,8 +1,9 @@
 
 import { AlertCircle, Info, CheckCircle } from "lucide-react";
+import { getUserFriendlyErrorMessage } from "@/lib/error-utils";
 
 type StatusMessageProps = {
-  errorMessage?: string;
+  errorMessage?: string | Error;
   infoMessage?: string;
   successMessage?: string;
   className?: string;
@@ -19,12 +20,17 @@ const StatusMessage = ({
     return null;
   }
   
+  // Convert error object to user-friendly message if needed
+  const friendlyErrorMessage = errorMessage 
+    ? getUserFriendlyErrorMessage(errorMessage)
+    : undefined;
+  
   return (
     <div className={`space-y-2 ${className}`}>
-      {errorMessage && (
+      {friendlyErrorMessage && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2 text-red-800">
           <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-          <span>{errorMessage}</span>
+          <span>{friendlyErrorMessage}</span>
         </div>
       )}
       

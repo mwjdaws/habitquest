@@ -3,9 +3,18 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
+import ErrorBoundary from './components/ErrorBoundary.tsx'
 
-// Create a client
-const queryClient = new QueryClient()
+// Create a client with better error handling defaults
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 30000,
+    },
+  },
+})
 
 // Basic error handling for the entire app
 try {
@@ -17,9 +26,11 @@ try {
   }
   
   createRoot(container).render(
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
   console.log('Application rendered successfully');
 } catch (error) {

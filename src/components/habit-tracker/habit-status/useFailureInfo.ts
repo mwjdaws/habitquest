@@ -9,15 +9,24 @@ import { useMemo } from "react";
 export function useFailureInfo(
   habitId: string,
   isFailed: boolean,
-  failures: HabitFailure[]
+  failures: HabitFailure[] | null | undefined
 ): string {
   return useMemo(() => {
-    if (!isFailed || !failures || failures.length === 0) return '';
+    // Guard against invalid inputs
+    if (!habitId || !isFailed || !failures || failures.length === 0) {
+      return '';
+    }
     
-    // Create a Map for O(1) lookup performance instead of using find() which is O(n)
-    const failureMap = new Map(failures.map(f => [f.habit_id, f]));
-    const failure = failureMap.get(habitId);
-    
-    return failure?.reason || "Failed";
+    try {
+      // Create a Map for O(1) lookup performance instead of using find() which is O(n)
+      const failureMap = new Map(failures.map(f => [f.habit_id, f]));
+      const failure = failureMap.get(habitId);
+      
+      // If failure exists, use its reason, otherwise use a generic message
+      return failure?.reason || "Failed";
+    } catch (error) {
+      console.error("Error processing failure info:", error);
+      return "Failed";
+    }
   }, [isFailed, failures, habitId]);
 }

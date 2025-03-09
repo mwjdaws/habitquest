@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { HabitList } from "@/components/HabitList";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
+import { ErrorState } from "@/components/habit-tracker/ErrorState";
 
 const Habits = () => {
   const { user, isLoading } = useAuth();
@@ -66,21 +66,7 @@ const Habits = () => {
             <CardDescription>Track your daily habits</CardDescription>
           </CardHeader>
           <CardContent>
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                {error}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="ml-4"
-                  onClick={handleReload}
-                >
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  Retry
-                </Button>
-              </AlertDescription>
-            </Alert>
+            <ErrorState error={error} onRetry={handleReload} />
           </CardContent>
         </Card>
       </div>

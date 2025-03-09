@@ -2,6 +2,54 @@
 import { toast } from "@/components/ui/use-toast";
 
 /**
+ * Common user-friendly error messages for technical errors
+ */
+const USER_FRIENDLY_ERRORS = {
+  "Authentication required": "You need to sign in to access this feature",
+  "Failed to fetch": "Network connection issue. Please check your internet connection",
+  "Network Error": "Unable to connect to the server. Please check your internet connection",
+  "Request timeout": "The server is taking too long to respond. Please try again later",
+  "Internal Server Error": "We're experiencing technical difficulties. Please try again later",
+  "404": "The requested resource could not be found",
+  "403": "You don't have permission to access this resource",
+  "401": "Your session has expired. Please sign in again",
+  "500": "We're experiencing technical difficulties. Please try again later",
+  "unknown error": "Something went wrong. Please try again"
+};
+
+/**
+ * Maps technical error messages to user-friendly ones
+ * @param error The technical error message
+ * @returns A user-friendly error message
+ */
+export const getUserFriendlyErrorMessage = (error: unknown): string => {
+  const techMessage = formatErrorMessage(error);
+  
+  // Check for exact matches
+  if (techMessage in USER_FRIENDLY_ERRORS) {
+    return USER_FRIENDLY_ERRORS[techMessage as keyof typeof USER_FRIENDLY_ERRORS];
+  }
+  
+  // Check for partial matches
+  for (const [errorKey, friendlyMessage] of Object.entries(USER_FRIENDLY_ERRORS)) {
+    if (techMessage.toLowerCase().includes(errorKey.toLowerCase())) {
+      return friendlyMessage;
+    }
+  }
+  
+  // Check for status code matches
+  if (techMessage.includes("status code 4") || techMessage.includes("status code 5")) {
+    const statusCode = techMessage.match(/status code (\d+)/)?.[1];
+    if (statusCode && statusCode in USER_FRIENDLY_ERRORS) {
+      return USER_FRIENDLY_ERRORS[statusCode as keyof typeof USER_FRIENDLY_ERRORS];
+    }
+  }
+  
+  // Default user-friendly message for unmatched errors
+  return "Something unexpected happened. Please try again";
+};
+
+/**
  * Formats an error message from various error types
  * @param error The error object
  * @returns A formatted error message string
@@ -63,10 +111,10 @@ export const handleError = (
   
   console.error(contextMessage);
   
-  if (showToast && userFriendlyMessage) {
+  if (showToast) {
     toast({
       title: "Error",
-      description: userFriendlyMessage,
+      description: userFriendlyMessage || getUserFriendlyErrorMessage(error),
       variant: "destructive",
     });
   }
@@ -93,7 +141,7 @@ export const handleApiError = (
   if (showToast) {
     toast({
       title: "Error",
-      description: defaultMessage,
+      description: defaultMessage || getUserFriendlyErrorMessage(error),
       variant: "destructive",
     });
   }
