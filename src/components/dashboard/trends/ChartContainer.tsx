@@ -1,6 +1,7 @@
 
 import { ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 type ChartContainerProps = {
   loading: boolean;
@@ -20,13 +21,16 @@ export function ChartContainer({
   height = 300,
   children
 }: ChartContainerProps) {
+  // Convert height to a CSS value
+  const heightStyle = typeof height === 'number' ? `${height}px` : height;
+  
   if (loading) {
-    return <Skeleton className={`h-[${typeof height === 'number' ? height + 'px' : height}] w-full`} />;
+    return <Skeleton className={cn("w-full")} style={{ height: heightStyle }} />;
   }
 
   if (isEmpty) {
     return <div className="text-center py-8 text-muted-foreground">{emptyMessage}</div>;
   }
 
-  return <div className={`h-[${typeof height === 'number' ? height + 'px' : height}] w-full`}>{children}</div>;
+  return <div className="w-full" style={{ height: heightStyle }}>{children}</div>;
 }
