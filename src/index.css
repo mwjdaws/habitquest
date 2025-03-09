@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -98,30 +97,29 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  /* Add transitions for theme color changes */
   .card,
   .button,
   .badge,
   .sidebar,
   .sidebar-menu-button {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    transition: background-color 0.3s ease, 
+                color 0.3s ease, 
+                border-color 0.3s ease;
   }
   
-  /* Theme color transitions for habit items */
   [class*="bg-habit-"],
   [style*="--habit-"] {
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition: background-color 0.3s ease, 
+                border-color 0.3s ease;
   }
 }
 
-/* Add this to make sure the theme transition is smooth */
 :root {
+  will-change: --primary, --accent, --secondary, --ring;
   transition: --primary 0.3s ease, 
               --accent 0.3s ease, 
               --secondary 0.3s ease,
               --ring 0.3s ease,
-              --muted 0.3s ease,
-              --border 0.3s ease,
               --sidebar-primary 0.3s ease,
               --habit-purple 0.3s ease;
 }

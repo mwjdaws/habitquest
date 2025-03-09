@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Palette } from "lucide-react";
@@ -49,71 +49,58 @@ const colorThemes: ColorTheme[] = [
   },
 ];
 
-// Helper to convert hex to hsl
+// Optimized hex to HSL conversion
 function hexToHSL(hex: string): string {
   // Remove the # if present
   hex = hex.replace(/^#/, '');
   
-  // Parse the hex values
-  let r = parseInt(hex.substring(0, 2), 16) / 255;
-  let g = parseInt(hex.substring(2, 4), 16) / 255;
-  let b = parseInt(hex.substring(4, 6), 16) / 255;
+  // Parse the hex values more efficiently
+  const r = parseInt(hex.slice(0, 2), 16) / 255;
+  const g = parseInt(hex.slice(2, 4), 16) / 255;
+  const b = parseInt(hex.slice(4, 6), 16) / 255;
   
-  // Find min and max values
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
-  
-  // Calculate lightness
-  let l = (max + min) / 2;
+  const l = (max + min) / 2;
   
   let h = 0;
   let s = 0;
   
   if (max !== min) {
-    // Calculate saturation
-    s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
     
-    // Calculate hue
-    if (max === r) {
-      h = (g - b) / (max - min) + (g < b ? 6 : 0);
-    } else if (max === g) {
-      h = (b - r) / (max - min) + 2;
-    } else {
-      h = (r - g) / (max - min) + 4;
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
     }
+    
     h /= 6;
   }
   
   // Convert to degrees and percentages
-  h = Math.round(h * 360);
-  s = Math.round(s * 100);
-  l = Math.round(l * 100);
-  
-  return `${h} ${s}% ${l}%`;
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
-// Check if a color is in HSL format
+// Check if a color is in HSL format - optimized
 function isHSL(color: string): boolean {
-  return color.startsWith('hsl(') || color.startsWith('hsl ');
+  return /^hsl\(|^hsl\s/.test(color);
 }
 
-// Extract HSL values from a hsl() string or return converted hex
+// Optimized HSL extraction function
 function extractHSL(color: string): string {
   if (isHSL(color)) {
-    // Extract h, s, l values from hsl format
-    const hslMatch = color.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/);
-    if (hslMatch) {
-      return `${hslMatch[1]} ${hslMatch[2]}% ${hslMatch[3]}%`;
-    }
+    // Extract h, s, l from various HSL formats
+    const hslRegex = /hsl\(\s*(\d+)(?:\s*,\s*|\s+)(\d+)%(?:\s*,\s*|\s+)(\d+)%\s*\)/;
+    const match = color.match(hslRegex);
     
-    // For format like "hsl(260 96% 66%)"
-    const hslSpaceMatch = color.match(/hsl\(\s*(\d+)\s+(\d+)%\s+(\d+)%\s*\)/);
-    if (hslSpaceMatch) {
-      return `${hslSpaceMatch[1]} ${hslSpaceMatch[2]}% ${hslSpaceMatch[3]}%`;
+    if (match) {
+      return `${match[1]} ${match[2]}% ${match[3]}%`;
     }
     
     // Already in "260 96% 66%" format
-    const plainHSLMatch = color.match(/(\d+)\s+(\d+)%\s+(\d+)%/);
+    const plainHSLMatch = /(\d+)\s+(\d+)%\s+(\d+)%/.exec(color);
     if (plainHSLMatch) {
       return color;
     }
@@ -126,49 +113,51 @@ function extractHSL(color: string): string {
 export function ThemeSwitcher() {
   const [currentTheme, setCurrentTheme] = useState<string>("Default Purple");
 
-  // Apply the theme when it changes
-  useEffect(() => {
-    const theme = colorThemes.find(theme => theme.name === currentTheme);
-    if (theme) {
-      try {
-        // Convert colors to HSL values for CSS variables
-        const primaryHSL = extractHSL(theme.primaryColor);
-        const accentHSL = extractHSL(theme.accentColor);
+  // Memoize the theme application function to avoid recreating it on every render
+  const applyTheme = useCallback((themeName: string) => {
+    const theme = colorThemes.find(t => t.name === themeName);
+    if (!theme) return;
+    
+    try {
+      // Convert colors to HSL values
+      const primaryHSL = extractHSL(theme.primaryColor);
+      const accentHSL = extractHSL(theme.accentColor);
+      
+      // Create a single batch of CSS variable updates for better performance
+      const cssVars = {
+        '--primary': primaryHSL,
+        '--accent': accentHSL,
+        '--secondary': primaryHSL.replace(/\d+%$/, match => `${Math.max(parseInt(match) - 16, 0)}%`),
+        '--ring': primaryHSL
+      };
+      
+      // Apply all CSS variables at once to minimize repaints
+      Object.entries(cssVars).forEach(([prop, value]) => {
+        document.documentElement.style.setProperty(prop, value);
+      });
+      
+      // Handle habit colors and sidebar primary color
+      const formattedPrimaryColor = theme.primaryColor.startsWith('#') 
+        ? theme.primaryColor 
+        : `hsl(${primaryHSL})`;
         
-        // Update CSS variables for the theme
-        document.documentElement.style.setProperty('--primary', primaryHSL);
-        document.documentElement.style.setProperty('--accent', accentHSL);
-        
-        // Set secondary based on primary (slightly darker)
-        const secondaryHSL = primaryHSL.replace(/\d+%$/, match => `${Math.max(parseInt(match) - 16, 0)}%`);
-        document.documentElement.style.setProperty('--secondary', secondaryHSL);
-        
-        // Update other dependent variables
-        document.documentElement.style.setProperty('--ring', primaryHSL);
-        
-        // Update habit colors and sidebar
-        if (theme.primaryColor.startsWith('#')) {
-          // For hex colors, set the CSS property with the hsl() function format
-          document.documentElement.style.setProperty('--habit-purple', theme.primaryColor);
-          document.documentElement.style.setProperty('--sidebar-primary', theme.primaryColor);
-        } else {
-          // If it's already HSL, format properly
-          document.documentElement.style.setProperty('--habit-purple', `hsl(${primaryHSL})`);
-          document.documentElement.style.setProperty('--sidebar-primary', `hsl(${primaryHSL})`);
-        }
-        
-        console.log(`Theme changed to ${currentTheme}`);
-        console.log(`Primary HSL: ${primaryHSL}`);
-        console.log(`Accent HSL: ${accentHSL}`);
-        console.log(`Secondary HSL: ${secondaryHSL}`);
-
-        toast.success(`Theme changed to ${currentTheme}`);
-      } catch (error) {
-        console.error('Error applying theme:', error);
-        toast.error('Failed to apply theme');
-      }
+      document.documentElement.style.setProperty('--habit-purple', formattedPrimaryColor);
+      document.documentElement.style.setProperty('--sidebar-primary', formattedPrimaryColor);
+      
+      // Log for debugging
+      console.log(`Theme applied: ${themeName}`);
+      
+      toast.success(`Theme changed to ${themeName}`);
+    } catch (error) {
+      console.error('Error applying theme:', error);
+      toast.error('Failed to apply theme');
     }
-  }, [currentTheme]);
+  }, []);
+
+  // Apply theme when it changes
+  useEffect(() => {
+    applyTheme(currentTheme);
+  }, [currentTheme, applyTheme]);
 
   return (
     <Popover>

@@ -10,7 +10,7 @@ export function AppHeader() {
         <SidebarTrigger />
         <h1 className="text-2xl font-bold ml-4">Perfectio</h1>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <ThemeSwitcher />
         <UserMenu />
       </div>
