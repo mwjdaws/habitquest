@@ -1,7 +1,7 @@
 
 import { useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ChartContainer } from "./ChartContainer";
 
 type FailureReasonsProps = {
   failures: any[];
@@ -28,16 +28,8 @@ export function FailureReasons({ failures, loading }: FailureReasonsProps) {
       .sort((a, b) => Number(b.count) - Number(a.count)); // Ensure we're comparing numbers
   }, [failures]);
 
-  if (loading) {
-    return <Skeleton className="h-[300px] w-full" />;
-  }
-
-  if (chartData.length === 0) {
-    return <div className="text-center py-8 text-muted-foreground">No failure data available for the selected period</div>;
-  }
-
   return (
-    <div className="h-[300px] w-full">
+    <ChartContainer loading={loading} isEmpty={chartData.length === 0} emptyMessage="No failure data available for the selected period">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={chartData}
@@ -51,6 +43,6 @@ export function FailureReasons({ failures, loading }: FailureReasonsProps) {
           <Bar dataKey="count" name="Number of failures" fill="#ef4444" />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </ChartContainer>
   );
 }

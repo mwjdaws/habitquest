@@ -2,26 +2,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Habit } from '@/lib/habitTypes';
 import { fetchHabits } from '@/lib/api/habit';
+import { useLoadingError } from './useLoadingError';
 
 export function useHabits() {
   const [habits, setHabits] = useState<Habit[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { loading, error, handleLoading } = useLoadingError();
 
   const fetchHabitsData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
     try {
-      const data = await fetchHabits(false);
+      const data = await handleLoading(fetchHabits(false));
       setHabits(data || []);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('An unknown error occurred'));
-    } finally {
-      setLoading(false);
+      // Error is already handled by the hook
+      console.error('Failed to fetch habits:', err);
     }
-  }, []);
+  }, [handleLoading]);
 
   // Force a refresh by incrementing the refresh trigger
   const refreshHabits = useCallback(() => {

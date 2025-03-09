@@ -2,9 +2,10 @@
 import { useState, useCallback } from "react";
 import { HabitTrackingState } from "../types";
 import { useHabitFiltering } from "../useHabitFiltering";
+import { useHabitStateUpdate } from "../utils/useHabitStateUpdate";
 
 /**
- * Hook to manage habit tracking state
+ * Hook to manage habit tracking state with optimized update functions
  */
 export function useHabitStateManager() {
   const [state, setState] = useState<HabitTrackingState>({
@@ -18,6 +19,7 @@ export function useHabitStateManager() {
   });
   
   const { filterHabitsForToday } = useHabitFiltering();
+  const { setLoading, setError } = useHabitStateUpdate(setState);
   
   // Update habits with filtering
   const updateHabits = useCallback((habits: any[]) => {
@@ -32,16 +34,6 @@ export function useHabitStateManager() {
       error: null
     }));
   }, [filterHabitsForToday]);
-  
-  // Set loading state
-  const setLoading = useCallback((loading: boolean) => {
-    setState(prev => ({ ...prev, loading }));
-  }, []);
-  
-  // Set error state
-  const setError = useCallback((error: string | null) => {
-    setState(prev => ({ ...prev, error, loading: false }));
-  }, []);
   
   return {
     state,

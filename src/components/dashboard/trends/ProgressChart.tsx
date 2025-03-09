@@ -1,6 +1,7 @@
+
 import { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ChartContainer } from "./ChartContainer";
 import { formatInTorontoTimezone } from "@/lib/dateUtils";
 
 type ProgressChartProps = {
@@ -49,16 +50,10 @@ export function ProgressChart({ habits, completions, loading }: ProgressChartPro
     });
   }, [habits, completions]);
 
-  if (loading) {
-    return <Skeleton className="h-[300px] w-full" />;
-  }
-
-  if (chartData.length === 0) {
-    return <div className="text-center py-8 text-muted-foreground">No data available for the selected period</div>;
-  }
+  const isEmpty = chartData.length === 0;
 
   return (
-    <div className="h-[300px] w-full">
+    <ChartContainer loading={loading} isEmpty={isEmpty}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={chartData}
@@ -81,12 +76,12 @@ export function ProgressChart({ habits, completions, loading }: ProgressChartPro
           ))}
         </LineChart>
       </ResponsiveContainer>
-      {habits.length > 5 && (
+      {habits.length > 5 && !isEmpty && (
         <div className="text-sm text-muted-foreground mt-2 text-center">
           Showing top 5 habits. {habits.length - 5} more not shown.
         </div>
       )}
-    </div>
+    </ChartContainer>
   );
 }
 
