@@ -4,6 +4,13 @@ import { CreateTaskData, Task, UpdateTaskData } from '../taskTypes';
 import { getAuthenticatedUser, handleApiError } from './apiUtils';
 
 /**
+ * Helper function to format tag data consistently
+ */
+const formatTagValue = (tag: string | undefined | null): string | null => {
+  return tag?.trim() || null;
+};
+
+/**
  * Fetches all tasks for the current user
  */
 export async function fetchTasks(): Promise<Task[]> {
@@ -34,7 +41,7 @@ export async function createTask(taskData: CreateTaskData): Promise<Task> {
     // Ensure tag is properly formatted (null if undefined or empty)
     const formattedData = {
       ...taskData,
-      tag: taskData.tag?.trim() || null,
+      tag: formatTagValue(taskData.tag),
       user_id: userId
     };
     
@@ -62,7 +69,7 @@ export async function updateTask(taskId: string, updates: UpdateTaskData): Promi
     // Ensure tag is properly formatted (null if undefined or empty)
     const formattedUpdates = {
       ...updates,
-      tag: updates.tag?.trim() || null
+      tag: formatTagValue(updates.tag)
     };
     
     const { data, error } = await supabase

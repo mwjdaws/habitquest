@@ -5,12 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
-import { fetchTasks } from '@/lib/api/taskAPI';
 import { TaskNameField } from './TaskNameField';
 import { TaskDescriptionField } from './TaskDescriptionField';
 import { TaskDatePicker } from './TaskDatePicker';
 import { TaskTagSelect } from './TaskTagSelect';
+import { useTaskTags } from '@/hooks/useTaskTags';
 
 interface TaskFormProps {
   onSubmit: (data: CreateTaskData | UpdateTaskData) => Promise<void>;
@@ -20,6 +19,7 @@ interface TaskFormProps {
 }
 
 export function TaskForm({ onSubmit, onCancel, initialData, title }: TaskFormProps) {
+  // Form state
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [dueDate, setDueDate] = useState<Date | undefined>(
@@ -28,30 +28,9 @@ export function TaskForm({ onSubmit, onCancel, initialData, title }: TaskFormPro
   const [tag, setTag] = useState<string | undefined>(initialData?.tag || undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameError, setNameError] = useState('');
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const { user } = useAuth();
   
-  // Fetch available tags from existing tasks
-  useEffect(() => {
-    if (!user) return;
-    
-    const loadTags = async () => {
-      try {
-        const tasks = await fetchTasks();
-        const tags = tasks
-          .filter(task => task.tag) // Filter out tasks without tags
-          .map(task => task.tag as string) // Extract the tag
-          .filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
-          .sort(); // Sort alphabetically
-        
-        setAvailableTags(tags);
-      } catch (error) {
-        console.error("Failed to load tags:", error);
-      }
-    };
-    
-    loadTags();
-  }, [user]);
+  // Use our new tag management hook
+  const { availableTags } = useTaskTags();
   
   const handleTagChange = (newTag: string | undefined) => {
     setTag(newTag);

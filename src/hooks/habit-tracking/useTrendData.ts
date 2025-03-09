@@ -1,18 +1,35 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { fetchHabits, getCompletionTrends, getFailureTrends, getStreakRecords } from "@/lib/habits";
+import { fetchHabits } from "@/lib/api/habitCrudAPI";
+import { getCompletionTrends, getFailureTrends, getStreakRecords } from "@/lib/api/trendAPI";
 import { Habit } from "@/lib/habitTypes";
 import { toast } from "@/components/ui/use-toast";
 
-type TimeFilter = "week" | "month" | "all";
+export type TimeFilter = "week" | "month" | "all";
 
-type TrendData = {
+export interface TrendData {
   habits: Habit[];
   completions: any[];
   failures: any[];
   streakRecords: any[];
   loading: boolean;
   error: string | null;
+}
+
+/**
+ * Helper function to determine days from time filter
+ */
+const getDaysFromFilter = (filter: TimeFilter): number => {
+  switch (filter) {
+    case "week":
+      return 7;
+    case "month":
+      return 30;
+    case "all":
+      return 365; // Using a year as "all" time to prevent too large requests
+    default:
+      return 7;
+  }
 };
 
 export function useTrendData() {
@@ -25,19 +42,6 @@ export function useTrendData() {
     loading: true,
     error: null
   });
-
-  const getDaysFromFilter = (filter: TimeFilter): number => {
-    switch (filter) {
-      case "week":
-        return 7;
-      case "month":
-        return 30;
-      case "all":
-        return 365; // Using a year as "all" time to prevent too large requests
-      default:
-        return 7;
-    }
-  };
 
   const fetchTrendData = useCallback(async () => {
     try {
