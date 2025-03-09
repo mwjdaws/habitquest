@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, Loader2 } from "lucide-react";
 import { Task } from "@/lib/taskTypes";
 import { fetchTasks, toggleTaskCompletion } from "@/lib/api/taskAPI";
-import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatInTorontoTimezone, toTorontoTime } from "@/lib/dateUtils";
 
 export function UpcomingTasks() {
   const { user } = useAuth();
@@ -97,7 +97,7 @@ export function UpcomingTasks() {
                   <p className="text-sm font-medium">{task.name}</p>
                   {task.due_date && (
                     <p className="text-xs text-muted-foreground">
-                      Due: {format(new Date(task.due_date), 'MMM d, yyyy')}
+                      Due: {formatInTorontoTimezone(new Date(task.due_date), 'MMM d, yyyy')}
                     </p>
                   )}
                 </div>

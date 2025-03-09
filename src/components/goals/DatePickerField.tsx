@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from '@/lib/utils';
+import { formatInTorontoTimezone, toTorontoTime } from '@/lib/dateUtils';
 
 interface DatePickerFieldProps {
   label: string;
@@ -15,6 +16,14 @@ interface DatePickerFieldProps {
 }
 
 export function DatePickerField({ label, date, onDateChange, error, minDate }: DatePickerFieldProps) {
+  // Convert the displayed date to Toronto timezone
+  const displayDate = date ? toTorontoTime(date) : undefined;
+  
+  // Handle date selection and convert to Toronto timezone
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    onDateChange(selectedDate);
+  };
+
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
@@ -24,20 +33,21 @@ export function DatePickerField({ label, date, onDateChange, error, minDate }: D
             variant="outline"
             className={cn(
               "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground",
+              !displayDate && "text-muted-foreground",
               error ? "border-red-500" : ""
             )}
           >
-            {date ? format(date, 'PPP') : <span>Pick a date</span>}
+            {displayDate ? formatInTorontoTimezone(displayDate, 'PPP') : <span>Pick a date</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             mode="single"
-            selected={date}
-            onSelect={onDateChange}
+            selected={displayDate}
+            onSelect={handleDateSelect}
             initialFocus
             disabled={minDate ? (current => current < minDate) : undefined}
+            className="p-3 pointer-events-auto"
           />
         </PopoverContent>
       </Popover>

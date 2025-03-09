@@ -2,7 +2,6 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -10,6 +9,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { formatInTorontoTimezone } from '@/lib/dateUtils';
 
 interface TaskDatePickerProps {
   dueDate: Date | undefined;
@@ -30,7 +30,7 @@ export function TaskDatePicker({ dueDate, onDateChange }: TaskDatePickerProps) {
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {dueDate ? format(dueDate, 'PPP') : <span>Pick a due date</span>}
+            {dueDate ? formatInTorontoTimezone(dueDate, 'PPP') : <span>Pick a due date</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -39,6 +39,7 @@ export function TaskDatePicker({ dueDate, onDateChange }: TaskDatePickerProps) {
             selected={dueDate}
             onSelect={onDateChange}
             initialFocus
+            className="p-3 pointer-events-auto"
           />
         </PopoverContent>
       </Popover>

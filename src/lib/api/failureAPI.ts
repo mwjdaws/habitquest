@@ -2,6 +2,7 @@
 import { supabase } from "../supabase";
 import { HabitFailure } from "../habitTypes";
 import { getAuthenticatedUser, handleApiError } from "./apiUtils";
+import { getTodayFormattedInToronto } from "../dateUtils";
 
 /**
  * Gets habit failures for a specific date

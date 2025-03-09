@@ -6,6 +6,7 @@ import { ChevronRight, Target } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { getCurrentTorontoDate } from "@/lib/dateUtils";
 
 export function GoalsProgress() {
   const { goals, loading } = useGoals();
@@ -14,8 +15,8 @@ export function GoalsProgress() {
   
   useEffect(() => {
     if (goals.length) {
-      // Filter to get active goals
-      const today = new Date();
+      // Filter to get active goals based on Toronto time
+      const today = getCurrentTorontoDate();
       const active = goals.filter(goal => {
         const startDate = new Date(goal.start_date);
         const endDate = new Date(goal.end_date);

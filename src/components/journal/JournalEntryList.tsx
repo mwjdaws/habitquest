@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Trash2, Tag, ChevronDown, ChevronUp } from 'lucide-react';
 import { JournalEntry } from '@/lib/journalTypes';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { formatInTorontoTimezone, toTorontoTime } from '@/lib/dateUtils';
 
 interface JournalEntryListProps {
   entries: JournalEntry[];
@@ -18,9 +18,9 @@ interface JournalEntryListProps {
 export function JournalEntryList({ entries, onDelete, isDeleting }: JournalEntryListProps) {
   const [expandedEntries, setExpandedEntries] = useState<Record<string, boolean>>({});
   
-  // Group entries by date
+  // Group entries by date in Toronto timezone
   const groupedEntries = entries.reduce<Record<string, JournalEntry[]>>((groups, entry) => {
-    const date = format(new Date(entry.created_at), 'yyyy-MM-dd');
+    const date = formatInTorontoTimezone(new Date(entry.created_at), 'yyyy-MM-dd');
     if (!groups[date]) {
       groups[date] = [];
     }
@@ -50,7 +50,7 @@ export function JournalEntryList({ entries, onDelete, isDeleting }: JournalEntry
       {Object.entries(groupedEntries).map(([date, entriesForDate]) => (
         <div key={date} className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">
-            {format(new Date(date), 'EEEE, MMMM d, yyyy')}
+            {formatInTorontoTimezone(new Date(date), 'EEEE, MMMM d, yyyy')}
           </h3>
           
           {entriesForDate.map((entry) => (
@@ -72,7 +72,7 @@ export function JournalEntryList({ entries, onDelete, isDeleting }: JournalEntry
                       </Button>
                     </CollapsibleTrigger>
                     <CardTitle className="text-base">
-                      {format(new Date(entry.created_at), 'h:mm a')}
+                      {formatInTorontoTimezone(new Date(entry.created_at), 'h:mm a')}
                     </CardTitle>
                     {entry.tag && (
                       <Badge variant="outline" className="gap-1">

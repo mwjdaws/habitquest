@@ -2,6 +2,7 @@
 import { supabase } from "../supabase";
 import { getAuthenticatedUser, handleApiError } from "./apiUtils";
 import { HabitCompletion, HabitFailure } from "../habitTypes";
+import { formatTorontoDate, getCurrentTorontoDate } from "../dateUtils";
 
 /**
  * Get habit completion trend data for a time period
@@ -12,16 +13,16 @@ export const getCompletionTrends = async (
   try {
     const userId = await getAuthenticatedUser();
 
-    const endDate = new Date();
-    const startDate = new Date();
+    const endDate = getCurrentTorontoDate();
+    const startDate = new Date(endDate);
     startDate.setDate(endDate.getDate() - days);
     
     const { data, error } = await supabase
       .from("habit_completions")
       .select("*")
       .eq("user_id", userId)
-      .gte("completed_date", startDate.toISOString().split("T")[0])
-      .lte("completed_date", endDate.toISOString().split("T")[0]);
+      .gte("completed_date", formatTorontoDate(startDate))
+      .lte("completed_date", formatTorontoDate(endDate));
 
     if (error) throw error;
     return data || [];
@@ -39,16 +40,16 @@ export const getFailureTrends = async (
   try {
     const userId = await getAuthenticatedUser();
 
-    const endDate = new Date();
-    const startDate = new Date();
+    const endDate = getCurrentTorontoDate();
+    const startDate = new Date(endDate);
     startDate.setDate(endDate.getDate() - days);
     
     const { data, error } = await supabase
       .from("habit_failures")
       .select("*")
       .eq("user_id", userId)
-      .gte("failure_date", startDate.toISOString().split("T")[0])
-      .lte("failure_date", endDate.toISOString().split("T")[0]);
+      .gte("failure_date", formatTorontoDate(startDate))
+      .lte("failure_date", formatTorontoDate(endDate));
 
     if (error) throw error;
     return data || [];

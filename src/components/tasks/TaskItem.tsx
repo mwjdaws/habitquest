@@ -1,6 +1,5 @@
 
 import { useState, useCallback, memo } from 'react';
-import { format } from 'date-fns';
 import { Task } from '@/lib/taskTypes';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ import {
   AlertDialogTrigger 
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { formatInTorontoTimezone } from '@/lib/dateUtils';
 
 interface TaskItemProps {
   task: Task;
@@ -77,7 +77,7 @@ export const TaskItem = memo(function TaskItem({ task, onToggleComplete, onEdit,
         <div className="flex flex-wrap gap-2 mt-2">
           {task.due_date && (
             <div className="text-xs text-muted-foreground">
-              Due: {format(new Date(task.due_date), 'PPP')}
+              Due: {formatInTorontoTimezone(new Date(task.due_date), 'PPP')}
             </div>
           )}
           

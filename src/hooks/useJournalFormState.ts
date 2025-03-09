@@ -1,5 +1,6 @@
 
 import { useState, useRef, useEffect } from 'react';
+import { getCurrentTorontoDate } from '@/lib/dateUtils';
 
 export function useJournalFormState(initialTag: string | null = null) {
   const [content, setContent] = useState('');
@@ -78,6 +79,8 @@ export function useJournalFormState(initialTag: string | null = null) {
     textareaRef,
     handleCreateTag,
     handleSelectPrompt,
-    resetForm
+    resetForm,
+    // Add timestamp in Toronto timezone
+    currentTimestamp: getCurrentTorontoDate()
   };
 }

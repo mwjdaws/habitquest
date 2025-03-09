@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { Goal, KeyResult, useGoals } from "@/hooks/useGoals";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ChevronDown, ChevronUp, Calendar } from "lucide-react";
-import { format } from "date-fns";
 import { KeyResultItem } from "./KeyResultItem";
 import { Badge } from "@/components/ui/badge";
+import { formatInTorontoTimezone, getCurrentTorontoDate } from "@/lib/dateUtils";
 
 interface GoalItemProps {
   goal: Goal;
@@ -16,11 +15,12 @@ interface GoalItemProps {
 export function GoalItem({ goal }: GoalItemProps) {
   const [expanded, setExpanded] = useState(false);
   
-  // Format dates for display
+  // Format dates for display with Toronto timezone
   const startDate = new Date(goal.start_date);
   const endDate = new Date(goal.end_date);
-  const isActive = new Date() >= startDate && new Date() <= endDate;
-  const isPast = new Date() > endDate;
+  const currentDate = getCurrentTorontoDate();
+  const isActive = currentDate >= startDate && currentDate <= endDate;
+  const isPast = currentDate > endDate;
   
   const getStatusBadge = () => {
     if (isPast) {
@@ -47,7 +47,7 @@ export function GoalItem({ goal }: GoalItemProps) {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-3.5 w-3.5" />
               <span>
-                {format(startDate, 'MMM d, yyyy')} - {format(endDate, 'MMM d, yyyy')}
+                {formatInTorontoTimezone(startDate, 'MMM d, yyyy')} - {formatInTorontoTimezone(endDate, 'MMM d, yyyy')}
               </span>
               {getStatusBadge()}
             </div>

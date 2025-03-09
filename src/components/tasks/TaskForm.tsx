@@ -10,6 +10,7 @@ import { TaskDescriptionField } from './TaskDescriptionField';
 import { TaskDatePicker } from './TaskDatePicker';
 import { TaskTagSelect } from './TaskTagSelect';
 import { useTaskTags } from '@/hooks/useTaskTags';
+import { formatInTorontoTimezone, toTorontoTime } from '@/lib/dateUtils';
 
 interface TaskFormProps {
   onSubmit: (data: CreateTaskData | UpdateTaskData) => Promise<void>;
@@ -23,7 +24,7 @@ export function TaskForm({ onSubmit, onCancel, initialData, title }: TaskFormPro
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [dueDate, setDueDate] = useState<Date | undefined>(
-    initialData?.due_date ? new Date(initialData.due_date) : undefined
+    initialData?.due_date ? toTorontoTime(new Date(initialData.due_date)) : undefined
   );
   const [tag, setTag] = useState<string | undefined>(initialData?.tag || undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,7 +55,7 @@ export function TaskForm({ onSubmit, onCancel, initialData, title }: TaskFormPro
       const taskData: CreateTaskData | UpdateTaskData = {
         name: name.trim(),
         description: description.trim() || null,
-        due_date: dueDate ? format(dueDate, 'yyyy-MM-dd') : null,
+        due_date: dueDate ? formatInTorontoTimezone(dueDate, 'yyyy-MM-dd') : null,
         tag: tag || null,
       };
       

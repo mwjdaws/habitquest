@@ -2,6 +2,7 @@
 import { supabase } from "../supabase";
 import { HabitCompletion } from "../habitTypes";
 import { getAuthenticatedUser, handleApiError } from "./apiUtils";
+import { getTodayFormattedInToronto } from "../dateUtils";
 
 /**
  * Gets habit completions for a specific date
@@ -44,7 +45,7 @@ const updateStreakOnCompletion = async (habitId: string, userId: string) => {
     const newStreak = (habit.current_streak || 0) + 1;
     const newLongestStreak = Math.max(newStreak, habit.longest_streak || 0);
     
-    // Update the streak
+    // Update the streak with Toronto timezone
     const { error } = await supabase
       .from("habits")
       .update({ 

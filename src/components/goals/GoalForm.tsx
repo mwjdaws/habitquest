@@ -7,7 +7,7 @@ import { useGoals } from '@/hooks/useGoals';
 import { FormField } from './FormField';
 import { DatePickerField } from './DatePickerField';
 import { KeyResultsList } from './KeyResultsList';
-import { format } from 'date-fns';
+import { formatInTorontoTimezone, getCurrentTorontoDate } from '@/lib/dateUtils';
 
 interface GoalFormProps {
   onGoalCreated: () => void;
@@ -20,7 +20,7 @@ export function GoalForm({ onGoalCreated, onCancel }: GoalFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = useState('');
   const [objective, setObjective] = useState('');
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(getCurrentTorontoDate());
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [keyResults, setKeyResults] = useState<(Omit<KeyResult, 'id'> & { temp_id: string })[]>([
     { temp_id: Date.now().toString(), description: '', target_value: 100, current_value: 0, habit_id: null }
@@ -142,8 +142,8 @@ export function GoalForm({ onGoalCreated, onCancel }: GoalFormProps) {
     const goalData: CreateGoalData = {
       name: name.trim(),
       objective: objective.trim(),
-      start_date: startDate ? format(startDate, 'yyyy-MM-dd') : '',
-      end_date: endDate ? format(endDate, 'yyyy-MM-dd') : '',
+      start_date: startDate ? formatInTorontoTimezone(startDate, 'yyyy-MM-dd') : '',
+      end_date: endDate ? formatInTorontoTimezone(endDate, 'yyyy-MM-dd') : '',
       key_results: keyResults.map(kr => ({
         description: kr.description.trim(),
         target_value: kr.target_value,

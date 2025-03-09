@@ -1,8 +1,7 @@
-
 import { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate } from "@/lib/habitUtils";
+import { formatInTorontoTimezone } from "@/lib/dateUtils";
 
 type ProgressChartProps = {
   habits: any[];
@@ -33,13 +32,10 @@ export function ProgressChart({ habits, completions, loading }: ProgressChartPro
       completionsByDate.get(c.completed_date)?.add(c.habit_id);
     });
 
-    // Create chart data points
+    // Create chart data points with dates in Toronto timezone
     return dates.map(date => {
       const dateCompletions = completionsByDate.get(date) || new Set();
-      const formattedDate = new Date(date).toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
-      });
+      const formattedDate = formatInTorontoTimezone(new Date(date), 'MMM d');
 
       const dataPoint: any = { date: formattedDate };
       
