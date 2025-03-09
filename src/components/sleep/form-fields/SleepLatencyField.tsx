@@ -19,6 +19,7 @@ export const SleepLatencyField: React.FC<SleepLatencyFieldProps> = ({ form }) =>
       form={form}
       name="sleep_latency_minutes"
       label="Time to Fall Asleep (mins)"
+      description="Enter the approximate time it took you to fall asleep"
     >
       {field => (
         <Input
@@ -26,6 +27,7 @@ export const SleepLatencyField: React.FC<SleepLatencyFieldProps> = ({ form }) =>
           {...field}
           value={field.value || ''}
           onChange={(e) => handleNumericChange(field, e)}
+          placeholder="Enter minutes"
         />
       )}
     </FormFieldWrapper>

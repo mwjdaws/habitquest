@@ -1,6 +1,5 @@
 
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -10,6 +9,7 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { formatInTorontoTimezone } from '@/lib/dateUtils';
+import { TaskFormFieldWrapper } from './form-fields/TaskFormFieldWrapper';
 
 interface TaskDatePickerProps {
   dueDate: Date | undefined;
@@ -18,11 +18,14 @@ interface TaskDatePickerProps {
 
 export function TaskDatePicker({ dueDate, onDateChange }: TaskDatePickerProps) {
   return (
-    <div className="space-y-2">
-      <Label>Due Date (Optional)</Label>
+    <TaskFormFieldWrapper
+      id="taskDueDate"
+      label="Due Date (Optional)"
+    >
       <Popover>
         <PopoverTrigger asChild>
           <Button
+            id="taskDueDate"
             variant="outline"
             className={cn(
               "w-full justify-start text-left font-normal",
@@ -54,6 +57,6 @@ export function TaskDatePicker({ dueDate, onDateChange }: TaskDatePickerProps) {
           Clear date
         </Button>
       )}
-    </div>
+    </TaskFormFieldWrapper>
   );
 }

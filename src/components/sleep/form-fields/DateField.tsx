@@ -15,6 +15,7 @@ export const DateField: React.FC<DateFieldProps> = ({ form }) => {
       form={form}
       name="sleep_date"
       label="Date"
+      description="Select the date for this sleep record"
     >
       {field => (
         <Input type="date" {...field} />

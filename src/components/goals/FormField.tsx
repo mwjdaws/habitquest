@@ -2,6 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { cn } from '@/lib/utils';
 
 interface FormFieldProps {
   id: string;
@@ -11,6 +12,7 @@ interface FormFieldProps {
   placeholder: string;
   error: string;
   multiline?: boolean;
+  description?: string;
 }
 
 export function FormField({ 
@@ -20,7 +22,8 @@ export function FormField({
   onChange, 
   placeholder, 
   error, 
-  multiline 
+  multiline,
+  description
 }: FormFieldProps) {
   return (
     <div className="space-y-2">
@@ -31,7 +34,7 @@ export function FormField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={cn("min-h-[100px]", error ? "border-red-500" : "")}
+          className={cn("min-h-[100px]", error ? "border-destructive" : "")}
         />
       ) : (
         <Input
@@ -39,13 +42,11 @@ export function FormField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={error ? "border-red-500" : ""}
+          className={error ? "border-destructive" : ""}
         />
       )}
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {description && <p className="text-sm text-muted-foreground">{description}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
     </div>
   );
 }
-
-// Import cn utility
-import { cn } from '@/lib/utils';

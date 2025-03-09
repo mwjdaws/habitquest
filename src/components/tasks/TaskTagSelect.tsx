@@ -1,9 +1,9 @@
 
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { CustomTagInput } from './tag-select/CustomTagInput';
 import { TagSelector } from './tag-select/TagSelector';
 import { useTagState } from './tag-select/useTagState';
+import { TaskFormFieldWrapper } from './form-fields/TaskFormFieldWrapper';
 
 interface TaskTagSelectProps {
   tag: string | undefined | null;
@@ -23,9 +23,10 @@ export function TaskTagSelect({ tag, onTagChange, availableTags }: TaskTagSelect
   } = useTagState(tag, availableTags);
   
   return (
-    <div className="space-y-2">
-      <Label htmlFor="taskTag">Tag (Optional)</Label>
-      
+    <TaskFormFieldWrapper
+      id="taskTag"
+      label="Tag (Optional)"
+    >
       {customTagMode ? (
         <CustomTagInput 
           inputValue={inputValue}
@@ -56,6 +57,6 @@ export function TaskTagSelect({ tag, onTagChange, availableTags }: TaskTagSelect
           Clear tag
         </Button>
       )}
-    </div>
+    </TaskFormFieldWrapper>
   );
 }

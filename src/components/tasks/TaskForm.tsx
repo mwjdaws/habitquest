@@ -1,9 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Task, CreateTaskData, UpdateTaskData } from '@/lib/taskTypes';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskNameField } from './TaskNameField';
 import { TaskDescriptionField } from './TaskDescriptionField';
@@ -30,7 +29,7 @@ export function TaskForm({ onSubmit, onCancel, initialData, title }: TaskFormPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameError, setNameError] = useState('');
   
-  // Use our new tag management hook
+  // Use our tag management hook
   const { availableTags } = useTaskTags();
   
   const handleTagChange = (newTag: string | undefined) => {

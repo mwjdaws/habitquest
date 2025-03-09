@@ -1,6 +1,6 @@
 
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { TaskFormFieldWrapper } from './form-fields/TaskFormFieldWrapper';
 
 interface TaskDescriptionFieldProps {
   description: string;
@@ -9,8 +9,10 @@ interface TaskDescriptionFieldProps {
 
 export function TaskDescriptionField({ description, onDescriptionChange }: TaskDescriptionFieldProps) {
   return (
-    <div className="space-y-2">
-      <Label htmlFor="taskDescription">Description (Optional)</Label>
+    <TaskFormFieldWrapper
+      id="taskDescription"
+      label="Description (Optional)"
+    >
       <Textarea
         id="taskDescription"
         value={description}
@@ -18,6 +20,6 @@ export function TaskDescriptionField({ description, onDescriptionChange }: TaskD
         placeholder="Enter task description"
         className="min-h-[100px]"
       />
-    </div>
+    </TaskFormFieldWrapper>
   );
 }
