@@ -1,3 +1,4 @@
+
 import React, { ReactNode, useState, useEffect, useMemo } from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
@@ -7,35 +8,34 @@ import { toast } from "sonner";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// Completely reworked layouts to ensure no overlapping and proper spacing
-// Updated habit-tracker and journal-stats to span the full width of the grid
+// Updated layouts to make narrower cards taller and journal statistics wider
 const DEFAULT_LAYOUTS = {
   lg: [
     { i: "habit-tracker", x: 0, y: 0, w: 3, h: 4, minW: 1, minH: 3 },
-    { i: "task-stats", x: 0, y: 4, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "goals-progress", x: 1, y: 4, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "streak-stats", x: 2, y: 4, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "upcoming-tasks", x: 0, y: 6, w: 3, h: 2, minW: 1, minH: 1 },
-    { i: "habit-trends", x: 0, y: 8, w: 3, h: 3, minW: 2, minH: 2 },
-    { i: "journal-stats", x: 0, y: 11, w: 3, h: 4, minW: 2, minH: 3 },
+    { i: "task-stats", x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "goals-progress", x: 1, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "streak-stats", x: 2, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "upcoming-tasks", x: 0, y: 7, w: 3, h: 3, minW: 1, minH: 2 },
+    { i: "habit-trends", x: 0, y: 10, w: 3, h: 4, minW: 2, minH: 2 },
+    { i: "journal-stats", x: 0, y: 14, w: 3, h: 5, minW: 2, minH: 3 },
   ],
   md: [
     { i: "habit-tracker", x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 3 },
-    { i: "task-stats", x: 0, y: 4, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "upcoming-tasks", x: 1, y: 4, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "streak-stats", x: 0, y: 6, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "goals-progress", x: 1, y: 6, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "habit-trends", x: 0, y: 8, w: 2, h: 3, minW: 1, minH: 2 },
-    { i: "journal-stats", x: 0, y: 11, w: 2, h: 4, minW: 1, minH: 3 },
+    { i: "task-stats", x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "upcoming-tasks", x: 1, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "streak-stats", x: 0, y: 7, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "goals-progress", x: 1, y: 7, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "habit-trends", x: 0, y: 10, w: 2, h: 3, minW: 1, minH: 2 },
+    { i: "journal-stats", x: 0, y: 13, w: 2, h: 5, minW: 1, minH: 3 },
   ],
   sm: [
     { i: "habit-tracker", x: 0, y: 0, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: "task-stats", x: 0, y: 4, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "upcoming-tasks", x: 0, y: 6, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "streak-stats", x: 0, y: 8, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "goals-progress", x: 0, y: 10, w: 1, h: 2, minW: 1, minH: 1 },
-    { i: "habit-trends", x: 0, y: 12, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "journal-stats", x: 0, y: 15, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "task-stats", x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "upcoming-tasks", x: 0, y: 7, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "streak-stats", x: 0, y: 10, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "goals-progress", x: 0, y: 13, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "habit-trends", x: 0, y: 16, w: 1, h: 4, minW: 1, minH: 2 },
+    { i: "journal-stats", x: 0, y: 20, w: 1, h: 5, minW: 1, minH: 3 },
   ],
 };
 
