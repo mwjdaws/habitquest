@@ -17,7 +17,11 @@ export async function getAuthenticatedUser(): Promise<string> {
 /**
  * Base function to handle API errors consistently
  */
-export const handleApiError = (error: unknown, actionName: string): never => {
+export const handleApiError = (error: unknown, actionName: string, defaultReturn?: any): never | any => {
   console.error(`Error ${actionName}:`, error);
+  if (defaultReturn !== undefined) {
+    return defaultReturn;
+  }
   throw new Error(formatErrorMessage(error));
 };
+
