@@ -1,4 +1,3 @@
-
 import React, { ReactNode, useState, useEffect, useMemo } from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
@@ -11,28 +10,41 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 // Default layouts for different screen sizes
 const DEFAULT_LAYOUTS = {
   lg: [
+    // First row - Main habit tracker and task stats
     { i: "habit-tracker", x: 0, y: 0, w: 2, h: 2, minW: 1, minH: 1 },
     { i: "task-stats", x: 2, y: 0, w: 1, h: 1, minW: 1, minH: 1 },
+    
+    // Second row - Goals progress and complementary stats
+    { i: "goals-progress", x: 2, y: 1, w: 1, h: 2, minW: 1, minH: 1 },
     { i: "streak-stats", x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
     { i: "upcoming-tasks", x: 1, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
-    { i: "goals-progress", x: 2, y: 1, w: 1, h: 2, minW: 1, minH: 1 },
+    
+    // Third row - Full-width analytics
     { i: "habit-trends", x: 0, y: 3, w: 3, h: 2, minW: 2, minH: 2 },
+    
+    // Fourth row - Full-width journal stats
     { i: "journal-stats", x: 0, y: 5, w: 3, h: 2, minW: 2, minH: 2 },
   ],
   md: [
+    // First row - Habit tracker and task stats side by side
     { i: "habit-tracker", x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 1 },
     { i: "task-stats", x: 1, y: 0, w: 1, h: 1, minW: 1, minH: 1 },
-    { i: "streak-stats", x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
+    
+    // Continue with complementary data
     { i: "upcoming-tasks", x: 1, y: 1, w: 1, h: 1, minW: 1, minH: 1 },
-    { i: "goals-progress", x: 0, y: 3, w: 2, h: 1, minW: 1, minH: 1 },
-    { i: "habit-trends", x: 0, y: 4, w: 2, h: 2, minW: 1, minH: 2 },
-    { i: "journal-stats", x: 0, y: 6, w: 2, h: 2, minW: 1, minH: 2 },
+    { i: "streak-stats", x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
+    { i: "goals-progress", x: 1, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
+    
+    // Full width analytics charts
+    { i: "habit-trends", x: 0, y: 3, w: 2, h: 2, minW: 1, minH: 2 },
+    { i: "journal-stats", x: 0, y: 5, w: 2, h: 2, minW: 1, minH: 2 },
   ],
   sm: [
+    // Stack everything vertically for mobile
     { i: "habit-tracker", x: 0, y: 0, w: 1, h: 2, minW: 1, minH: 1 },
     { i: "task-stats", x: 0, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
-    { i: "streak-stats", x: 0, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
-    { i: "upcoming-tasks", x: 0, y: 4, w: 1, h: 1, minW: 1, minH: 1 },
+    { i: "upcoming-tasks", x: 0, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
+    { i: "streak-stats", x: 0, y: 4, w: 1, h: 1, minW: 1, minH: 1 },
     { i: "goals-progress", x: 0, y: 5, w: 1, h: 1, minW: 1, minH: 1 },
     { i: "habit-trends", x: 0, y: 6, w: 1, h: 2, minW: 1, minH: 2 },
     { i: "journal-stats", x: 0, y: 8, w: 1, h: 2, minW: 1, minH: 2 },
