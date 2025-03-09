@@ -7,6 +7,7 @@ import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { HabitTrends } from "@/components/dashboard/HabitTrends";
 import { TaskStats } from "@/components/dashboard/TaskStats";
 import { DashboardGrid } from "@/components/dashboard/DashboardGrid";
+import { JournalStats } from "@/components/dashboard/JournalStats";
 import { AnimatePresence, motion } from "framer-motion";
 
 const Dashboard = () => {
@@ -98,6 +99,14 @@ const Dashboard = () => {
             transition={{ duration: 0.4, delay: staggerDelay * 5 }}
           >
             <HabitTrends />
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+            transition={{ duration: 0.4, delay: staggerDelay * 6 }}
+          >
+            <JournalStats />
           </motion.div>
         </div>
       </motion.div>
