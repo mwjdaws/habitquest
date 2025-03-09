@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
 import { getAuthenticatedUser, handleApiError } from '@/lib/api/apiUtils';
@@ -142,6 +141,111 @@ export async function updateKeyResult(keyResultId: string, currentValue: number)
     console.error('Error updating key result:', err);
     toast({
       title: 'Error updating key result',
+      description: err instanceof Error ? err.message : 'An unknown error occurred',
+      variant: 'destructive',
+    });
+    return { success: false };
+  }
+}
+
+// Delete a goal and all its key results
+export async function deleteGoal(goalId: string): Promise<{ success: boolean }> {
+  try {
+    // First delete all key results associated with the goal
+    const { error: krError } = await supabase
+      .from('key_results')
+      .delete()
+      .eq('goal_id', goalId);
+    
+    if (krError) throw new Error(krError.message);
+    
+    // Then delete the goal itself
+    const { error: goalError } = await supabase
+      .from('goals')
+      .delete()
+      .eq('id', goalId);
+    
+    if (goalError) throw new Error(goalError.message);
+    
+    return { success: true };
+  } catch (err) {
+    console.error('Error deleting goal:', err);
+    toast({
+      title: 'Error deleting goal',
+      description: err instanceof Error ? err.message : 'An unknown error occurred',
+      variant: 'destructive',
+    });
+    return { success: false };
+  }
+}
+
+// Update goal details
+export async function updateGoal(
+  goalId: string, 
+  updates: { name?: string; objective?: string; start_date?: string; end_date?: string }
+): Promise<{ success: boolean }> {
+  try {
+    const { error } = await supabase
+      .from('goals')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', goalId);
+    
+    if (error) throw new Error(error.message);
+    
+    return { success: true };
+  } catch (err) {
+    console.error('Error updating goal:', err);
+    toast({
+      title: 'Error updating goal',
+      description: err instanceof Error ? err.message : 'An unknown error occurred',
+      variant: 'destructive',
+    });
+    return { success: false };
+  }
+}
+
+// Mark a goal as complete (100% progress)
+export async function completeGoal(goalId: string): Promise<{ success: boolean }> {
+  try {
+    // Update the goal's progress to 100%
+    const { error } = await supabase
+      .from('goals')
+      .update({ 
+        progress: 100,
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', goalId);
+    
+    if (error) throw new Error(error.message);
+    
+    // Get all key results for this goal
+    const { data: keyResults, error: krError } = await supabase
+      .from('key_results')
+      .select('id, target_value')
+      .eq('goal_id', goalId);
+    
+    if (krError) throw new Error(krError.message);
+    
+    // Update all key results to be at their target values
+    if (keyResults && keyResults.length > 0) {
+      for (const kr of keyResults) {
+        const { error: updateError } = await supabase
+          .from('key_results')
+          .update({ 
+            current_value: kr.target_value,
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', kr.id);
+        
+        if (updateError) throw new Error(updateError.message);
+      }
+    }
+    
+    return { success: true };
+  } catch (err) {
+    console.error('Error completing goal:', err);
+    toast({
+      title: 'Error completing goal',
       description: err instanceof Error ? err.message : 'An unknown error occurred',
       variant: 'destructive',
     });

@@ -1,7 +1,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Goal, KeyResult, CreateGoalData } from '@/lib/goalTypes';
-import { fetchGoals, createGoal, updateKeyResult } from '@/lib/api/goalAPI';
+import { 
+  fetchGoals, 
+  createGoal, 
+  updateKeyResult, 
+  deleteGoal, 
+  updateGoal,
+  completeGoal 
+} from '@/lib/api/goalAPI';
 
 // Use 'export type' for re-exporting types when isolatedModules is enabled
 export type { Goal, KeyResult, CreateGoalData } from '@/lib/goalTypes';
@@ -46,6 +53,39 @@ export function useGoals() {
     return result;
   }, [refreshGoals]);
 
+  const handleDeleteGoal = useCallback(async (goalId: string) => {
+    const result = await deleteGoal(goalId);
+    
+    if (result.success) {
+      await refreshGoals(false);
+    }
+    
+    return result;
+  }, [refreshGoals]);
+
+  const handleUpdateGoal = useCallback(async (
+    goalId: string, 
+    updates: { name?: string; objective?: string; start_date?: string; end_date?: string }
+  ) => {
+    const result = await updateGoal(goalId, updates);
+    
+    if (result.success) {
+      await refreshGoals(false);
+    }
+    
+    return result;
+  }, [refreshGoals]);
+
+  const handleCompleteGoal = useCallback(async (goalId: string) => {
+    const result = await completeGoal(goalId);
+    
+    if (result.success) {
+      await refreshGoals(false);
+    }
+    
+    return result;
+  }, [refreshGoals]);
+
   // Load goals on component mount
   useEffect(() => {
     refreshGoals();
@@ -57,6 +97,9 @@ export function useGoals() {
     error,
     refreshGoals,
     createGoal: handleCreateGoal,
-    updateKeyResult: handleUpdateKeyResult
+    updateKeyResult: handleUpdateKeyResult,
+    deleteGoal: handleDeleteGoal,
+    updateGoal: handleUpdateGoal,
+    completeGoal: handleCompleteGoal
   };
 }

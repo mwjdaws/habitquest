@@ -4,7 +4,7 @@ import { KeyResult, useGoals } from "@/hooks/useGoals";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Link, Check } from "lucide-react";
+import { Loader2, Link, Check, Plus, Minus } from "lucide-react";
 import { useHabits } from "@/hooks/useHabits";
 
 interface KeyResultItemProps {
@@ -28,6 +28,25 @@ export function KeyResultItem({ keyResult, goalProgress, isGoalActive }: KeyResu
     ? habits.find(h => h.id === keyResult.habit_id) 
     : null;
   
+  const handleQuickUpdate = async (increment: boolean) => {
+    if (!isGoalActive || isUpdating) return;
+    
+    setIsUpdating(true);
+    
+    const step = keyResult.target_value >= 100 ? 5 : 1;
+    const updatedValue = increment
+      ? Math.min(keyResult.current_value + step, keyResult.target_value)
+      : Math.max(keyResult.current_value - step, 0);
+    
+    if (updatedValue === keyResult.current_value) {
+      setIsUpdating(false);
+      return;
+    }
+    
+    await updateKeyResult(keyResult.id!, updatedValue);
+    setIsUpdating(false);
+  };
+  
   const handleUpdate = async () => {
     if (newValue === keyResult.current_value || !isGoalActive) {
       setShowUpdateForm(false);
@@ -36,8 +55,11 @@ export function KeyResultItem({ keyResult, goalProgress, isGoalActive }: KeyResu
     
     setIsUpdating(true);
     
-    // Ensure value doesn't exceed target
-    const updatedValue = Math.min(newValue, keyResult.target_value);
+    // Ensure value doesn't exceed target and is not negative
+    const updatedValue = Math.min(
+      Math.max(0, newValue), 
+      keyResult.target_value
+    );
     
     const { success } = await updateKeyResult(keyResult.id!, updatedValue);
     
@@ -106,14 +128,38 @@ export function KeyResultItem({ keyResult, goalProgress, isGoalActive }: KeyResu
               </Button>
             </div>
           ) : (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="text-xs h-7" 
-              onClick={() => setShowUpdateForm(true)}
-            >
-              Update Progress
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {!isComplete && (
+                <div className="flex items-center">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2"
+                    onClick={() => handleQuickUpdate(false)}
+                    disabled={isUpdating || keyResult.current_value <= 0}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 ml-1"
+                    onClick={() => handleQuickUpdate(true)}
+                    disabled={isUpdating || keyResult.current_value >= keyResult.target_value}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="text-xs h-7" 
+                onClick={() => setShowUpdateForm(true)}
+              >
+                Update Value
+              </Button>
+            </div>
           )}
         </div>
       )}

@@ -1,19 +1,51 @@
+
 import { useState } from "react";
 import { Goal, KeyResult, useGoals } from "@/hooks/useGoals";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ChevronDown, ChevronUp, Calendar } from "lucide-react";
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Calendar, 
+  Edit, 
+  Trash2, 
+  Check,
+  MoreHorizontal
+} from "lucide-react";
 import { KeyResultItem } from "./KeyResultItem";
 import { Badge } from "@/components/ui/badge";
 import { formatInTorontoTimezone, getCurrentTorontoDate } from "@/lib/dateUtils";
+import { GoalEditForm } from "./GoalEditForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "@/components/ui/use-toast";
 
 interface GoalItemProps {
   goal: Goal;
 }
 
 export function GoalItem({ goal }: GoalItemProps) {
+  const { deleteGoal, updateGoal, completeGoal } = useGoals();
   const [expanded, setExpanded] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   
   // Format dates for display with Toronto timezone
   const startDate = new Date(goal.start_date);
@@ -21,6 +53,35 @@ export function GoalItem({ goal }: GoalItemProps) {
   const currentDate = getCurrentTorontoDate();
   const isActive = currentDate >= startDate && currentDate <= endDate;
   const isPast = currentDate > endDate;
+  const isComplete = goal.progress >= 100;
+  
+  const handleDeleteGoal = async () => {
+    setIsDeleting(true);
+    const { success } = await deleteGoal(goal.id);
+    setIsDeleting(false);
+    
+    if (success) {
+      toast({
+        title: "Goal deleted",
+        description: "The goal has been deleted successfully",
+      });
+    }
+  };
+  
+  const handleCompleteGoal = async () => {
+    if (isComplete) return;
+    
+    setIsCompleting(true);
+    const { success } = await completeGoal(goal.id);
+    setIsCompleting(false);
+    
+    if (success) {
+      toast({
+        title: "Goal completed",
+        description: "The goal has been marked as complete",
+      });
+    }
+  };
   
   const getStatusBadge = () => {
     if (isPast) {
@@ -38,6 +99,23 @@ export function GoalItem({ goal }: GoalItemProps) {
     return <Badge variant="outline">Upcoming</Badge>;
   };
 
+  if (showEditForm) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Goal</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <GoalEditForm 
+            goal={goal} 
+            onSave={updateGoal} 
+            onCancel={() => setShowEditForm(false)} 
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
@@ -53,14 +131,66 @@ export function GoalItem({ goal }: GoalItemProps) {
             </div>
           </div>
           
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setExpanded(!expanded)}
-            className="p-0 h-8 w-8"
-          >
-            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowEditForm(true)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Goal
+                </DropdownMenuItem>
+                {!isComplete && (
+                  <DropdownMenuItem onClick={handleCompleteGoal} disabled={isCompleting}>
+                    <Check className="mr-2 h-4 w-4" />
+                    Mark as Complete
+                  </DropdownMenuItem>
+                )}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem 
+                      onSelect={(e) => e.preventDefault()}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Goal
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Goal</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this goal? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDeleteGoal}
+                        disabled={isDeleting}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        {isDeleting ? "Deleting..." : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setExpanded(!expanded)}
+              className="p-0 h-8 w-8"
+            >
+              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
