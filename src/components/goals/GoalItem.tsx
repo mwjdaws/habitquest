@@ -56,8 +56,13 @@ export function GoalItem({ goal }: GoalItemProps) {
   const isComplete = goal.progress >= 100;
   
   const handleDeleteGoal = async () => {
+    if (isDeleting) return;
+    
     setIsDeleting(true);
+    console.log(`GoalItem - Starting delete operation for goal ID: ${goal.id}`);
+    
     const { success } = await deleteGoal(goal.id);
+    
     setIsDeleting(false);
     
     if (success) {
@@ -65,11 +70,17 @@ export function GoalItem({ goal }: GoalItemProps) {
         title: "Goal deleted",
         description: "The goal has been deleted successfully",
       });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to delete goal. Please try again.",
+        variant: "destructive",
+      });
     }
   };
   
   const handleCompleteGoal = async () => {
-    if (isComplete) return;
+    if (isComplete || isCompleting) return;
     
     setIsCompleting(true);
     const { success } = await completeGoal(goal.id);
@@ -79,6 +90,12 @@ export function GoalItem({ goal }: GoalItemProps) {
       toast({
         title: "Goal completed",
         description: "The goal has been marked as complete",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to complete goal. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -168,7 +185,7 @@ export function GoalItem({ goal }: GoalItemProps) {
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
                       <AlertDialogAction 
                         onClick={handleDeleteGoal}
                         disabled={isDeleting}
