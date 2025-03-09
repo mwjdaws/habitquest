@@ -38,11 +38,12 @@ export function useTrendData() {
       const days = getDays();
       
       // Use Promise.all for concurrent fetching with the new safeApiCall utility
+      // Pass proper string values for the error message parameter
       const [habitsResult, completionsResult, failuresResult, streakRecordsResult] = await Promise.all([
-        safeApiCall(() => fetchHabits(), "fetching habits", [], false),
-        safeApiCall(() => getCompletionTrends(days), "fetching completion trends", [], false),
-        safeApiCall(() => getFailureTrends(days), "fetching failure trends", [], false),
-        safeApiCall(() => getStreakRecords(), "fetching streak records", [], false)
+        safeApiCall(() => fetchHabits(), "fetching habits", "Failed to fetch habits", false),
+        safeApiCall(() => getCompletionTrends(days), "fetching completion trends", "Failed to fetch completion trends", false),
+        safeApiCall(() => getFailureTrends(days), "fetching failure trends", "Failed to fetch failure trends", false),
+        safeApiCall(() => getStreakRecords(), "fetching streak records", "Failed to fetch streak records", false)
       ]);
       
       // Check if any of the API calls failed
