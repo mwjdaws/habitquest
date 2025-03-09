@@ -2,6 +2,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash, Archive } from "lucide-react";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 type DeleteConfirmationProps = {
   onConfirm: () => void;
@@ -22,107 +33,91 @@ export function DeleteConfirmation({
   confirmMessage = "Are you sure you want to delete this habit? This action cannot be undone.",
   showArchive = true
 }: DeleteConfirmationProps) {
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [action, setAction] = useState<'delete' | 'archive'>('delete');
-  const [isProcessing, setIsProcessing] = useState(false); // Add a local processing state
+  const [actionType, setActionType] = useState<'delete' | 'archive' | null>(null);
 
-  const handleConfirm = async () => {
-    if (isProcessing || isLoading) return; // Prevent multiple clicks
-    
-    setIsProcessing(true);
-    try {
-      if (action === 'delete') {
-        await onConfirm();
-      } else if (action === 'archive' && onArchive) {
-        await onArchive();
-      }
-      setShowConfirm(false);
-    } finally {
-      // We don't reset isProcessing here because the component will likely unmount
-      // after a successful operation
+  const handleConfirmDelete = () => {
+    onConfirm();
+    setActionType(null);
+  };
+
+  const handleConfirmArchive = () => {
+    if (onArchive) {
+      onArchive();
     }
-  };
-
-  const handleDelete = () => {
-    if (isProcessing || isLoading) return; // Prevent multiple clicks
-    setAction('delete');
-    setShowConfirm(true);
-  };
-
-  const handleArchive = () => {
-    if (isProcessing || isLoading) return; // Prevent multiple clicks
-    setAction('archive');
-    setShowConfirm(true);
+    setActionType(null);
   };
 
   return (
-    <div>
-      {showConfirm ? (
-        <div className="flex flex-col space-y-2">
-          <p className="text-sm text-muted-foreground">
-            {action === 'delete' 
-              ? confirmMessage 
-              : "Are you sure you want to archive this habit? It will be hidden from view but all data will be preserved."}
-          </p>
-          <div className="flex gap-2">
-            <Button 
-              type="button" 
-              variant="destructive" 
-              onClick={handleConfirm}
-              disabled={isLoading || isProcessing}
-              size="sm"
-            >
-              {action === 'delete' ? (
-                <>
-                  <Trash className="h-4 w-4 mr-1" />
-                  {isProcessing ? "Processing..." : confirmText}
-                </>
-              ) : (
-                <>
-                  <Archive className="h-4 w-4 mr-1" />
-                  {isProcessing ? "Processing..." : "Confirm Archive"}
-                </>
-              )}
-            </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setShowConfirm(false)}
-              disabled={isLoading || isProcessing}
-              size="sm"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex gap-2">
+    <div className="flex gap-2">
+      {/* Delete Button with Dialog */}
+      <AlertDialog open={actionType === 'delete'} onOpenChange={(open) => !open && setActionType(null)}>
+        <AlertDialogTrigger asChild>
           <Button 
             type="button" 
             variant="outline" 
             size="sm"
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={handleDelete}
-            disabled={isLoading || isProcessing}
+            onClick={() => setActionType('delete')}
+            disabled={isLoading}
           >
             <Trash className="h-4 w-4 mr-1" />
             {buttonText}
           </Button>
-          
-          {showArchive && onArchive && (
+        </AlertDialogTrigger>
+        
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Habit</AlertDialogTitle>
+            <AlertDialogDescription>{confirmMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              disabled={isLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isLoading ? "Deleting..." : confirmText}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Archive Button with Dialog */}
+      {showArchive && onArchive && (
+        <AlertDialog open={actionType === 'archive'} onOpenChange={(open) => !open && setActionType(null)}>
+          <AlertDialogTrigger asChild>
             <Button 
               type="button" 
               variant="outline" 
               size="sm"
               className="text-muted-foreground hover:text-muted-foreground"
-              onClick={handleArchive}
-              disabled={isLoading || isProcessing}
+              onClick={() => setActionType('archive')}
+              disabled={isLoading}
             >
               <Archive className="h-4 w-4 mr-1" />
               Archive
             </Button>
-          )}
-        </div>
+          </AlertDialogTrigger>
+          
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Archive Habit</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to archive this habit? It will be hidden from view but all data will be preserved.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleConfirmArchive}
+                disabled={isLoading}
+              >
+                {isLoading ? "Archiving..." : "Confirm Archive"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );

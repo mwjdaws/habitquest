@@ -145,7 +145,7 @@ export const deleteHabit = async (id: string) => {
     console.log(`Authenticated user ID: ${userId}`);
 
     // First delete related habit completions
-    console.log(`Deleting completions for habit ID: ${id}`);
+    console.log(`Step 1: Deleting completions for habit ID: ${id}`);
     const { error: completionsError } = await supabase
       .from("habit_completions")
       .delete()
@@ -158,7 +158,7 @@ export const deleteHabit = async (id: string) => {
     console.log("Completions deleted successfully");
     
     // Then delete related habit failures
-    console.log(`Deleting failures for habit ID: ${id}`);
+    console.log(`Step 2: Deleting failures for habit ID: ${id}`);
     const { error: failuresError } = await supabase
       .from("habit_failures")
       .delete()
@@ -170,21 +170,26 @@ export const deleteHabit = async (id: string) => {
     }
     console.log("Failures deleted successfully");
 
-    // Add a small delay to ensure all related records are deleted
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Add a small delay to ensure all related records are processed by the database
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // Finally delete the habit itself
-    console.log(`Deleting habit ID: ${id}`);
+    console.log(`Step 3: Deleting habit ID: ${id}`);
     const { error } = await supabase
       .from("habits")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", userId);
 
     if (error) {
       console.error(`Error deleting habit: ${error.message}`);
       throw error;
     }
+    
     console.log("Habit deleted successfully");
+    
+    // Add a small delay before returning to ensure UI has time to update
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     // Return true to indicate successful deletion
     return true;

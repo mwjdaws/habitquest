@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -18,6 +19,7 @@ type HabitFormContainerProps = {
   onCancel: () => void;
   onDelete?: () => void;
   onArchive?: () => void;
+  isProcessing?: boolean;
 };
 
 export function HabitFormContainer({ 
@@ -25,7 +27,8 @@ export function HabitFormContainer({
   onSave, 
   onCancel, 
   onDelete,
-  onArchive
+  onArchive,
+  isProcessing = false
 }: HabitFormContainerProps) {
   const [name, setName] = useState(habit?.name || "");
   const [description, setDescription] = useState(habit?.description || "");
@@ -36,6 +39,7 @@ export function HabitFormContainer({
   const [error, setError] = useState<string | null>(null);
   
   const isEdit = !!habit;
+  const isSubmitting = loading || isProcessing;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,9 +114,9 @@ export function HabitFormContainer({
         <>
           <Separator />
           <DeleteConfirmation 
-            onConfirm={onDelete} 
+            onConfirm={onDelete || (() => {})} 
             onArchive={onArchive}
-            isLoading={loading} 
+            isLoading={isSubmitting} 
           />
         </>
       )}
@@ -122,12 +126,12 @@ export function HabitFormContainer({
           type="button" 
           variant="outline" 
           onClick={onCancel}
-          disabled={loading}
+          disabled={isSubmitting}
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : isEdit ? "Update Habit" : "Save Habit"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : isEdit ? "Update Habit" : "Save Habit"}
         </Button>
       </div>
     </form>

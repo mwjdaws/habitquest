@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { HabitFormContainer } from "./habit/HabitFormContainer";
 import { Habit } from "@/lib/habitTypes";
@@ -13,29 +14,25 @@ type HabitFormProps = {
 
 export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps) {
   const isEdit = !!habit;
-  let isDeleting = false; // Add flag to prevent multiple deletes
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleDelete = async () => {
-    if (!isEdit || !habit || isDeleting) return;
-    
-    isDeleting = true; // Set flag to prevent multiple deletion calls
+    if (!isEdit || !habit || isProcessing) return;
     
     try {
-      console.log("HabitForm - Deleting habit:", habit.id);
+      setIsProcessing(true);
+      console.log(`HabitForm - Starting delete operation for habit ID: ${habit.id}`);
+      
       await deleteHabit(habit.id);
-      console.log("HabitForm - Habit deleted successfully");
       
       toast({
         title: "Habit deleted",
         description: "Your habit has been permanently deleted",
       });
       
-      // Call the appropriate callback
       if (onDelete) {
-        console.log("HabitForm - Calling onDelete callback");
         onDelete();
       } else {
-        console.log("HabitForm - Calling onSave callback as fallback");
         onSave();
       }
     } catch (error) {
@@ -45,31 +42,28 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
         description: "Failed to delete habit. Please try again.",
         variant: "destructive",
       });
-      isDeleting = false; // Reset the flag on error
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleArchive = async () => {
-    if (!isEdit || !habit || isDeleting) return;
-    
-    isDeleting = true; // Set flag to prevent multiple archive calls
+    if (!isEdit || !habit || isProcessing) return;
     
     try {
-      console.log("HabitForm - Archiving habit:", habit.id);
+      setIsProcessing(true);
+      console.log(`HabitForm - Starting archive operation for habit ID: ${habit.id}`);
+      
       await archiveHabit(habit.id);
-      console.log("HabitForm - Habit archived successfully");
       
       toast({
         title: "Habit archived",
         description: "Your habit has been archived and can be restored later",
       });
       
-      // Call the appropriate callback
       if (onDelete) {
-        console.log("HabitForm - Calling onDelete callback after archive");
         onDelete();
       } else {
-        console.log("HabitForm - Calling onSave callback as fallback after archive");
         onSave();
       }
     } catch (error) {
@@ -79,7 +73,8 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
         description: "Failed to archive habit",
         variant: "destructive",
       });
-      isDeleting = false; // Reset the flag on error
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -90,6 +85,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
       onCancel={onCancel}
       onDelete={handleDelete}
       onArchive={handleArchive}
+      isProcessing={isProcessing}
     />
   );
 }
