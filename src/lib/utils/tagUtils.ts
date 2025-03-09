@@ -3,9 +3,12 @@
  * Utility functions for working with tags
  */
 
-// Cache for processed tags to avoid repeated operations
-const processedTagCache = new Map<string, string | null>();
-const validationCache = new Map<string, boolean>();
+// Unified cache object for all tag-related operations
+const tagCache = {
+  formatted: new Map<string, string | null>(),
+  processed: new Map<string, string | null>(),
+  validation: new Map<string, boolean>(),
+};
 
 /**
  * Formats tag value to ensure consistency
@@ -14,14 +17,13 @@ const validationCache = new Map<string, boolean>();
 export const formatTagValue = (tag: string | undefined | null): string | null => {
   if (tag === undefined || tag === null) return null;
   
-  // Use cached result if available
-  const cacheKey = `format_${tag}`;
-  if (processedTagCache.has(cacheKey)) {
-    return processedTagCache.get(cacheKey)!;
+  const cacheKey = tag;
+  if (tagCache.formatted.has(cacheKey)) {
+    return tagCache.formatted.get(cacheKey)!;
   }
   
   const result = tag.trim() || null;
-  processedTagCache.set(cacheKey, result);
+  tagCache.formatted.set(cacheKey, result);
   return result;
 };
 
@@ -29,14 +31,14 @@ export const formatTagValue = (tag: string | undefined | null): string | null =>
  * Extracts unique tags from a list of tasks
  */
 export const extractUniqueTags = (tasks: any[]): string[] => {
-  // Use Set for faster uniqueness check
+  // Use Set for faster uniqueness check and reduce iterations
   const uniqueTags = new Set<string>();
   
-  for (const task of tasks) {
+  tasks.forEach(task => {
     if (task.tag) {
       uniqueTags.add(task.tag);
     }
-  }
+  });
   
   // Convert Set to sorted array
   return Array.from(uniqueTags).sort();
@@ -48,13 +50,13 @@ export const extractUniqueTags = (tasks: any[]): string[] => {
 export const isValidTag = (tag: string | undefined | null): boolean => {
   if (tag === undefined || tag === null) return false;
   
-  // Use cached result if available
-  if (validationCache.has(tag)) {
-    return validationCache.get(tag)!;
+  const cacheKey = tag;
+  if (tagCache.validation.has(cacheKey)) {
+    return tagCache.validation.get(cacheKey)!;
   }
   
   const result = Boolean(tag.trim());
-  validationCache.set(tag, result);
+  tagCache.validation.set(cacheKey, result);
   return result;
 };
 
@@ -62,16 +64,28 @@ export const isValidTag = (tag: string | undefined | null): boolean => {
  * Processes a new custom tag, ensuring it's properly formatted
  */
 export const processCustomTag = (tag: string | undefined | null): string | null => {
-  if (tag === undefined || tag === null || !tag.trim()) return null;
+  if (tag === undefined || tag === null) return null;
   
-  // Use cached result if available
-  const cacheKey = `process_${tag}`;
-  if (processedTagCache.has(cacheKey)) {
-    return processedTagCache.get(cacheKey);
+  const cacheKey = tag;
+  if (tagCache.processed.has(cacheKey)) {
+    return tagCache.processed.get(cacheKey);
   }
   
+  const trimmed = tag.trim();
+  if (!trimmed) return null;
+  
   // Process the tag
-  const result = tag.trim().toLowerCase().replace(/\s+/g, '-');
-  processedTagCache.set(cacheKey, result);
+  const result = trimmed.toLowerCase().replace(/\s+/g, '-');
+  tagCache.processed.set(cacheKey, result);
   return result;
+};
+
+/**
+ * Clears the tag cache
+ * Useful for testing or when tag processing rules change
+ */
+export const clearTagCache = (): void => {
+  tagCache.formatted.clear();
+  tagCache.processed.clear();
+  tagCache.validation.clear();
 };
