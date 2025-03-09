@@ -39,10 +39,10 @@ export function useTrendData() {
       
       // Use Promise.all for concurrent fetching with the new safeApiCall utility
       const [habitsResult, completionsResult, failuresResult, streakRecordsResult] = await Promise.all([
-        safeApiCall(() => fetchHabits(), "fetching habits", undefined, false),
-        safeApiCall(() => getCompletionTrends(days), "fetching completion trends", undefined, false),
-        safeApiCall(() => getFailureTrends(days), "fetching failure trends", undefined, false),
-        safeApiCall(() => getStreakRecords(), "fetching streak records", undefined, false)
+        safeApiCall(() => fetchHabits(), "fetching habits", [], false),
+        safeApiCall(() => getCompletionTrends(days), "fetching completion trends", [], false),
+        safeApiCall(() => getFailureTrends(days), "fetching failure trends", [], false),
+        safeApiCall(() => getStreakRecords(), "fetching streak records", [], false)
       ]);
       
       // Check if any of the API calls failed
@@ -57,10 +57,10 @@ export function useTrendData() {
       
       // Ensure we're setting arrays for each property, even if the API returned undefined
       setData({
-        habits: habitsResult.data || [],
-        completions: completionsResult.data || [],
-        failures: failuresResult.data || [],
-        streakRecords: streakRecordsResult.data || [],
+        habits: Array.isArray(habitsResult.data) ? habitsResult.data : [],
+        completions: Array.isArray(completionsResult.data) ? completionsResult.data : [],
+        failures: Array.isArray(failuresResult.data) ? failuresResult.data : [],
+        streakRecords: Array.isArray(streakRecordsResult.data) ? streakRecordsResult.data : [],
         loading: false,
         error: null
       });
