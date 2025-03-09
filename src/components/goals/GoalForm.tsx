@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,7 +95,6 @@ export function GoalForm({ onGoalCreated, onCancel }: GoalFormProps) {
       { temp_id: Date.now().toString(), description: '', target_value: 100, current_value: 0, habit_id: null }
     ]);
     
-    // Add an empty error string for the new key result
     setErrors(prev => ({
       ...prev,
       keyResults: [...prev.keyResults, '']
@@ -109,7 +107,6 @@ export function GoalForm({ onGoalCreated, onCancel }: GoalFormProps) {
     const updatedKeyResults = keyResults.filter((_, i) => i !== index);
     setKeyResults(updatedKeyResults);
     
-    // Remove the error for the deleted key result
     setErrors(prev => {
       const updatedKeyResultErrors = [...prev.keyResults];
       updatedKeyResultErrors.splice(index, 1);
@@ -128,7 +125,6 @@ export function GoalForm({ onGoalCreated, onCancel }: GoalFormProps) {
     };
     setKeyResults(updatedKeyResults);
     
-    // Clear error for the updated field
     if (field === 'description' && value.trim() !== '') {
       setErrors(prev => {
         const updatedKeyResultErrors = [...prev.keyResults];
@@ -325,14 +321,14 @@ export function GoalForm({ onGoalCreated, onCancel }: GoalFormProps) {
                       Link to Habit (Optional)
                     </Label>
                     <Select
-                      value={kr.habit_id || ""}
-                      onValueChange={(value) => handleKeyResultChange(index, 'habit_id', value || null)}
+                      value={kr.habit_id || "no_habit"}
+                      onValueChange={(value) => handleKeyResultChange(index, 'habit_id', value === "no_habit" ? null : value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a habit (optional)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No habit linked</SelectItem>
+                        <SelectItem value="no_habit">No habit linked</SelectItem>
                         {habitsLoading ? (
                           <div className="flex items-center justify-center py-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
