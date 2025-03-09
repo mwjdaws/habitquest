@@ -67,7 +67,6 @@ export function useTrendData() {
       console.error("Error fetching trend data:", error);
       setData(prev => ({ 
         ...prev,
-        // Ensure we maintain proper array types by using empty arrays when no previous data exists
         habits: prev.habits || [],
         completions: prev.completions || [],
         failures: prev.failures || [],
