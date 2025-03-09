@@ -12,12 +12,12 @@ export function useFailureInfo(
   failures: HabitFailure[]
 ): string {
   return useMemo(() => {
-    if (!isFailed) return '';
+    if (!isFailed || !failures || failures.length === 0) return '';
     
     // Create a Map for O(1) lookup performance instead of using find() which is O(n)
     const failureMap = new Map(failures.map(f => [f.habit_id, f]));
     const failure = failureMap.get(habitId);
     
-    return failure ? failure.reason || "Failed" : "Failed";
+    return failure?.reason || "Failed";
   }, [isFailed, failures, habitId]);
 }

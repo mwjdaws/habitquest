@@ -99,7 +99,7 @@ export function useHabitData(onHabitChange?: () => void) {
         });
       } catch (error) {
         console.error("Unexpected error refreshing data:", error);
-        setError("An unexpected error occurred");
+        setError(error instanceof Error ? error.message : "An unexpected error occurred");
         setLoading(false);
         
         if (showLoading) {
@@ -125,7 +125,7 @@ export function useHabitData(onHabitChange?: () => void) {
   }, [loadData, onHabitChange, setError, setLoading, setState, state.filteredHabits.length, updateHabits]);
 
   // Handle visibility changes by refreshing data when tab becomes visible again
-  const { isMounted } = useVisibilityManager(() => {
+  useVisibilityManager(() => {
     if (isInitializedRef.current && !refreshInProgressRef.current) {
       // When tab becomes visible again, check if data is stale (>60s)
       const now = new Date();

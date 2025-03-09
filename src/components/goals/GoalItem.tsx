@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Goal, KeyResult, useGoals } from "@/hooks/useGoals";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ export function GoalItem({ goal, onRefresh }: GoalItemProps) {
   const [expanded, setExpanded] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   
-  const handleDeleteGoal = async () => {
+  const handleDeleteGoal = useCallback(async () => {
     const { success } = await deleteGoal(goal.id);
     
     if (success) {
@@ -33,9 +33,9 @@ export function GoalItem({ goal, onRefresh }: GoalItemProps) {
       });
       if (onRefresh) onRefresh();
     }
-  };
+  }, [deleteGoal, goal.id, onRefresh]);
   
-  const handleCompleteGoal = async () => {
+  const handleCompleteGoal = useCallback(async () => {
     const { success } = await completeGoal(goal.id);
     
     if (success) {
@@ -45,7 +45,7 @@ export function GoalItem({ goal, onRefresh }: GoalItemProps) {
       });
       if (onRefresh) onRefresh();
     }
-  };
+  }, [completeGoal, goal.id, onRefresh]);
 
   if (showEditForm) {
     return (

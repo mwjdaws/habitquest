@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { KeyResult, useGoals } from "@/hooks/useGoals";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export function KeyResultItem({ keyResult, goalProgress, isGoalActive, onProgres
     ? habits.find(h => h.id === keyResult.habit_id) 
     : null;
   
-  const handleQuickUpdate = async (increment: boolean) => {
+  const handleQuickUpdate = useCallback(async (increment: boolean) => {
     if (!isGoalActive || isUpdating) return;
     
     setIsUpdating(true);
@@ -51,9 +51,9 @@ export function KeyResultItem({ keyResult, goalProgress, isGoalActive, onProgres
       await onProgressChange(newProgress);
     }
     setIsUpdating(false);
-  };
+  }, [keyResult, isGoalActive, isUpdating, updateKeyResult, onProgressChange]);
   
-  const handleUpdate = async () => {
+  const handleUpdate = useCallback(async () => {
     if (newValue === keyResult.current_value || !isGoalActive) {
       setShowUpdateForm(false);
       return;
@@ -78,7 +78,7 @@ export function KeyResultItem({ keyResult, goalProgress, isGoalActive, onProgres
     }
     
     setIsUpdating(false);
-  };
+  }, [keyResult, newValue, isGoalActive, updateKeyResult, onProgressChange]);
 
   return (
     <div className="p-3 bg-muted/40 rounded-md">
