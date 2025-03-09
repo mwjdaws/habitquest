@@ -46,7 +46,9 @@ export function KeyResultItem({ keyResult, goalProgress, isGoalActive, onProgres
     
     await updateKeyResult(keyResult.id!, updatedValue);
     if (onProgressChange) {
-      await onProgressChange(progress);
+      // Calculate new progress percentage for parent notification
+      const newProgress = Math.min(100, Math.round((updatedValue / keyResult.target_value) * 100));
+      await onProgressChange(newProgress);
     }
     setIsUpdating(false);
   };

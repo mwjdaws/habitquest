@@ -57,7 +57,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
       
       return () => clearTimeout(timeout);
     }
-  }, []); // Empty dependency array to ensure it runs only once
+  }, [refreshData]); // Added refreshData to dependency array
   
   // Debug render tracking
   useEffect(() => {
