@@ -65,9 +65,13 @@ export function useTrendData() {
       });
     } catch (error) {
       console.error("Error fetching trend data:", error);
-      // Use spread operator with previous state to ensure we maintain the array types
+      // Fix: Ensure we maintain array types by using empty arrays instead of empty objects
       setData(prev => ({ 
         ...prev, 
+        habits: prev.habits,
+        completions: prev.completions,
+        failures: prev.failures,
+        streakRecords: prev.streakRecords,
         loading: false, 
         error: error instanceof Error ? error.message : "Failed to load habit trend data" 
       }));

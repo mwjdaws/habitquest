@@ -1,10 +1,9 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCompletionsForDate, toggleHabitCompletion, getTodayFormatted } from "@/lib/habits";
-import { fetchHabits } from "@/lib/api/habit"; // Updated import path
+import { fetchHabits } from "@/lib/api/habit";
 import { toast } from "@/components/ui/use-toast";
-import { formatErrorMessage } from "@/lib/error-utils";
+import { formatErrorMessage, getUserFriendlyErrorMessage } from "@/lib/error-utils";
 import { HabitCompletion } from "@/lib/habitTypes";
 import { HabitItem } from "./habit-list/HabitItem";
 import { NewHabitButton } from "./habit-list/NewHabitButton";
@@ -24,7 +23,6 @@ export function HabitList() {
   const today = getTodayFormatted();
   const queryClient = useQueryClient();
 
-  // Update query key to include refreshCounter to force refetch
   const { 
     data: habits = [], 
     isLoading, 
@@ -32,12 +30,11 @@ export function HabitList() {
     refetch: refetchHabits 
   } = useQuery({
     queryKey: ['habits', refreshCounter],
-    queryFn: () => fetchHabits(false), // Pass false to exclude archived habits
+    queryFn: () => fetchHabits(false),
   });
 
   useEffect(() => {
     if (queryError) {
-      // Fix: Extract just the error message string instead of passing the whole object
       const errorMessage = formatErrorMessage(queryError);
       setError(errorMessage);
     }
@@ -51,26 +48,23 @@ export function HabitList() {
       setCompletions(data);
     } catch (error) {
       console.error("Error fetching completions:", error);
-      handleApiError(error, "Failed to load your habit completions", "Failed to load your habit completions");
+      const errorMessage = formatErrorMessage(error);
+      console.error("Error fetching completions:", errorMessage);
+      setError(getUserFriendlyErrorMessage(error));
     }
   };
 
   useEffect(() => {
     fetchCompletions();
-  }, [refreshCounter]); // Also refresh completions when counter changes
+  }, [refreshCounter]);
 
-  // Enhanced refetch function to ensure all data is refreshed
   const refreshAllData = useCallback(async () => {
     console.log("Refreshing all habit data...");
     
-    // Invalidate queries first
     queryClient.invalidateQueries({ queryKey: ['habits'] });
-    
-    // Then update the refresh counter to force component refresh
     setRefreshCounter(prev => prev + 1);
     
     try {
-      // Explicitly fetch the data
       await Promise.all([
         refetchHabits(),
         fetchCompletions()
@@ -83,7 +77,7 @@ export function HabitList() {
 
   const handleToggleCompletion = async (habitId: string) => {
     try {
-      setIsUpdating(habitId); // Show updating state for this specific habit
+      setIsUpdating(habitId);
       const isCompleted = completions.some(c => c.habit_id === habitId);
       await toggleHabitCompletion(habitId, today, isCompleted);
       await fetchCompletions();
@@ -93,7 +87,14 @@ export function HabitList() {
         description: isCompleted ? "Keep working on it!" : "Great job!",
       });
     } catch (error) {
-      handleApiError(error, "updating habit status", "Failed to update habit status");
+      const errorMessage = formatErrorMessage(error);
+      console.error("Error updating habit status:", errorMessage);
+      
+      toast({
+        title: "Error",
+        description: getUserFriendlyErrorMessage(error) || "Failed to update habit status",
+        variant: "destructive",
+      });
     } finally {
       setIsUpdating(null);
     }
@@ -111,7 +112,6 @@ export function HabitList() {
   const handleHabitDeleted = async () => {
     console.log("Habit deleted, refreshing list...");
     
-    // Add a small delay before refreshing to ensure database operations are complete
     setTimeout(async () => {
       await refreshAllData();
       setShowForm(false);
@@ -173,7 +173,7 @@ export function HabitList() {
                 habit={habit} 
                 isCompleted={completions.some(c => c.habit_id === habit.id)} 
                 onToggle={handleToggleCompletion}
-                onUpdate={refreshAllData} // Use refreshAllData
+                onUpdate={refreshAllData}
                 onDelete={handleHabitDeleted}
               />
             </motion.div>
