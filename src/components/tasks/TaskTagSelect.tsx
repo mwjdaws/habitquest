@@ -63,6 +63,7 @@ export function TaskTagSelect({ tag, onTagChange, availableTags }: TaskTagSelect
   const handleCustomTagSubmit = () => {
     if (inputValue.trim()) {
       onTagChange(inputValue.trim());
+      setCustomTagMode(false); // Exit custom tag mode after saving
     } else {
       onTagChange(undefined);
       setCustomTagMode(false);
