@@ -20,19 +20,50 @@ export function useJournalFormState(initialTag: string | null = null) {
       setTag(newTag.trim());
       setNewTag('');
       setIsAddingTag(false);
+    } else {
+      // If empty, just close the tag input
+      setIsAddingTag(false);
     }
   };
   
   const handleSelectPrompt = (promptText: string, promptTag: string) => {
-    setContent(promptText + "\n\n");
-    setTag(promptTag);
+    // Handle null or undefined promptText gracefully
+    const textToInsert = promptText?.trim() ? promptText + "\n\n" : "";
+    
+    setContent(textToInsert);
+    
+    // Only set the tag if it's not empty
+    if (promptTag?.trim()) {
+      setTag(promptTag.trim());
+    }
     
     // Focus the textarea and place cursor at the end after the prompt
     if (textareaRef.current) {
       textareaRef.current.focus();
-      textareaRef.current.selectionStart = promptText.length + 2;
-      textareaRef.current.selectionEnd = promptText.length + 2;
+      const cursorPosition = textToInsert.length;
+      textareaRef.current.selectionStart = cursorPosition;
+      textareaRef.current.selectionEnd = cursorPosition;
+      
+      // Scroll to the cursor position
+      textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
     }
+  };
+  
+  // Safely reset the form
+  const resetForm = (keepTag: boolean = true) => {
+    setContent('');
+    if (!keepTag) {
+      setTag(null);
+    }
+    setIsAddingTag(false);
+    setNewTag('');
+    
+    // Focus the textarea again
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 0);
   };
   
   return {
@@ -46,6 +77,7 @@ export function useJournalFormState(initialTag: string | null = null) {
     setNewTag,
     textareaRef,
     handleCreateTag,
-    handleSelectPrompt
+    handleSelectPrompt,
+    resetForm
   };
 }
