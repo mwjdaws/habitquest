@@ -15,7 +15,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
   const isEdit = !!habit;
 
   const handleDelete = async () => {
-    if (!isEdit) return;
+    if (!isEdit || !habit) return;
     
     try {
       await deleteHabit(habit.id);
@@ -41,7 +41,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
   };
 
   const handleArchive = async () => {
-    if (!isEdit) return;
+    if (!isEdit || !habit) return;
     
     try {
       await archiveHabit(habit.id);

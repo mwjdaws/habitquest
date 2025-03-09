@@ -59,15 +59,16 @@ export function DeleteConfirmation({
               variant="destructive" 
               onClick={handleConfirm}
               disabled={isLoading}
+              size="sm"
             >
               {action === 'delete' ? (
                 <>
-                  <Trash className="mr-2 h-4 w-4" />
+                  <Trash className="h-4 w-4 mr-1" />
                   {confirmText}
                 </>
               ) : (
                 <>
-                  <Archive className="mr-2 h-4 w-4" />
+                  <Archive className="h-4 w-4 mr-1" />
                   Confirm Archive
                 </>
               )}
@@ -77,21 +78,23 @@ export function DeleteConfirmation({
               variant="outline" 
               onClick={() => setShowConfirm(false)}
               disabled={isLoading}
+              size="sm"
             >
               Cancel
             </Button>
           </div>
         </div>
       ) : (
-        <div className="flex flex-col space-y-2">
+        <div className="flex gap-2">
           <Button 
             type="button" 
             variant="outline" 
+            size="sm"
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={handleDelete}
             disabled={isLoading}
           >
-            <Trash className="mr-2 h-4 w-4" />
+            <Trash className="h-4 w-4 mr-1" />
             {buttonText}
           </Button>
           
@@ -99,12 +102,13 @@ export function DeleteConfirmation({
             <Button 
               type="button" 
               variant="outline" 
+              size="sm"
               className="text-muted-foreground hover:text-muted-foreground"
               onClick={handleArchive}
               disabled={isLoading}
             >
-              <Archive className="mr-2 h-4 w-4" />
-              Archive Habit
+              <Archive className="h-4 w-4 mr-1" />
+              Archive
             </Button>
           )}
         </div>

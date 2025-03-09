@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -61,7 +60,7 @@ export function HabitFormContainer({
         category
       };
 
-      if (isEdit) {
+      if (isEdit && habit) {
         await updateHabit(habit.id, habitData);
       } else {
         await createHabit(habitData);

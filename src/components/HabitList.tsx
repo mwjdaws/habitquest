@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCompletionsForDate, toggleHabitCompletion, getTodayFormatted } from "@/lib/habits";
@@ -22,7 +21,6 @@ export function HabitList() {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const today = getTodayFormatted();
 
-  // Configure React Query with the correct fetchHabits function
   const { 
     data: habits = [], 
     isLoading, 
@@ -73,14 +71,10 @@ export function HabitList() {
   };
 
   const handleHabitSaved = () => {
-    // Force refetch immediately after saving to ensure fresh data
     refetchHabits();
-    
-    // Force a second refresh after a short delay to ensure all components have updated
     setTimeout(() => {
       refetchHabits();
     }, 300);
-    
     setShowForm(false);
     toast({
       title: "Habit saved",
@@ -89,14 +83,11 @@ export function HabitList() {
   };
 
   const handleHabitDeleted = () => {
-    // Force refetch immediately after deletion to ensure fresh data
+    console.log("Habit deleted, refreshing list...");
     refetchHabits();
-    
-    // Also fetch a second time after a delay to ensure all components have updated
     setTimeout(() => {
       refetchHabits();
     }, 300);
-    
     setShowForm(false);
     toast({
       title: "Habit removed",
