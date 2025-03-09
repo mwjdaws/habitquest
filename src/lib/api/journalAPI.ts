@@ -27,17 +27,42 @@ export const fetchJournalEntries = async (): Promise<JournalEntry[]> => {
 };
 
 /**
+ * Analyzes sentiment of journal content using edge function
+ */
+async function analyzeSentiment(content: string): Promise<number> {
+  try {
+    const { data, error } = await supabase.functions.invoke('analyze-sentiment', {
+      body: { content }
+    });
+    
+    if (error) {
+      console.error('Error analyzing sentiment:', error);
+      return 0; // Default to neutral on error
+    }
+    
+    return data.sentimentScore;
+  } catch (error) {
+    console.error('Exception analyzing sentiment:', error);
+    return 0; // Default to neutral on exception
+  }
+}
+
+/**
  * Creates a new journal entry
  */
 export const createJournalEntry = async (data: CreateJournalEntryData): Promise<JournalEntry> => {
   try {
     const userId = await getAuthenticatedUser();
     
+    // Analyze sentiment
+    const sentimentScore = await analyzeSentiment(data.content);
+    
     const { data: newEntry, error } = await supabase
       .from('journal_entries')
       .insert([{
         ...data,
         user_id: userId,
+        sentiment_score: sentimentScore
       }])
       .select()
       .single();
@@ -57,9 +82,17 @@ export const createJournalEntry = async (data: CreateJournalEntryData): Promise<
  */
 export const updateJournalEntry = async (id: string, data: Partial<CreateJournalEntryData>): Promise<JournalEntry> => {
   try {
+    // If content is being updated, re-analyze sentiment
+    let updateData: any = { ...data };
+    
+    if (data.content) {
+      const sentimentScore = await analyzeSentiment(data.content);
+      updateData.sentiment_score = sentimentScore;
+    }
+    
     const { data: updatedEntry, error } = await supabase
       .from('journal_entries')
-      .update(data)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();

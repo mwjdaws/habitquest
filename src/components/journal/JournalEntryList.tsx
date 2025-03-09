@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Tag, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, Tag, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { JournalEntry } from '@/lib/journalTypes';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { formatInTorontoTimezone, toTorontoTime } from '@/lib/dateUtils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface JournalEntryListProps {
   entries: JournalEntry[];
@@ -33,6 +34,34 @@ export function JournalEntryList({ entries, onDelete, isDeleting }: JournalEntry
       ...expandedEntries,
       [id]: !expandedEntries[id]
     });
+  };
+  
+  const getSentimentIcon = (score: number | null) => {
+    if (score === null) return null;
+    
+    if (score > 0.2) return <ThumbsUp className="h-4 w-4 text-green-500" />;
+    if (score < -0.2) return <ThumbsDown className="h-4 w-4 text-red-500" />;
+    return null;
+  };
+  
+  const getSentimentLabel = (score: number | null) => {
+    if (score === null) return "No sentiment data";
+    
+    if (score > 0.6) return "Very positive";
+    if (score > 0.2) return "Positive";
+    if (score > -0.2) return "Neutral";
+    if (score > -0.6) return "Negative";
+    return "Very negative";
+  };
+  
+  const getSentimentColor = (score: number | null) => {
+    if (score === null) return "bg-gray-100";
+    
+    if (score > 0.6) return "bg-green-100 text-green-800";
+    if (score > 0.2) return "bg-green-50 text-green-600";
+    if (score > -0.2) return "bg-gray-100 text-gray-800";
+    if (score > -0.6) return "bg-red-50 text-red-600";
+    return "bg-red-100 text-red-800";
   };
   
   if (entries.length === 0) {
@@ -79,6 +108,25 @@ export function JournalEntryList({ entries, onDelete, isDeleting }: JournalEntry
                         <Tag className="h-3 w-3" />
                         {entry.tag}
                       </Badge>
+                    )}
+                    
+                    {entry.sentiment_score !== null && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge 
+                              variant="secondary"
+                              className={`gap-1 ${getSentimentColor(entry.sentiment_score)}`}
+                            >
+                              {getSentimentIcon(entry.sentiment_score)}
+                              {getSentimentLabel(entry.sentiment_score)}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Sentiment score: {entry.sentiment_score.toFixed(2)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
                   

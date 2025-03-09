@@ -159,6 +159,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          sentiment_score: number | null
           tag: string | null
           updated_at: string
           user_id: string
@@ -167,6 +168,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          sentiment_score?: number | null
           tag?: string | null
           updated_at?: string
           user_id: string
@@ -175,6 +177,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          sentiment_score?: number | null
           tag?: string | null
           updated_at?: string
           user_id?: string
