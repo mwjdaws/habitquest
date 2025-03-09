@@ -62,7 +62,7 @@ export function habitItemPropsAreEqual(prevProps: any, nextProps: any) {
     const nextFailureMap = new Map(nextProps.failures.map((f: any) => [f.habit_id, f]));
     
     const prevFailure = prevFailureMap.get(prevProps.habit.id);
-    const nextFailure = nextFailureMap.get(nextProps.habit.id);
+    const nextFailure = nextFailureMap.get(prevProps.habit.id);
     
     // Short-circuit for both undefined/null
     if (!prevFailure && !nextFailure) return true;
@@ -70,8 +70,12 @@ export function habitItemPropsAreEqual(prevProps: any, nextProps: any) {
     // Short-circuit if one exists and other doesn't
     if ((!prevFailure && nextFailure) || (prevFailure && !nextFailure)) return false;
     
-    // Only compare reasons if both exist
-    return prevFailure?.reason === nextFailure?.reason;
+    // Only compare reasons if both exist - with proper type checking
+    if (prevFailure && nextFailure) {
+      return (prevFailure as HabitFailure).reason === (nextFailure as HabitFailure).reason;
+    }
+    
+    return true;
   }
   
   // Check identity of core habit properties that affect rendering
@@ -101,7 +105,9 @@ export function habitItemPropsAreEqual(prevProps: any, nextProps: any) {
   
   if (!prevFailure && !nextFailure) return true;
   if ((!prevFailure && nextFailure) || (prevFailure && !nextFailure)) return false;
-  if (prevFailure && nextFailure) return prevFailure.reason === nextFailure.reason;
   
-  return true;
+  // Use proper type casting for comparing failure reasons
+  return prevFailure && nextFailure 
+    ? (prevFailure as HabitFailure).reason === (nextFailure as HabitFailure).reason 
+    : true;
 }

@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchHabits, getTodayFormatted, getCompletionsForDate, toggleHabitCompletion } from "@/lib/habits";
+import { getCompletionsForDate, toggleHabitCompletion, getTodayFormatted } from "@/lib/habits";
+import { fetchHabits } from "@/lib/api/habitCrudAPI";
 import { toast } from "@/components/ui/use-toast";
 import { handleApiError } from "@/lib/error-utils";
 import { HabitCompletion } from "@/lib/habitTypes";
@@ -21,6 +22,7 @@ export function HabitList() {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const today = getTodayFormatted();
 
+  // Fix the query configuration to properly handle the fetchHabits function
   const { 
     data: habits = [], 
     isLoading, 
@@ -28,7 +30,7 @@ export function HabitList() {
     refetch: refetchHabits 
   } = useQuery({
     queryKey: ['habits'],
-    queryFn: fetchHabits,
+    queryFn: () => fetchHabits(false), // Explicitly call fetchHabits with the boolean parameter
   });
 
   useEffect(() => {
