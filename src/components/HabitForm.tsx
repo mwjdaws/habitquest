@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { HabitFormContainer } from "./habit/HabitFormContainer";
 import { Habit } from "@/lib/habitTypes";
-import { deleteHabit, archiveHabit } from "@/lib/api/habitCrudAPI";
+import { deleteHabit, archiveHabit } from "@/lib/api/habit"; // Updated import path
 
 type HabitFormProps = {
   habit?: Habit;

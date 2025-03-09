@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Check, Tag, Zap, Trash, Archive, Edit } from "lucide-react";
 import { HabitForm } from "@/components/HabitForm";
 import { Habit } from "@/lib/habitTypes";
-import { deleteHabit, archiveHabit } from "@/lib/api/habitCrudAPI";
+import { deleteHabit, archiveHabit } from "@/lib/api/habit"; // Updated import path
 import { toast } from "@/components/ui/use-toast";
 import {
   Dialog,

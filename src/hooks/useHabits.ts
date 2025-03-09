@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Habit } from '@/lib/habitTypes';
-import { fetchHabits } from '@/lib/api/habitCrudAPI';
+import { fetchHabits } from '@/lib/api/habit';
 
 export function useHabits() {
   const [habits, setHabits] = useState<Habit[]>([]);

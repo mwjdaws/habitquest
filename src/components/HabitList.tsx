@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCompletionsForDate, toggleHabitCompletion, getTodayFormatted } from "@/lib/habits";
-import { fetchHabits } from "@/lib/api/habitCrudAPI";
+import { fetchHabits } from "@/lib/api/habit"; // Updated import path
 import { toast } from "@/components/ui/use-toast";
 import { handleApiError } from "@/lib/error-utils";
 import { HabitCompletion } from "@/lib/habitTypes";
