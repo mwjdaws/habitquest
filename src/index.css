@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -115,11 +116,18 @@
 }
 
 :root {
-  will-change: --primary, --accent, --secondary, --ring;
+  will-change: --primary, --accent, --secondary, --ring, --background, --foreground, --card, --card-foreground;
   transition: --primary 0.3s ease, 
               --accent 0.3s ease, 
               --secondary 0.3s ease,
               --ring 0.3s ease,
               --sidebar-primary 0.3s ease,
-              --habit-purple 0.3s ease;
+              --habit-purple 0.3s ease,
+              --background 0.3s ease,
+              --foreground 0.3s ease,
+              --card 0.3s ease,
+              --card-foreground 0.3s ease,
+              --border 0.3s ease,
+              --muted 0.3s ease,
+              --muted-foreground 0.3s ease;
 }

@@ -27,8 +27,8 @@ export function ThemeSwitcher() {
           <Palette className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-3" align="end">
-        <div className="space-y-2">
+      <PopoverContent className="w-64 p-3" align="end">
+        <div className="space-y-3">
           <h4 className="text-sm font-medium">Theme</h4>
           <div className="grid grid-cols-3 gap-2">
             {colorThemes.map((theme) => (
@@ -36,20 +36,32 @@ export function ThemeSwitcher() {
                 key={theme.name}
                 variant="outline"
                 size="sm"
-                className={`h-8 p-0 border ${
+                className={`h-10 p-0 border overflow-hidden ${
                   currentTheme === theme.name ? "ring-2 ring-primary ring-offset-2" : ""
                 }`}
                 style={{ 
-                  backgroundColor: theme.primaryColor,
                   transition: "all 0.2s ease" 
                 }}
                 onClick={() => handleThemeChange(theme.name)}
                 title={theme.name}
               >
+                <div className="flex flex-col w-full h-full">
+                  <div 
+                    className="w-full h-6" 
+                    style={{ backgroundColor: theme.primaryColor }}
+                  ></div>
+                  <div 
+                    className="w-full h-3" 
+                    style={{ backgroundColor: theme.accentColor }}
+                  ></div>
+                </div>
                 <span className="sr-only">{theme.name}</span>
               </Button>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Current: {currentTheme}
+          </p>
         </div>
       </PopoverContent>
     </Popover>
