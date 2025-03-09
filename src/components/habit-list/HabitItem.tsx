@@ -53,6 +53,8 @@ export function HabitItem({
   };
 
   const handleQuickDelete = async () => {
+    if (isProcessing) return; // Prevent multiple clicks
+    
     setIsProcessing(true);
     try {
       console.log(`Starting deletion of habit ID: ${habit.id}`);
@@ -66,16 +68,14 @@ export function HabitItem({
       
       setShowDeleteDialog(false);
       
-      // Use a slight delay to ensure state is updated properly
-      setTimeout(() => {
-        if (onDelete) {
-          console.log("Calling onDelete callback");
-          onDelete();
-        } else {
-          console.log("Calling onUpdate callback");
-          onUpdate();
-        }
-      }, 100);
+      // Call the appropriate callback
+      if (onDelete) {
+        console.log("Calling onDelete callback");
+        onDelete();
+      } else {
+        console.log("Calling onUpdate callback");
+        onUpdate();
+      }
     } catch (error) {
       console.error("Error deleting habit:", error);
       toast({
@@ -89,6 +89,8 @@ export function HabitItem({
   };
 
   const handleQuickArchive = async () => {
+    if (isProcessing) return; // Prevent multiple clicks
+    
     setIsProcessing(true);
     try {
       console.log(`Starting archiving of habit ID: ${habit.id}`);
@@ -102,16 +104,14 @@ export function HabitItem({
       
       setShowArchiveDialog(false);
       
-      // Use a slight delay to ensure state is updated properly
-      setTimeout(() => {
-        if (onDelete) {
-          console.log("Calling onDelete callback after archive");
-          onDelete();
-        } else {
-          console.log("Calling onUpdate callback after archive");
-          onUpdate();
-        }
-      }, 100);
+      // Call the appropriate callback
+      if (onDelete) {
+        console.log("Calling onDelete callback after archive");
+        onDelete();
+      } else {
+        console.log("Calling onUpdate callback after archive");
+        onUpdate();
+      }
     } catch (error) {
       console.error("Error archiving habit:", error);
       toast({
@@ -220,7 +220,9 @@ export function HabitItem({
       </Card>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <Dialog open={showDeleteDialog} onOpenChange={(open) => {
+        if (!isProcessing) setShowDeleteDialog(open);
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Habit</DialogTitle>
@@ -239,7 +241,7 @@ export function HabitItem({
               {isProcessing ? "Deleting..." : "Delete Permanently"}
             </Button>
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" disabled={isProcessing}>
                 Cancel
               </Button>
             </DialogClose>
@@ -248,7 +250,9 @@ export function HabitItem({
       </Dialog>
 
       {/* Archive Confirmation Dialog */}
-      <Dialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+      <Dialog open={showArchiveDialog} onOpenChange={(open) => {
+        if (!isProcessing) setShowArchiveDialog(open);
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Archive Habit</DialogTitle>
@@ -267,7 +271,7 @@ export function HabitItem({
               {isProcessing ? "Archiving..." : "Archive Habit"}
             </Button>
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" disabled={isProcessing}>
                 Cancel
               </Button>
             </DialogClose>

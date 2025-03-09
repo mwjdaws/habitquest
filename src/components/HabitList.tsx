@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCompletionsForDate, toggleHabitCompletion, getTodayFormatted } from "@/lib/habits";
 import { fetchHabits } from "@/lib/api/habitCrudAPI";
 import { toast } from "@/components/ui/use-toast";
@@ -20,8 +20,9 @@ export function HabitList() {
   const [completions, setCompletions] = useState<HabitCompletion[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
-  const [refreshCounter, setRefreshCounter] = useState(0); // Add counter to force refetch
+  const [refreshCounter, setRefreshCounter] = useState(0);
   const today = getTodayFormatted();
+  const queryClient = useQueryClient();
 
   // Update query key to include refreshCounter to force refetch
   const { 
@@ -42,7 +43,9 @@ export function HabitList() {
 
   const fetchCompletions = async () => {
     try {
+      console.log("Fetching completions for date:", today);
       const data = await getCompletionsForDate(today);
+      console.log("Received completions:", data);
       setCompletions(data);
     } catch (error) {
       console.error("Error fetching completions:", error);
@@ -57,10 +60,24 @@ export function HabitList() {
   // Enhanced refetch function to ensure all data is refreshed
   const refreshAllData = useCallback(async () => {
     console.log("Refreshing all habit data...");
-    setRefreshCounter(prev => prev + 1); // Increment counter to force refetch
-    await refetchHabits();
-    await fetchCompletions();
-  }, [refetchHabits]);
+    
+    // Invalidate queries first
+    queryClient.invalidateQueries({ queryKey: ['habits'] });
+    
+    // Then update the refresh counter to force component refresh
+    setRefreshCounter(prev => prev + 1);
+    
+    try {
+      // Explicitly fetch the data
+      await Promise.all([
+        refetchHabits(),
+        fetchCompletions()
+      ]);
+      console.log("All habit data refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing habit data:", error);
+    }
+  }, [refetchHabits, queryClient]);
 
   const handleToggleCompletion = async (habitId: string) => {
     try {
@@ -68,7 +85,6 @@ export function HabitList() {
       const isCompleted = completions.some(c => c.habit_id === habitId);
       await toggleHabitCompletion(habitId, today, isCompleted);
       await fetchCompletions();
-      await refetchHabits();
       
       toast({
         title: isCompleted ? "Habit unmarked" : "Habit completed",
@@ -92,13 +108,17 @@ export function HabitList() {
 
   const handleHabitDeleted = async () => {
     console.log("Habit deleted, refreshing list...");
-    await refreshAllData();
-    setShowForm(false);
     
-    toast({
-      title: "Habit removed",
-      description: "Your habit has been removed successfully",
-    });
+    // Add a small delay before refreshing to ensure database operations are complete
+    setTimeout(async () => {
+      await refreshAllData();
+      setShowForm(false);
+      
+      toast({
+        title: "Habit removed",
+        description: "Your habit has been removed successfully",
+      });
+    }, 300);
   };
 
   if (isLoading) return <LoadingState />;
@@ -151,7 +171,7 @@ export function HabitList() {
                 habit={habit} 
                 isCompleted={completions.some(c => c.habit_id === habit.id)} 
                 onToggle={handleToggleCompletion}
-                onUpdate={refreshAllData} // Change to use refreshAllData
+                onUpdate={refreshAllData} // Use refreshAllData
                 onDelete={handleHabitDeleted}
               />
             </motion.div>

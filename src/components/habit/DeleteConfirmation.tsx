@@ -24,22 +24,33 @@ export function DeleteConfirmation({
 }: DeleteConfirmationProps) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [action, setAction] = useState<'delete' | 'archive'>('delete');
+  const [isProcessing, setIsProcessing] = useState(false); // Add a local processing state
 
-  const handleConfirm = () => {
-    if (action === 'delete') {
-      onConfirm();
-    } else if (action === 'archive' && onArchive) {
-      onArchive();
+  const handleConfirm = async () => {
+    if (isProcessing || isLoading) return; // Prevent multiple clicks
+    
+    setIsProcessing(true);
+    try {
+      if (action === 'delete') {
+        await onConfirm();
+      } else if (action === 'archive' && onArchive) {
+        await onArchive();
+      }
+      setShowConfirm(false);
+    } finally {
+      // We don't reset isProcessing here because the component will likely unmount
+      // after a successful operation
     }
-    setShowConfirm(false);
   };
 
   const handleDelete = () => {
+    if (isProcessing || isLoading) return; // Prevent multiple clicks
     setAction('delete');
     setShowConfirm(true);
   };
 
   const handleArchive = () => {
+    if (isProcessing || isLoading) return; // Prevent multiple clicks
     setAction('archive');
     setShowConfirm(true);
   };
@@ -58,18 +69,18 @@ export function DeleteConfirmation({
               type="button" 
               variant="destructive" 
               onClick={handleConfirm}
-              disabled={isLoading}
+              disabled={isLoading || isProcessing}
               size="sm"
             >
               {action === 'delete' ? (
                 <>
                   <Trash className="h-4 w-4 mr-1" />
-                  {confirmText}
+                  {isProcessing ? "Processing..." : confirmText}
                 </>
               ) : (
                 <>
                   <Archive className="h-4 w-4 mr-1" />
-                  Confirm Archive
+                  {isProcessing ? "Processing..." : "Confirm Archive"}
                 </>
               )}
             </Button>
@@ -77,7 +88,7 @@ export function DeleteConfirmation({
               type="button" 
               variant="outline" 
               onClick={() => setShowConfirm(false)}
-              disabled={isLoading}
+              disabled={isLoading || isProcessing}
               size="sm"
             >
               Cancel
@@ -92,7 +103,7 @@ export function DeleteConfirmation({
             size="sm"
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={handleDelete}
-            disabled={isLoading}
+            disabled={isLoading || isProcessing}
           >
             <Trash className="h-4 w-4 mr-1" />
             {buttonText}
@@ -105,7 +116,7 @@ export function DeleteConfirmation({
               size="sm"
               className="text-muted-foreground hover:text-muted-foreground"
               onClick={handleArchive}
-              disabled={isLoading}
+              disabled={isLoading || isProcessing}
             >
               <Archive className="h-4 w-4 mr-1" />
               Archive

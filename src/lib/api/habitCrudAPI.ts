@@ -135,7 +135,7 @@ export const unarchiveHabit = async (id: string) => {
 
 /**
  * Deletes a habit for the authenticated user
- * This function now first deletes related records in habit_completions and habit_failures
+ * This function first deletes related records in habit_completions and habit_failures
  * before deleting the habit itself
  */
 export const deleteHabit = async (id: string) => {
@@ -149,8 +149,7 @@ export const deleteHabit = async (id: string) => {
     const { error: completionsError } = await supabase
       .from("habit_completions")
       .delete()
-      .eq("habit_id", id)
-      .eq("user_id", userId);
+      .eq("habit_id", id);
 
     if (completionsError) {
       console.error(`Error deleting completions: ${completionsError.message}`);
@@ -163,8 +162,7 @@ export const deleteHabit = async (id: string) => {
     const { error: failuresError } = await supabase
       .from("habit_failures")
       .delete()
-      .eq("habit_id", id)
-      .eq("user_id", userId);
+      .eq("habit_id", id);
     
     if (failuresError) {
       console.error(`Error deleting failures: ${failuresError.message}`);
@@ -172,13 +170,15 @@ export const deleteHabit = async (id: string) => {
     }
     console.log("Failures deleted successfully");
 
+    // Add a small delay to ensure all related records are deleted
+    await new Promise(resolve => setTimeout(resolve, 200));
+
     // Finally delete the habit itself
     console.log(`Deleting habit ID: ${id}`);
     const { error } = await supabase
       .from("habits")
       .delete()
-      .eq("id", id)
-      .eq("user_id", userId);
+      .eq("id", id);
 
     if (error) {
       console.error(`Error deleting habit: ${error.message}`);
@@ -186,6 +186,7 @@ export const deleteHabit = async (id: string) => {
     }
     console.log("Habit deleted successfully");
     
+    // Return true to indicate successful deletion
     return true;
     
   } catch (error) {

@@ -13,9 +13,12 @@ type HabitFormProps = {
 
 export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps) {
   const isEdit = !!habit;
+  let isDeleting = false; // Add flag to prevent multiple deletes
 
   const handleDelete = async () => {
-    if (!isEdit || !habit) return;
+    if (!isEdit || !habit || isDeleting) return;
+    
+    isDeleting = true; // Set flag to prevent multiple deletion calls
     
     try {
       console.log("HabitForm - Deleting habit:", habit.id);
@@ -27,17 +30,14 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
         description: "Your habit has been permanently deleted",
       });
       
-      // Call the onDelete callback if provided, otherwise fall back to onSave
-      // Using a small timeout to ensure state updates properly
-      setTimeout(() => {
-        if (onDelete) {
-          console.log("HabitForm - Calling onDelete callback");
-          onDelete();
-        } else {
-          console.log("HabitForm - Calling onSave callback as fallback");
-          onSave();
-        }
-      }, 100);
+      // Call the appropriate callback
+      if (onDelete) {
+        console.log("HabitForm - Calling onDelete callback");
+        onDelete();
+      } else {
+        console.log("HabitForm - Calling onSave callback as fallback");
+        onSave();
+      }
     } catch (error) {
       console.error("Error deleting habit:", error);
       toast({
@@ -45,11 +45,14 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
         description: "Failed to delete habit. Please try again.",
         variant: "destructive",
       });
+      isDeleting = false; // Reset the flag on error
     }
   };
 
   const handleArchive = async () => {
-    if (!isEdit || !habit) return;
+    if (!isEdit || !habit || isDeleting) return;
+    
+    isDeleting = true; // Set flag to prevent multiple archive calls
     
     try {
       console.log("HabitForm - Archiving habit:", habit.id);
@@ -61,17 +64,14 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
         description: "Your habit has been archived and can be restored later",
       });
       
-      // Call the onDelete callback if provided, otherwise fall back to onSave
-      // Using a small timeout to ensure state updates properly
-      setTimeout(() => {
-        if (onDelete) {
-          console.log("HabitForm - Calling onDelete callback after archive");
-          onDelete();
-        } else {
-          console.log("HabitForm - Calling onSave callback as fallback after archive");
-          onSave();
-        }
-      }, 100);
+      // Call the appropriate callback
+      if (onDelete) {
+        console.log("HabitForm - Calling onDelete callback after archive");
+        onDelete();
+      } else {
+        console.log("HabitForm - Calling onSave callback as fallback after archive");
+        onSave();
+      }
     } catch (error) {
       console.error("Error archiving habit:", error);
       toast({
@@ -79,6 +79,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
         description: "Failed to archive habit",
         variant: "destructive",
       });
+      isDeleting = false; // Reset the flag on error
     }
   };
 
