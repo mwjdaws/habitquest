@@ -178,8 +178,8 @@ export function TaskForm({ onSubmit, onCancel, initialData, title }: TaskFormPro
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {/* Option to clear the tag */}
-                <SelectItem value="">
+                {/* Option to clear the tag - use "no-tag" instead of empty string */}
+                <SelectItem value="no-tag">
                   <span className="text-muted-foreground">No tag</span>
                 </SelectItem>
                 
@@ -194,7 +194,7 @@ export function TaskForm({ onSubmit, onCancel, initialData, title }: TaskFormPro
                 ))}
                 
                 {/* Custom tag input */}
-                {tag && !availableTags.includes(tag) && (
+                {tag && !availableTags.includes(tag) && tag !== "no-tag" && (
                   <SelectItem value={tag}>
                     <div className="flex items-center">
                       <TagIcon className="mr-2 h-4 w-4" />
@@ -210,7 +210,7 @@ export function TaskForm({ onSubmit, onCancel, initialData, title }: TaskFormPro
                     id="newTag"
                     placeholder="Enter new tag"
                     className="mt-1"
-                    value={tag === undefined ? "" : tag}
+                    value={tag === "no-tag" ? "" : (tag || "")}
                     onChange={(e) => {
                       if (e.target.value) {
                         setTag(e.target.value);
