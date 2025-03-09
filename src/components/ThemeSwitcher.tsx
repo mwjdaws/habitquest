@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Palette, Circle } from "lucide-react";
+import { Palette } from "lucide-react";
 
 type ColorTheme = {
   name: string;
@@ -48,6 +48,80 @@ const colorThemes: ColorTheme[] = [
   },
 ];
 
+// Helper to convert hex to hsl
+function hexToHSL(hex: string): string {
+  // Remove the # if present
+  hex = hex.replace(/^#/, '');
+  
+  // Parse the hex values
+  let r = parseInt(hex.substring(0, 2), 16) / 255;
+  let g = parseInt(hex.substring(2, 4), 16) / 255;
+  let b = parseInt(hex.substring(4, 6), 16) / 255;
+  
+  // Find min and max values
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  
+  // Calculate lightness
+  let l = (max + min) / 2;
+  
+  let h = 0;
+  let s = 0;
+  
+  if (max !== min) {
+    // Calculate saturation
+    s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
+    
+    // Calculate hue
+    if (max === r) {
+      h = (g - b) / (max - min) + (g < b ? 6 : 0);
+    } else if (max === g) {
+      h = (b - r) / (max - min) + 2;
+    } else {
+      h = (r - g) / (max - min) + 4;
+    }
+    h /= 6;
+  }
+  
+  // Convert to degrees and percentages
+  h = Math.round(h * 360);
+  s = Math.round(s * 100);
+  l = Math.round(l * 100);
+  
+  return `${h} ${s}% ${l}%`;
+}
+
+// Check if a color is in HSL format
+function isHSL(color: string): boolean {
+  return color.startsWith('hsl(') || color.startsWith('hsl ');
+}
+
+// Extract HSL values from a hsl() string or return converted hex
+function extractHSL(color: string): string {
+  if (isHSL(color)) {
+    // Extract h, s, l values from hsl format
+    const hslMatch = color.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/);
+    if (hslMatch) {
+      return `${hslMatch[1]} ${hslMatch[2]}% ${hslMatch[3]}%`;
+    }
+    
+    // For format like "hsl(260 96% 66%)"
+    const hslSpaceMatch = color.match(/hsl\(\s*(\d+)\s+(\d+)%\s+(\d+)%\s*\)/);
+    if (hslSpaceMatch) {
+      return `${hslSpaceMatch[1]} ${hslSpaceMatch[2]}% ${hslSpaceMatch[3]}%`;
+    }
+    
+    // Already in "260 96% 66%" format
+    const plainHSLMatch = color.match(/(\d+)\s+(\d+)%\s+(\d+)%/);
+    if (plainHSLMatch) {
+      return color;
+    }
+  }
+  
+  // Convert hex to HSL
+  return hexToHSL(color);
+}
+
 export function ThemeSwitcher() {
   const [currentTheme, setCurrentTheme] = useState<string>("Default Purple");
 
@@ -55,13 +129,26 @@ export function ThemeSwitcher() {
   useEffect(() => {
     const theme = colorThemes.find(theme => theme.name === currentTheme);
     if (theme) {
-      // Update CSS variables for the theme
-      document.documentElement.style.setProperty('--primary', theme.primaryColor);
-      document.documentElement.style.setProperty('--accent', theme.accentColor);
+      // Convert colors to HSL values for CSS variables
+      const primaryHSL = extractHSL(theme.primaryColor);
+      const accentHSL = extractHSL(theme.accentColor);
       
-      // Update habit colors based on the primary color
-      document.documentElement.style.setProperty('--habit-purple', theme.primaryColor);
-      document.documentElement.style.setProperty('--sidebar-primary', theme.primaryColor);
+      // Update CSS variables for the theme
+      document.documentElement.style.setProperty('--primary', primaryHSL);
+      document.documentElement.style.setProperty('--accent', accentHSL);
+      document.documentElement.style.setProperty('--secondary', primaryHSL.replace(/\d+%$/, match => `${parseInt(match) - 16}%`));
+      
+      // Update habit colors and sidebar
+      if (theme.primaryColor.startsWith('#')) {
+        document.documentElement.style.setProperty('--habit-purple', theme.primaryColor);
+        document.documentElement.style.setProperty('--sidebar-primary', theme.primaryColor);
+      } else {
+        // If it's HSL, convert to hex for habits and sidebar
+        document.documentElement.style.setProperty('--habit-purple', `hsl(${primaryHSL})`);
+        document.documentElement.style.setProperty('--sidebar-primary', `hsl(${primaryHSL})`);
+      }
+      
+      console.log(`Theme changed to ${currentTheme} with primary: ${primaryHSL}, accent: ${accentHSL}`);
     }
   }, [currentTheme]);
 
