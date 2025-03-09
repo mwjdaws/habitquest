@@ -1,9 +1,9 @@
 
 import React from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { SleepFormData } from "@/lib/sleepTypes";
+import { FormFieldWrapper } from "./FormFieldWrapper";
 
 interface DateFieldProps {
   form: UseFormReturn<SleepFormData>;
@@ -11,18 +11,14 @@ interface DateFieldProps {
 
 export const DateField: React.FC<DateFieldProps> = ({ form }) => {
   return (
-    <FormField
-      control={form.control}
+    <FormFieldWrapper
+      form={form}
       name="sleep_date"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Date</FormLabel>
-          <FormControl>
-            <Input type="date" {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
+      label="Date"
+    >
+      {field => (
+        <Input type="date" {...field} />
       )}
-    />
+    </FormFieldWrapper>
   );
 };
