@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Tag } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { CreateJournalEntryData } from '@/lib/journalTypes';
+import { QuickPromptCards } from './QuickPromptCards';
 
 interface JournalEntryFormProps {
   onSave: (data: CreateJournalEntryData) => void;
@@ -59,10 +60,24 @@ export function JournalEntryForm({ onSave, availableTags, isSaving }: JournalEnt
     }
   };
   
+  const handleSelectPrompt = (promptText: string, promptTag: string) => {
+    setContent(promptText + "\n\n");
+    setTag(promptTag);
+    
+    // Focus the textarea and place cursor at the end after the prompt
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.selectionStart = promptText.length + 2;
+      textareaRef.current.selectionEnd = promptText.length + 2;
+    }
+  };
+  
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">
         <div className="space-y-4">
+          <QuickPromptCards onSelectPrompt={handleSelectPrompt} />
+          
           <div>
             <Textarea
               ref={textareaRef}

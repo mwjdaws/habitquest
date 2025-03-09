@@ -181,6 +181,27 @@ export type Database = {
         }
         Relationships: []
       }
+      journal_prompts: {
+        Row: {
+          created_at: string
+          id: string
+          tag: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tag: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tag?: string
+          text?: string
+        }
+        Relationships: []
+      }
       key_results: {
         Row: {
           created_at: string
