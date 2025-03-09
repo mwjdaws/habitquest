@@ -47,9 +47,9 @@ const Dashboard = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
       transition={{ duration: 0.4, delay: staggerDelay * 0 }}
-      className="h-full"
+      className="h-full overflow-auto"
     >
-      <div className="h-full">
+      <div className="h-full p-2">
         <HabitTracker onHabitChange={refreshData} key={`habit-tracker-${refreshKey}`} />
       </div>
     </motion.div>
@@ -60,8 +60,11 @@ const Dashboard = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
       transition={{ duration: 0.4, delay: staggerDelay * 1 }}
+      className="h-full overflow-auto"
     >
-      <TaskStats />
+      <div className="h-full p-2">
+        <TaskStats />
+      </div>
     </motion.div>
   ), [isLoaded, staggerDelay]);
 
@@ -70,8 +73,11 @@ const Dashboard = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
       transition={{ duration: 0.4, delay: staggerDelay * 2 }}
+      className="h-full overflow-auto"
     >
-      <StreakStats onDataChange={refreshData} />
+      <div className="h-full p-2">
+        <StreakStats onDataChange={refreshData} />
+      </div>
     </motion.div>
   ), [isLoaded, staggerDelay, refreshData]);
 
@@ -80,8 +86,11 @@ const Dashboard = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
       transition={{ duration: 0.4, delay: staggerDelay * 3 }}
+      className="h-full overflow-auto"
     >
-      <UpcomingTasks />
+      <div className="h-full p-2">
+        <UpcomingTasks />
+      </div>
     </motion.div>
   ), [isLoaded, staggerDelay]);
 
@@ -90,8 +99,11 @@ const Dashboard = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
       transition={{ duration: 0.4, delay: staggerDelay * 4 }}
+      className="h-full overflow-auto"
     >
-      <GoalsProgress />
+      <div className="h-full p-2">
+        <GoalsProgress />
+      </div>
     </motion.div>
   ), [isLoaded, staggerDelay]);
 
@@ -100,8 +112,11 @@ const Dashboard = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
       transition={{ duration: 0.4, delay: staggerDelay * 5 }}
+      className="h-full overflow-auto"
     >
-      <HabitTrends />
+      <div className="h-full p-2">
+        <HabitTrends />
+      </div>
     </motion.div>
   ), [isLoaded, staggerDelay]);
 
@@ -110,8 +125,11 @@ const Dashboard = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
       transition={{ duration: 0.4, delay: staggerDelay * 6 }}
+      className="h-full overflow-auto"
     >
-      <JournalStats />
+      <div className="h-full p-2">
+        <JournalStats />
+      </div>
     </motion.div>
   ), [isLoaded, staggerDelay]);
 
@@ -121,6 +139,7 @@ const Dashboard = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
+        className="dashboard-container"
       >
         <DashboardGrid>
           {HabitTrackerMemo}

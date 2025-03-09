@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -130,4 +129,38 @@
               --border 0.3s ease,
               --muted 0.3s ease,
               --muted-foreground 0.3s ease;
+}
+
+/* Dashboard Grid Styles */
+.dashboard-item {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  height: 100%;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dashboard-item:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.react-grid-item.react-grid-placeholder {
+  background-color: hsl(var(--primary) / 0.2);
+  border: 2px dashed hsl(var(--primary));
+  border-radius: var(--radius);
+}
+
+.react-resizable-handle {
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.react-grid-item:hover .react-resizable-handle {
+  opacity: 1;
+}
+
+.dashboard-grid-container .layout {
+  min-height: calc(100vh - 200px);
 }
