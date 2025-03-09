@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Goal, KeyResult, CreateGoalData } from '@/lib/goalTypes';
 import { 
@@ -8,7 +7,7 @@ import {
   deleteGoal, 
   updateGoal,
   completeGoal 
-} from '@/lib/api/goalAPI';
+} from '@/lib/api/goal';
 
 // Use 'export type' for re-exporting types when isolatedModules is enabled
 export type { Goal, KeyResult, CreateGoalData } from '@/lib/goalTypes';
