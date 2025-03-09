@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCompletionsForDate, toggleHabitCompletion, getTodayFormatted } from "@/lib/habits";
 import { fetchHabits } from "@/lib/api/habit"; // Updated import path
 import { toast } from "@/components/ui/use-toast";
-import { handleApiError } from "@/lib/error-utils";
+import { formatErrorMessage } from "@/lib/error-utils";
 import { HabitCompletion } from "@/lib/habitTypes";
 import { HabitItem } from "./habit-list/HabitItem";
 import { NewHabitButton } from "./habit-list/NewHabitButton";
@@ -37,7 +37,9 @@ export function HabitList() {
 
   useEffect(() => {
     if (queryError) {
-      setError(handleApiError(queryError, "fetching habits", "Failed to load your habits"));
+      // Fix: Extract just the error message string instead of passing the whole object
+      const errorMessage = formatErrorMessage(queryError);
+      setError(errorMessage);
     }
   }, [queryError]);
 
