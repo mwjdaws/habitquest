@@ -1,8 +1,8 @@
 
 import { Outlet } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { UserMenu } from "./UserMenu";
+import { AppHeader } from "./AppHeader";
 
 export function Layout() {
   return (
@@ -11,13 +11,7 @@ export function Layout() {
         <AppSidebar />
         <main className="flex-1 overflow-auto">
           <div className="container py-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <SidebarTrigger />
-                <h1 className="text-2xl font-bold ml-4">Perfectio</h1>
-              </div>
-              <UserMenu />
-            </div>
+            <AppHeader />
             <Outlet />
           </div>
         </main>

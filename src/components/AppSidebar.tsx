@@ -1,5 +1,5 @@
 
-import { Calendar, CheckSquare, BarChart, Diamond, BookOpen, Heart, Home, Code } from "lucide-react";
+import { Diamond } from "lucide-react";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -12,54 +12,11 @@ import {
   SidebarMenuItem 
 } from "@/components/ui/sidebar";
 import { useLocation, Link } from "react-router-dom";
+import { navigationItems } from "@/lib/navigation";
 
 export function AppSidebar() {
   const location = useLocation();
   
-  // Navigation items
-  const menuItems = [
-    {
-      title: "Dashboard",
-      path: "/dashboard",
-      icon: Home,
-    },
-    {
-      title: "Habits",
-      path: "/habits",
-      icon: Diamond,
-    },
-    {
-      title: "Tasks",
-      path: "/tasks",
-      icon: CheckSquare,
-    },
-    {
-      title: "Goals",
-      path: "/goals",
-      icon: Calendar,
-    },
-    {
-      title: "Journal",
-      path: "/journal",
-      icon: BookOpen,
-    },
-    {
-      title: "Mood",
-      path: "/mood",
-      icon: Heart,
-    },
-    {
-      title: "Analytics",
-      path: "/analytics",
-      icon: BarChart,
-    },
-    {
-      title: "Developer",
-      path: "/developer",
-      icon: Code,
-    },
-  ];
-
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -73,7 +30,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton asChild className={
                     location.pathname === item.path 
