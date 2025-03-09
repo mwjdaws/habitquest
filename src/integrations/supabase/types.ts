@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      goals: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          name: string
+          objective: string
+          progress: number
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          name: string
+          objective: string
+          progress?: number
+          start_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          name?: string
+          objective?: string
+          progress?: number
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       habit_completions: {
         Row: {
           completed_date: string
@@ -117,6 +153,54 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      key_results: {
+        Row: {
+          created_at: string
+          current_value: number
+          description: string
+          goal_id: string
+          habit_id: string | null
+          id: string
+          target_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number
+          description: string
+          goal_id: string
+          habit_id?: string | null
+          id?: string
+          target_value: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number
+          description?: string
+          goal_id?: string
+          habit_id?: string | null
+          id?: string
+          target_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_results_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_results_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
