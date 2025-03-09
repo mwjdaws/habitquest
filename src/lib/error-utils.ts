@@ -93,6 +93,20 @@ export const isNetworkError = (error: unknown): boolean => {
 };
 
 /**
+ * Basic error handler that formats errors and returns the message
+ * @param error The error object
+ * @param context Optional context about what action was being performed
+ * @returns Formatted error message string
+ */
+export const formatErrorWithContext = (
+  error: unknown,
+  context?: string
+): string => {
+  const errorMessage = formatErrorMessage(error);
+  return context ? `Error ${context}: ${errorMessage}` : errorMessage;
+};
+
+/**
  * General error handler that formats errors and shows toast notifications when needed
  * @param error The error object
  * @param actionContext Optional context about what action was being performed
@@ -106,10 +120,9 @@ export const handleError = (
   userFriendlyMessage?: string,
   showToast: boolean = true
 ): string => {
-  const errorMessage = formatErrorMessage(error);
-  const contextMessage = actionContext ? `Error ${actionContext}: ${errorMessage}` : errorMessage;
+  const errorMessage = formatErrorWithContext(error, actionContext);
   
-  console.error(contextMessage);
+  console.error(errorMessage);
   
   if (showToast) {
     toast({
@@ -123,19 +136,20 @@ export const handleError = (
 };
 
 /**
- * Handles API errors and displays a toast notification
+ * Handles API errors and returns a result with success/error information
  * @param error The error object
  * @param actionName The name of the action that failed
  * @param defaultMessage A default error message
  * @param showToast Whether to show a toast notification
+ * @returns Object containing success status and error message
  */
-export const handleApiError = (
+export const handleApiError = <T>(
   error: unknown,
   actionName: string,
-  defaultMessage: string,
+  defaultMessage?: string,
   showToast: boolean = true
-): string => {
-  const errorMessage = `Error ${actionName}: ${formatErrorMessage(error)}`;
+): { success: false, error: string, data?: T } => {
+  const errorMessage = formatErrorWithContext(error, actionName);
   console.error(errorMessage);
 
   if (showToast) {
@@ -146,7 +160,32 @@ export const handleApiError = (
     });
   }
 
-  return errorMessage;
+  return { 
+    success: false, 
+    error: errorMessage 
+  };
+};
+
+/**
+ * Wraps an API call with standard error handling
+ * @param apiCall The function to execute
+ * @param actionName Description of the action
+ * @param errorMessage Custom error message to display on failure
+ * @param showToast Whether to show error toast
+ * @returns Result object with success status, data and error info
+ */
+export const safeApiCall = async <T>(
+  apiCall: () => Promise<T>,
+  actionName: string,
+  errorMessage?: string,
+  showToast: boolean = true
+): Promise<{ success: boolean, data?: T, error?: string }> => {
+  try {
+    const data = await apiCall();
+    return { success: true, data };
+  } catch (error) {
+    return handleApiError<T>(error, actionName, errorMessage, showToast);
+  }
 };
 
 /**

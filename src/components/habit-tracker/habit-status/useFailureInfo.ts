@@ -17,16 +17,11 @@ export function useFailureInfo(
       return '';
     }
     
-    try {
-      // Create a Map for O(1) lookup performance instead of using find() which is O(n)
-      const failureMap = new Map(failures.map(f => [f.habit_id, f]));
-      const failure = failureMap.get(habitId);
-      
-      // If failure exists, use its reason, otherwise use a generic message
-      return failure?.reason || "Failed";
-    } catch (error) {
-      console.error("Error processing failure info:", error);
-      return "Failed";
-    }
+    // Create a Map for O(1) lookup performance instead of using find() which is O(n)
+    const failureMap = new Map(failures.map(f => [f.habit_id, f]));
+    const failure = failureMap.get(habitId);
+    
+    // If failure exists, use its reason, otherwise use a generic message
+    return failure?.reason || "Failed";
   }, [isFailed, failures, habitId]);
 }

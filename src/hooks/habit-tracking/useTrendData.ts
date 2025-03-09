@@ -1,10 +1,10 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { fetchHabits } from "@/lib/api/habit"; // Updated import path
+import { fetchHabits } from "@/lib/api/habit"; 
 import { getCompletionTrends, getFailureTrends, getStreakRecords } from "@/lib/api/trendAPI";
 import { Habit } from "@/lib/habitTypes";
-import { toast } from "@/components/ui/use-toast";
 import { useTimeFilter } from "./utils/useTimeFilter";
+import { safeApiCall } from "@/lib/error-utils";
 
 export interface TrendData {
   habits: Habit[];
@@ -37,35 +37,40 @@ export function useTrendData() {
       
       const days = getDays();
       
-      // Use Promise.all for concurrent fetching
-      const [habitsData, completionsData, failuresData, streakRecordsData] = await Promise.all([
-        fetchHabits(),
-        getCompletionTrends(days),
-        getFailureTrends(days),
-        getStreakRecords()
+      // Use Promise.all for concurrent fetching with the new safeApiCall utility
+      const [habitsResult, completionsResult, failuresResult, streakRecordsResult] = await Promise.all([
+        safeApiCall(() => fetchHabits(), "fetching habits", undefined, false),
+        safeApiCall(() => getCompletionTrends(days), "fetching completion trends", undefined, false),
+        safeApiCall(() => getFailureTrends(days), "fetching failure trends", undefined, false),
+        safeApiCall(() => getStreakRecords(), "fetching streak records", undefined, false)
       ]);
       
+      // Check if any of the API calls failed
+      const errorResults = [habitsResult, completionsResult, failuresResult, streakRecordsResult]
+        .filter(result => !result.success);
+      
+      if (errorResults.length > 0) {
+        // Use the first error as the main error
+        const firstError = errorResults[0].error || "Failed to load trend data";
+        throw new Error(firstError);
+      }
+      
       setData({
-        habits: habitsData || [],
-        completions: completionsData || [],
-        failures: failuresData || [],
-        streakRecords: streakRecordsData || [],
+        habits: habitsResult.data || [],
+        completions: completionsResult.data || [],
+        failures: failuresResult.data || [],
+        streakRecords: streakRecordsResult.data || [],
         loading: false,
         error: null
       });
     } catch (error) {
       console.error("Error fetching trend data:", error);
+      // Use spread operator with previous state to ensure we maintain the array types
       setData(prev => ({ 
         ...prev, 
         loading: false, 
-        error: "Failed to load habit trend data" 
+        error: error instanceof Error ? error.message : "Failed to load habit trend data" 
       }));
-      
-      toast({
-        title: "Error",
-        description: "Failed to load habit trend data",
-        variant: "destructive"
-      });
     }
   }, [getDays]);
 

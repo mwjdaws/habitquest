@@ -1,6 +1,6 @@
 
 import { supabase } from "../supabase";
-import { formatErrorMessage, getUserFriendlyErrorMessage } from "../error-utils";
+import { formatErrorMessage, getUserFriendlyErrorMessage, safeApiCall } from "../error-utils";
 
 /**
  * Validates that the user is authenticated
@@ -59,9 +59,15 @@ export async function safeDbOperation<T>(
   actionName: string,
   defaultValue?: T
 ): Promise<T> {
-  try {
-    return await operation();
-  } catch (error) {
-    return handleApiError(error, actionName, defaultValue);
+  const result = await safeApiCall(operation, actionName, undefined, false);
+  
+  if (result.success) {
+    return result.data as T;
   }
+  
+  if (defaultValue !== undefined) {
+    return defaultValue;
+  }
+  
+  throw new Error(result.error);
 }

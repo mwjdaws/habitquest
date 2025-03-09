@@ -10,7 +10,6 @@ type ErrorAlertProps = {
 };
 
 export function ErrorAlert({ message, onRetry }: ErrorAlertProps) {
-  const errorText = typeof message === 'string' ? message : message.message;
   const userFriendlyMessage = getUserFriendlyErrorMessage(message);
   
   return (
