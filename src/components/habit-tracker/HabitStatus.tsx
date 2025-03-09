@@ -1,4 +1,5 @@
-import { memo } from "react";
+
+import { memo, useMemo } from "react";
 import { HabitFailure } from "@/lib/habitTypes";
 import { StatusButtons } from "./habit-status/StatusButtons";
 import { FailedStatus } from "./habit-status/FailedStatus";
@@ -27,8 +28,10 @@ export const HabitStatus = memo(function HabitStatus({
   // Get failure reason if available - using custom hook for clarity
   const failureInfo = useFailureInfo(habitId, isFailed, failures);
   
-  // Early return pattern for improved rendering performance
-  if (isFailed) {
+  // Memoize component instances to prevent recreating them on each render
+  const failedStatusComponent = useMemo(() => {
+    if (!isFailed) return null;
+    
     return (
       <FailedStatus 
         habitId={habitId}
@@ -36,16 +39,23 @@ export const HabitStatus = memo(function HabitStatus({
         onUndoFailure={onUndoFailure}
       />
     );
-  }
+  }, [habitId, isFailed, failureInfo, onUndoFailure]);
   
-  return (
-    <StatusButtons
-      habitId={habitId}
-      isCompleted={isCompleted}
-      onToggleCompletion={onToggleCompletion}
-      onLogFailure={onLogFailure}
-    />
-  );
+  const statusButtonsComponent = useMemo(() => {
+    if (isFailed) return null;
+    
+    return (
+      <StatusButtons
+        habitId={habitId}
+        isCompleted={isCompleted}
+        onToggleCompletion={onToggleCompletion}
+        onLogFailure={onLogFailure}
+      />
+    );
+  }, [habitId, isCompleted, isFailed, onToggleCompletion, onLogFailure]);
+  
+  // Early return pattern for improved rendering performance
+  return isFailed ? failedStatusComponent : statusButtonsComponent;
 }, (prevProps, nextProps) => {
   // Optimized comparison logic that short-circuits early
   if (prevProps.habitId !== nextProps.habitId) return false;
@@ -54,8 +64,14 @@ export const HabitStatus = memo(function HabitStatus({
   
   // Only compare the relevant failure when needed
   if (prevProps.isFailed && nextProps.isFailed) {
-    const prevFailure = prevProps.failures.find(f => f.habit_id === prevProps.habitId);
-    const nextFailure = nextProps.failures.find(f => f.habit_id === nextProps.habitId);
+    // Use Map for O(1) lookups instead of find() which is O(n)
+    const prevFailureMap = new Map(prevProps.failures.map(f => [f.habit_id, f]));
+    const nextFailureMap = new Map(nextProps.failures.map(f => [f.habit_id, f]));
+    
+    const prevFailure = prevFailureMap.get(prevProps.habitId);
+    const nextFailure = nextFailureMap.get(nextProps.habitId);
+    
+    // Check if reasons differ
     return prevFailure?.reason === nextFailure?.reason;
   }
   

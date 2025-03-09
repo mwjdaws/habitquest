@@ -52,17 +52,21 @@ export function habitItemPropsAreEqual(prevProps: any, nextProps: any) {
     }
     
     // Habits are identical, now just check completion and failure status
-    const prevCompleted = new Set(prevProps.completions.map((c: any) => c.habit_id)).has(prevProps.habit.id);
-    const nextCompleted = new Set(nextProps.completions.map((c: any) => c.habit_id)).has(nextProps.habit.id);
+    // Use Set for O(1) lookups instead of some() which is O(n)
+    const prevCompletionIds = new Set(prevProps.completions.map((c: any) => c.habit_id));
+    const nextCompletionIds = new Set(nextProps.completions.map((c: any) => c.habit_id));
+    
+    const prevCompleted = prevCompletionIds.has(prevProps.habit.id);
+    const nextCompleted = nextCompletionIds.has(nextProps.habit.id);
     
     if (prevCompleted !== nextCompleted) return false;
     
-    // More efficient lookup with Map
+    // Use Map for O(1) lookups instead of find() which is O(n)
     const prevFailureMap = new Map(prevProps.failures.map((f: any) => [f.habit_id, f]));
     const nextFailureMap = new Map(nextProps.failures.map((f: any) => [f.habit_id, f]));
     
     const prevFailure = prevFailureMap.get(prevProps.habit.id);
-    const nextFailure = nextFailureMap.get(prevProps.habit.id);
+    const nextFailure = nextFailureMap.get(nextProps.habit.id);
     
     // Short-circuit for both undefined/null
     if (!prevFailure && !nextFailure) return true;

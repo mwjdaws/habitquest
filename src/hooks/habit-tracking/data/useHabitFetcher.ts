@@ -22,6 +22,9 @@ export function useHabitFetcher() {
   const cacheExpiryRef = useRef(0);
   const cachedDataRef = useRef<any>(null);
   const today = getTodayFormatted();
+  
+  // Track pending promises to improve cancellation logic
+  const pendingPromisesRef = useRef<Set<Promise<any>>>(new Set());
 
   // Enhanced data loading with improved error handling, request cancellation, and caching
   const fetchHabitData = useCallback(async (signal?: AbortSignal) => {
@@ -57,12 +60,32 @@ export function useHabitFetcher() {
     console.log(`Starting data fetch (version ${currentVersion})`);
     
     try {      
+      // Create fetch promises
+      const habitsPromise = withRetry(() => fetchHabits(), 2, signal);
+      const completionsPromise = withRetry(() => getCompletionsForDate(today), 2, signal);
+      const failuresPromise = withRetry(() => getFailuresForDate(today), 2, signal);
+      
+      // Add promises to tracking set
+      pendingPromisesRef.current.add(habitsPromise);
+      pendingPromisesRef.current.add(completionsPromise);
+      pendingPromisesRef.current.add(failuresPromise);
+      
       // Optimized data fetching with parallel requests and better error handling
       const [habitsData, completionsData, failuresData] = await Promise.all([
-        withRetry(() => fetchHabits(), 2, signal),
-        withRetry(() => getCompletionsForDate(today), 2, signal),
-        withRetry(() => getFailuresForDate(today), 2, signal)
+        habitsPromise,
+        completionsPromise,
+        failuresPromise
       ]);
+      
+      // Remove completed promises from tracking set
+      pendingPromisesRef.current.delete(habitsPromise);
+      pendingPromisesRef.current.delete(completionsPromise);
+      pendingPromisesRef.current.delete(failuresPromise);
+      
+      if (signal?.aborted) {
+        console.log('Fetch aborted mid-operation');
+        return null;
+      }
       
       if (!habitsData) {
         throw new Error("Failed to fetch habits data");
@@ -128,17 +151,23 @@ export function useHabitFetcher() {
     return result;
   }, [fetchHabitData]);
 
+  // Improved cancellation that aborts all pending requests
   const cancelPendingRequests = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    
+    // Log count of pending promises being canceled
+    console.log(`Canceling ${pendingPromisesRef.current.size} pending promises`);
+    pendingPromisesRef.current.clear();
   }, []);
 
   // Added ability to clear cache explicitly
   const clearCache = useCallback(() => {
     cachedDataRef.current = null;
     cacheExpiryRef.current = 0;
+    console.log("Cache cleared");
   }, []);
   
   return {

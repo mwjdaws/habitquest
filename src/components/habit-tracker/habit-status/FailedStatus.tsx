@@ -2,7 +2,7 @@
 import { X, Undo } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 
 type FailedStatusProps = {
   habitId: string;
@@ -25,10 +25,15 @@ export const FailedStatus = memo(function FailedStatus({
   // Memoize handlers to prevent new function references on each render
   const handleUndo = useCallback(() => onUndoFailure(habitId), [habitId, onUndoFailure]);
   
+  // Memoize motion components to prevent recreation on each render
+  const motionProps = useMemo(() => ({
+    initial: { opacity: 0, scale: 0.9 },
+    animate: { opacity: 1, scale: 1 }
+  }), []);
+  
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      {...motionProps}
       className="flex items-center gap-2"
     >
       <motion.div 
