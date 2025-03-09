@@ -1,5 +1,5 @@
 
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
 import { Badge } from "@/components/ui/badge";
 import { Tag, Zap } from "lucide-react";
@@ -25,12 +25,17 @@ export const HabitItem = memo(function HabitItem({
   onUndoFailure
 }: HabitItemProps) {
   // Use our optimized custom hook for status calculations
-  const { isCompleted, isFailed, bgColorClass } = useHabitStatus(habit, completions, failures);
+  const { isCompleted, isFailed, bgColorClass, failureReason } = useHabitStatus(habit, completions, failures);
   
   // Memoize handlers to prevent new function references on each render
   const handleToggle = useCallback(() => onToggleCompletion(habit.id), [habit.id, onToggleCompletion]);
   const handleFailure = useCallback(() => onLogFailure(habit.id), [habit.id, onLogFailure]);
   const handleUndo = useCallback(() => onUndoFailure(habit.id), [habit.id, onUndoFailure]);
+  
+  // Pre-compute the color style to avoid recalculation during render
+  const colorStyle = useMemo(() => ({
+    backgroundColor: habit.color ? `var(--${habit.color})` : 'var(--habit-purple)'
+  }), [habit.color]);
   
   return (
     <div 
@@ -39,7 +44,7 @@ export const HabitItem = memo(function HabitItem({
       <div className="flex items-center gap-3">
         <div 
           className="w-1 h-10 rounded-full" 
-          style={{ backgroundColor: habit.color ? `var(--${habit.color})` : 'var(--habit-purple)' }}
+          style={colorStyle}
         />
         <div>
           <div className="flex items-center gap-2">

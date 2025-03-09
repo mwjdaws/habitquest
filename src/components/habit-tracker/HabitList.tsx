@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
 import { HabitItem } from "./HabitItem";
 
@@ -11,7 +12,8 @@ type HabitListProps = {
   onUndoFailure: (habitId: string) => Promise<void>;
 };
 
-export function HabitList({
+// Memoize the entire list component to prevent unnecessary re-renders
+export const HabitList = memo(function HabitList({
   habits,
   completions,
   failures,
@@ -34,4 +36,4 @@ export function HabitList({
       ))}
     </div>
   );
-}
+});
