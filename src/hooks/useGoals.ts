@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Goal, KeyResult, CreateGoalData } from '@/lib/goalTypes';
 import { fetchGoals, createGoal, updateKeyResult } from '@/lib/api/goalAPI';
 
@@ -11,7 +11,7 @@ export function useGoals() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const refreshGoals = async (showLoading = true) => {
+  const refreshGoals = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     setError(null);
     
@@ -24,9 +24,9 @@ export function useGoals() {
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
+  }, []);
 
-  const handleCreateGoal = async (goalData: CreateGoalData) => {
+  const handleCreateGoal = useCallback(async (goalData: CreateGoalData) => {
     const result = await createGoal(goalData);
     
     if (result.success) {
@@ -34,9 +34,9 @@ export function useGoals() {
     }
     
     return result;
-  };
+  }, [refreshGoals]);
 
-  const handleUpdateKeyResult = async (keyResultId: string, currentValue: number) => {
+  const handleUpdateKeyResult = useCallback(async (keyResultId: string, currentValue: number) => {
     const result = await updateKeyResult(keyResultId, currentValue);
     
     if (result.success) {
@@ -44,18 +44,18 @@ export function useGoals() {
     }
     
     return result;
-  };
+  }, [refreshGoals]);
 
   // Load goals on component mount
   useEffect(() => {
     refreshGoals();
-  }, []);
+  }, [refreshGoals]);
 
   return {
     goals,
     loading,
     error,
-    refreshGoals: () => refreshGoals(),
+    refreshGoals,
     createGoal: handleCreateGoal,
     updateKeyResult: handleUpdateKeyResult
   };

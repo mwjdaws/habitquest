@@ -1,3 +1,4 @@
+
 import { Check, Undo, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HabitFailure } from "@/lib/habitTypes";
@@ -14,7 +15,7 @@ type HabitStatusProps = {
   failures: HabitFailure[];
 };
 
-// Predefine animation variants to avoid object creation on each render
+// Predefine animation variants outside component to avoid object creation on each render
 const buttonVariants = {
   initial: { scale: 0.95, opacity: 0 },
   animate: { scale: 1, opacity: 1, transition: { duration: 0.2 } },

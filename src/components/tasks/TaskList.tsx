@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { Task } from '@/lib/taskTypes';
 import { TaskItem } from './TaskItem';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,15 +13,36 @@ interface TaskListProps {
   onDelete: (taskId: string) => Promise<void>;
 }
 
-export function TaskList({ tasks, isLoading, onToggleComplete, onEdit, onDelete }: TaskListProps) {
+export const TaskList = memo(function TaskList({ 
+  tasks, 
+  isLoading, 
+  onToggleComplete, 
+  onEdit, 
+  onDelete 
+}: TaskListProps) {
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   
-  const filteredTasks = tasks.filter(task => {
-    if (filter === 'all') return true;
-    if (filter === 'pending') return task.status === 'pending';
-    if (filter === 'completed') return task.status === 'completed';
-    return true;
-  });
+  // Use memoization for filtered tasks to avoid recalculating on every render
+  const filteredTasks = useMemo(() => {
+    if (filter === 'all') return tasks;
+    return tasks.filter(task => filter === 'pending' 
+      ? task.status === 'pending' 
+      : task.status === 'completed'
+    );
+  }, [tasks, filter]);
+  
+  // Pre-calculate counts once
+  const { pendingCount, completedCount } = useMemo(() => {
+    let pending = 0;
+    let completed = 0;
+    
+    tasks.forEach(task => {
+      if (task.status === 'pending') pending++;
+      else if (task.status === 'completed') completed++; 
+    });
+    
+    return { pendingCount: pending, completedCount: completed };
+  }, [tasks]);
   
   if (isLoading) {
     return (
@@ -38,9 +59,6 @@ export function TaskList({ tasks, isLoading, onToggleComplete, onEdit, onDelete 
       </div>
     );
   }
-  
-  const pendingCount = tasks.filter(t => t.status === 'pending').length;
-  const completedCount = tasks.filter(t => t.status === 'completed').length;
   
   return (
     <div className="space-y-4">
@@ -113,4 +131,4 @@ export function TaskList({ tasks, isLoading, onToggleComplete, onEdit, onDelete 
       </Tabs>
     </div>
   );
-}
+});

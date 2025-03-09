@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { format } from 'date-fns';
 import { Task } from '@/lib/taskTypes';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,33 +25,38 @@ interface TaskItemProps {
   onDelete: (taskId: string) => Promise<void>;
 }
 
-export function TaskItem({ task, onToggleComplete, onEdit, onDelete }: TaskItemProps) {
+// Using memo to prevent unnecessary re-renders
+export const TaskItem = memo(function TaskItem({ task, onToggleComplete, onEdit, onDelete }: TaskItemProps) {
   const [isCompleting, setIsCompleting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const handleToggleComplete = async () => {
+  const handleToggleComplete = useCallback(async () => {
     try {
       setIsCompleting(true);
       await onToggleComplete(task.id, task.status);
     } finally {
       setIsCompleting(false);
     }
-  };
+  }, [task.id, task.status, onToggleComplete]);
   
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     try {
       setIsDeleting(true);
       await onDelete(task.id);
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [task.id, onDelete]);
+  
+  const handleEdit = useCallback(() => onEdit(task), [task, onEdit]);
+  
+  const isCompleted = task.status === 'completed';
   
   return (
-    <div className={`flex items-start p-4 border rounded-md mb-2 ${task.status === 'completed' ? 'bg-muted/50' : 'bg-card'}`}>
+    <div className={`flex items-start p-4 border rounded-md mb-2 ${isCompleted ? 'bg-muted/50' : 'bg-card'}`}>
       <div className="flex-shrink-0 pt-1">
         <Checkbox 
-          checked={task.status === 'completed'}
+          checked={isCompleted}
           onCheckedChange={handleToggleComplete}
           disabled={isCompleting}
           className="size-5"
@@ -59,12 +64,12 @@ export function TaskItem({ task, onToggleComplete, onEdit, onDelete }: TaskItemP
       </div>
       
       <div className="ml-3 flex-grow">
-        <div className={`text-base font-medium ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
+        <div className={`text-base font-medium ${isCompleted ? 'line-through text-muted-foreground' : ''}`}>
           {task.name}
         </div>
         
         {task.description && (
-          <div className={`mt-1 text-sm ${task.status === 'completed' ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
+          <div className={`mt-1 text-sm ${isCompleted ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
             {task.description}
           </div>
         )}
@@ -89,7 +94,7 @@ export function TaskItem({ task, onToggleComplete, onEdit, onDelete }: TaskItemP
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => onEdit(task)}
+          onClick={handleEdit}
           className="h-8 w-8"
         >
           <Edit className="h-4 w-4" />
@@ -129,4 +134,4 @@ export function TaskItem({ task, onToggleComplete, onEdit, onDelete }: TaskItemP
       </div>
     </div>
   );
-}
+});
