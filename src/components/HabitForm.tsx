@@ -22,9 +22,10 @@ type HabitFormProps = {
   habit?: Habit;
   onSave: () => void;
   onCancel: () => void;
+  onDelete?: () => void;
 };
 
-export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
+export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps) {
   const [name, setName] = useState(habit?.name || "");
   const [description, setDescription] = useState(habit?.description || "");
   const [frequency, setFrequency] = useState<string[]>(habit?.frequency || []);
@@ -107,7 +108,13 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
         title: "Habit deleted",
         description: "Your habit has been permanently deleted",
       });
-      onSave();
+      
+      // Call the onDelete callback if provided, otherwise fall back to onSave
+      if (onDelete) {
+        onDelete();
+      } else {
+        onSave();
+      }
     } catch (error) {
       console.error("Error deleting habit:", error);
       toast({
@@ -130,7 +137,13 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
         title: "Habit archived",
         description: "Your habit has been archived and can be restored later",
       });
-      onSave();
+      
+      // Call the onDelete callback if provided, otherwise fall back to onSave
+      if (onDelete) {
+        onDelete();
+      } else {
+        onSave();
+      }
     } catch (error) {
       console.error("Error archiving habit:", error);
       toast({

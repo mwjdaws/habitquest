@@ -12,18 +12,29 @@ type HabitItemProps = {
   isCompleted: boolean;
   onToggle: (id: string) => void;
   onUpdate: () => void;
+  onDelete?: () => void;
 };
 
 export function HabitItem({ 
   habit, 
   isCompleted, 
   onToggle, 
-  onUpdate 
+  onUpdate,
+  onDelete
 }: HabitItemProps) {
   const [showEditForm, setShowEditForm] = useState(false);
 
   const handleHabitSaved = () => {
     onUpdate();
+    setShowEditForm(false);
+  };
+  
+  const handleHabitDeleted = () => {
+    if (onDelete) {
+      onDelete();
+    } else {
+      onUpdate();
+    }
     setShowEditForm(false);
   };
 
@@ -34,7 +45,8 @@ export function HabitItem({
           <HabitForm 
             habit={habit} 
             onSave={handleHabitSaved} 
-            onCancel={() => setShowEditForm(false)} 
+            onCancel={() => setShowEditForm(false)}
+            onDelete={handleHabitDeleted}
           />
         </CardContent>
       ) : (

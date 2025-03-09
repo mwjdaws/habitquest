@@ -88,6 +88,22 @@ export function HabitList() {
     });
   };
 
+  const handleHabitDeleted = () => {
+    // Immediately refetch habits when a habit is deleted
+    refetchHabits();
+    
+    // Force a second refresh after a delay to ensure UI is updated
+    setTimeout(() => {
+      refetchHabits();
+    }, 300);
+    
+    setShowForm(false);
+    toast({
+      title: "Habit deleted",
+      description: "Your habit has been deleted successfully",
+    });
+  };
+
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorAlert message={error} />;
 
@@ -108,7 +124,8 @@ export function HabitList() {
           >
             <HabitFormCard 
               onSave={handleHabitSaved} 
-              onCancel={() => setShowForm(false)} 
+              onCancel={() => setShowForm(false)}
+              onDelete={handleHabitDeleted}
             />
           </motion.div>
         )}
@@ -138,6 +155,7 @@ export function HabitList() {
                 isCompleted={completions.some(c => c.habit_id === habit.id)} 
                 onToggle={handleToggleCompletion}
                 onUpdate={refetchHabits}
+                onDelete={handleHabitDeleted}
               />
             </motion.div>
           ))}
