@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,19 +55,27 @@ export function HabitItem({
   const handleQuickDelete = async () => {
     setIsProcessing(true);
     try {
+      console.log(`Starting deletion of habit ID: ${habit.id}`);
       await deleteHabit(habit.id);
+      console.log(`Successfully deleted habit ID: ${habit.id}`);
+      
       toast({
         title: "Habit deleted",
         description: "Your habit has been permanently deleted",
       });
       
-      if (onDelete) {
-        onDelete();
-      } else {
-        onUpdate();
-      }
-      
       setShowDeleteDialog(false);
+      
+      // Use a slight delay to ensure state is updated properly
+      setTimeout(() => {
+        if (onDelete) {
+          console.log("Calling onDelete callback");
+          onDelete();
+        } else {
+          console.log("Calling onUpdate callback");
+          onUpdate();
+        }
+      }, 100);
     } catch (error) {
       console.error("Error deleting habit:", error);
       toast({
@@ -82,19 +91,27 @@ export function HabitItem({
   const handleQuickArchive = async () => {
     setIsProcessing(true);
     try {
+      console.log(`Starting archiving of habit ID: ${habit.id}`);
       await archiveHabit(habit.id);
+      console.log(`Successfully archived habit ID: ${habit.id}`);
+      
       toast({
         title: "Habit archived",
         description: "Your habit has been archived and can be restored later",
       });
       
-      if (onDelete) {
-        onDelete();
-      } else {
-        onUpdate();
-      }
-      
       setShowArchiveDialog(false);
+      
+      // Use a slight delay to ensure state is updated properly
+      setTimeout(() => {
+        if (onDelete) {
+          console.log("Calling onDelete callback after archive");
+          onDelete();
+        } else {
+          console.log("Calling onUpdate callback after archive");
+          onUpdate();
+        }
+      }, 100);
     } catch (error) {
       console.error("Error archiving habit:", error);
       toast({

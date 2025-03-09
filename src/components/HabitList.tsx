@@ -20,15 +20,17 @@ export function HabitList() {
   const [completions, setCompletions] = useState<HabitCompletion[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [refreshCounter, setRefreshCounter] = useState(0); // Add counter to force refetch
   const today = getTodayFormatted();
 
+  // Update query key to include refreshCounter to force refetch
   const { 
     data: habits = [], 
     isLoading, 
     error: queryError,
     refetch: refetchHabits 
   } = useQuery({
-    queryKey: ['habits'],
+    queryKey: ['habits', refreshCounter],
     queryFn: () => fetchHabits(false), // Pass false to exclude archived habits
   });
 
@@ -50,11 +52,12 @@ export function HabitList() {
 
   useEffect(() => {
     fetchCompletions();
-  }, []);
+  }, [refreshCounter]); // Also refresh completions when counter changes
 
   // Enhanced refetch function to ensure all data is refreshed
   const refreshAllData = useCallback(async () => {
     console.log("Refreshing all habit data...");
+    setRefreshCounter(prev => prev + 1); // Increment counter to force refetch
     await refetchHabits();
     await fetchCompletions();
   }, [refetchHabits]);
@@ -148,7 +151,7 @@ export function HabitList() {
                 habit={habit} 
                 isCompleted={completions.some(c => c.habit_id === habit.id)} 
                 onToggle={handleToggleCompletion}
-                onUpdate={refetchHabits}
+                onUpdate={refreshAllData} // Change to use refreshAllData
                 onDelete={handleHabitDeleted}
               />
             </motion.div>
