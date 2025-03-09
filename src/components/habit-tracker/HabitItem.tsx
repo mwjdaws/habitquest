@@ -24,7 +24,7 @@ export const HabitItem = memo(function HabitItem({
   onLogFailure,
   onUndoFailure
 }: HabitItemProps) {
-  // Use our custom hook for status calculations
+  // Use our optimized custom hook for status calculations
   const { isCompleted, isFailed, bgColorClass } = useHabitStatus(habit, completions, failures);
   
   // Memoize handlers to prevent new function references on each render

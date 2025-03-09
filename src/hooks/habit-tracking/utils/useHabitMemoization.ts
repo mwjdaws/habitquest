@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
 
 /**
- * Hook that returns memoized status values for a habit
+ * Hook that returns memoized status values for a habit with optimized calculations
  */
 export function useHabitStatus(
   habit: Habit,
@@ -11,14 +11,16 @@ export function useHabitStatus(
   failures: HabitFailure[]
 ) {
   return useMemo(() => {
-    // Use map lookup instead of array iteration for faster checks
-    const isCompleted = completions.some(c => c.habit_id === habit.id);
-    const isFailed = failures.some(f => f.habit_id === habit.id);
+    // Create Set objects for O(1) lookups instead of array iteration
+    const completionIds = new Set(completions.map(c => c.habit_id));
+    const failureMap = new Map(failures.map(f => [f.habit_id, f]));
     
-    // Only find failure reason if habit is failed
-    const failureReason = isFailed 
-      ? failures.find(f => f.habit_id === habit.id)?.reason || "" 
-      : "";
+    // Use Set/Map for constant-time lookups
+    const isCompleted = completionIds.has(habit.id);
+    const isFailed = failureMap.has(habit.id);
+    
+    // Only find failure reason if habit is failed - direct map lookup
+    const failureReason = isFailed ? failureMap.get(habit.id)?.reason || "" : "";
     
     // Determine background color based on status - direct string assignment
     const bgColorClass = isCompleted 
@@ -38,18 +40,29 @@ export function useHabitStatus(
 
 /**
  * Optimized function to determine if HabitItem needs to re-render
+ * with improved short-circuit logic
  */
 export function habitItemPropsAreEqual(prevProps: any, nextProps: any) {
   // Fast identity check for habit object itself
   if (prevProps.habit === nextProps.habit) {
-    // Habits are identical, now just check completions and failures
-    const prevCompleted = prevProps.completions.some(c => c.habit_id === prevProps.habit.id);
-    const nextCompleted = nextProps.completions.some(c => c.habit_id === nextProps.habit.id);
+    // Fast identity checks for completions and failures arrays
+    if (prevProps.completions === nextProps.completions && 
+        prevProps.failures === nextProps.failures) {
+      return true;
+    }
+    
+    // Habits are identical, now just check completion and failure status
+    const prevCompleted = new Set(prevProps.completions.map((c: any) => c.habit_id)).has(prevProps.habit.id);
+    const nextCompleted = new Set(nextProps.completions.map((c: any) => c.habit_id)).has(nextProps.habit.id);
     
     if (prevCompleted !== nextCompleted) return false;
     
-    const prevFailure = prevProps.failures.find(f => f.habit_id === prevProps.habit.id);
-    const nextFailure = nextProps.failures.find(f => f.habit_id === nextProps.habit.id);
+    // More efficient lookup with Map
+    const prevFailureMap = new Map(prevProps.failures.map((f: any) => [f.habit_id, f]));
+    const nextFailureMap = new Map(nextProps.failures.map((f: any) => [f.habit_id, f]));
+    
+    const prevFailure = prevFailureMap.get(prevProps.habit.id);
+    const nextFailure = nextFailureMap.get(nextProps.habit.id);
     
     // Short-circuit for both undefined/null
     if (!prevFailure && !nextFailure) return true;
@@ -71,14 +84,20 @@ export function habitItemPropsAreEqual(prevProps: any, nextProps: any) {
     return false;
   }
   
-  // Check completion status
-  const prevCompleted = prevProps.completions.some(c => c.habit_id === prevProps.habit.id);
-  const nextCompleted = nextProps.completions.some(c => c.habit_id === nextProps.habit.id);
+  // Use Set for O(1) lookups of completions
+  const prevCompletionIds = new Set(prevProps.completions.map((c: any) => c.habit_id));
+  const nextCompletionIds = new Set(nextProps.completions.map((c: any) => c.habit_id));
+  const prevCompleted = prevCompletionIds.has(prevProps.habit.id);
+  const nextCompleted = nextCompletionIds.has(nextProps.habit.id);
+  
   if (prevCompleted !== nextCompleted) return false;
   
-  // Check failure status
-  const prevFailure = prevProps.failures.find(f => f.habit_id === prevProps.habit.id);
-  const nextFailure = nextProps.failures.find(f => f.habit_id === nextProps.habit.id);
+  // Use Map for O(1) lookups of failures
+  const prevFailureMap = new Map(prevProps.failures.map((f: any) => [f.habit_id, f]));
+  const nextFailureMap = new Map(nextProps.failures.map((f: any) => [f.habit_id, f]));
+  
+  const prevFailure = prevFailureMap.get(prevProps.habit.id);
+  const nextFailure = nextFailureMap.get(nextProps.habit.id);
   
   if (!prevFailure && !nextFailure) return true;
   if ((!prevFailure && nextFailure) || (prevFailure && !nextFailure)) return false;
