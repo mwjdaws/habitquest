@@ -47,7 +47,7 @@ export function TaskStats() {
   return (
     <Card className="col-span-1">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-md font-medium">Task Stats</CardTitle>
+        <CardTitle>Task Completion Metrics</CardTitle>
         <div className="flex items-center space-x-2">
           <BarChart className="h-4 w-4 text-muted-foreground" />
         </div>
