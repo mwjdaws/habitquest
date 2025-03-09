@@ -18,10 +18,24 @@ export const calculateTimeSleptMinutes = (bedtime: string, wake_time: string): n
   return minutesSlept;
 };
 
+// Get the current user ID or throw an error if not authenticated
+const getCurrentUserId = async (): Promise<string> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session?.user?.id) {
+    throw new Error("Authentication required to access sleep entries");
+  }
+  
+  return session.user.id;
+};
+
 export const fetchSleepEntries = async (): Promise<SleepEntry[]> => {
+  const userId = await getCurrentUserId();
+  
   const { data, error } = await supabase
     .from('sleep_entries')
     .select('*')
+    .eq('user_id', userId)
     .order('sleep_date', { ascending: false });
 
   if (error) {
@@ -32,10 +46,13 @@ export const fetchSleepEntries = async (): Promise<SleepEntry[]> => {
 };
 
 export const fetchSleepEntry = async (id: string): Promise<SleepEntry> => {
+  const userId = await getCurrentUserId();
+  
   const { data, error } = await supabase
     .from('sleep_entries')
     .select('*')
     .eq('id', id)
+    .eq('user_id', userId)
     .single();
 
   if (error) {
@@ -46,12 +63,18 @@ export const fetchSleepEntry = async (id: string): Promise<SleepEntry> => {
 };
 
 export const createSleepEntry = async (entryData: SleepFormData): Promise<SleepEntry> => {
+  const userId = await getCurrentUserId();
+  
   // Calculate time slept based on bedtime and wake time
   const time_slept_minutes = calculateTimeSleptMinutes(entryData.bedtime, entryData.wake_time);
   
   const { data, error } = await supabase
     .from('sleep_entries')
-    .insert([{ ...entryData, time_slept_minutes }])
+    .insert([{ 
+      ...entryData, 
+      time_slept_minutes,
+      user_id: userId  // Explicitly set the user_id
+    }])
     .select()
     .single();
 
@@ -63,13 +86,20 @@ export const createSleepEntry = async (entryData: SleepFormData): Promise<SleepE
 };
 
 export const updateSleepEntry = async (id: string, entryData: SleepFormData): Promise<SleepEntry> => {
+  const userId = await getCurrentUserId();
+  
   // Calculate time slept based on bedtime and wake time
   const time_slept_minutes = calculateTimeSleptMinutes(entryData.bedtime, entryData.wake_time);
   
   const { data, error } = await supabase
     .from('sleep_entries')
-    .update({ ...entryData, time_slept_minutes })
+    .update({ 
+      ...entryData, 
+      time_slept_minutes,
+      user_id: userId  // Ensure user_id is updated correctly
+    })
     .eq('id', id)
+    .eq('user_id', userId)  // Additional check to ensure we only update user's own entries
     .select()
     .single();
 
@@ -81,10 +111,13 @@ export const updateSleepEntry = async (id: string, entryData: SleepFormData): Pr
 };
 
 export const deleteSleepEntry = async (id: string): Promise<void> => {
+  const userId = await getCurrentUserId();
+  
   const { error } = await supabase
     .from('sleep_entries')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', userId);  // Additional check to ensure we only delete user's own entries
 
   if (error) {
     throw new Error(`Error deleting sleep entry: ${error.message}`);
