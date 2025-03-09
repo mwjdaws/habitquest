@@ -1,15 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SleepFormData } from "@/lib/sleepTypes";
 import { getTodayFormattedInToronto } from "@/lib/dateUtils";
+import { SleepFormContainer } from "./SleepFormContainer";
 
 const formSchema = z.object({
   sleep_date: z.string().min(1, "Date is required"),
@@ -64,202 +61,12 @@ export const SleepForm: React.FC<SleepFormProps> = ({
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="sleep_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="bedtime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bedtime</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="wake_time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Wake time</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <FormField
-              control={form.control}
-              name="quality_score"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quality Score: {field.value}</FormLabel>
-                  <FormControl>
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={1}
-                      defaultValue={[field.value]}
-                      onValueChange={([value]) => field.onChange(value)}
-                    />
-                  </FormControl>
-                  <FormDescription>Rate your sleep quality from 0-100</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="routine_score"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Routine Score: {field.value}</FormLabel>
-                  <FormControl>
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={1}
-                      defaultValue={[field.value]}
-                      onValueChange={([value]) => field.onChange(value)}
-                    />
-                  </FormControl>
-                  <FormDescription>How well did you stick to your sleep routine?</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="heart_rate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Avg. Heart Rate (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="hrv"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>HRV (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="breath_rate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Breath Rate (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="snoring_percentage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Snoring % (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="sleep_latency_minutes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Time to Fall Asleep (mins)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <CardFooter className="px-0 pb-0 pt-4">
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : submitLabel}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+        <SleepFormContainer 
+          form={form}
+          onSubmit={onSubmit}
+          isSubmitting={isSubmitting}
+          submitLabel={submitLabel}
+        />
       </CardContent>
     </Card>
   );
