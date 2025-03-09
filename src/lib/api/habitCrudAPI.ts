@@ -1,3 +1,4 @@
+
 import { supabase } from "../supabase";
 import { Habit } from "../habitTypes";
 import { getAuthenticatedUser, handleApiError } from "./apiUtils";
@@ -134,11 +135,32 @@ export const unarchiveHabit = async (id: string) => {
 
 /**
  * Deletes a habit for the authenticated user
+ * This function now first deletes related records in habit_completions and habit_failures
+ * before deleting the habit itself
  */
 export const deleteHabit = async (id: string) => {
   try {
     const userId = await getAuthenticatedUser();
 
+    // First delete related habit completions
+    const { error: completionsError } = await supabase
+      .from("habit_completions")
+      .delete()
+      .eq("habit_id", id)
+      .eq("user_id", userId);
+
+    if (completionsError) throw completionsError;
+    
+    // Then delete related habit failures
+    const { error: failuresError } = await supabase
+      .from("habit_failures")
+      .delete()
+      .eq("habit_id", id)
+      .eq("user_id", userId);
+    
+    if (failuresError) throw failuresError;
+
+    // Finally delete the habit itself
     const { error } = await supabase
       .from("habits")
       .delete()
