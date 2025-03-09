@@ -1,7 +1,11 @@
 
 import { createRoot } from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
+
+// Create a client
+const queryClient = new QueryClient()
 
 // Basic error handling for the entire app
 try {
@@ -12,7 +16,11 @@ try {
     throw new Error('Root element not found. Make sure there is a div with id "root" in your HTML.');
   }
   
-  createRoot(container).render(<App />);
+  createRoot(container).render(
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  );
   console.log('Application rendered successfully');
 } catch (error) {
   console.error('Failed to render application:', error);
