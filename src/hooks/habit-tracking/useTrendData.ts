@@ -67,10 +67,10 @@ export function useTrendData() {
       console.error("Error fetching trend data:", error);
       setData(prev => ({ 
         ...prev,
-        habits: prev.habits || [],
-        completions: prev.completions || [],
-        failures: prev.failures || [],
-        streakRecords: prev.streakRecords || [],
+        habits: Array.isArray(prev.habits) ? prev.habits : [],
+        completions: Array.isArray(prev.completions) ? prev.completions : [],
+        failures: Array.isArray(prev.failures) ? prev.failures : [],
+        streakRecords: Array.isArray(prev.streakRecords) ? prev.streakRecords : [],
         loading: false, 
         error: error instanceof Error ? error.message : "Failed to load habit trend data" 
       }));
