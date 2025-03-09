@@ -15,9 +15,10 @@ import { getCurrentTorontoDate } from "@/lib/dateUtils";
 
 interface GoalItemProps {
   goal: Goal;
+  onRefresh?: () => void;
 }
 
-export function GoalItem({ goal }: GoalItemProps) {
+export function GoalItem({ goal, onRefresh }: GoalItemProps) {
   const { deleteGoal, updateGoal, completeGoal } = useGoals();
   const [expanded, setExpanded] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -30,6 +31,7 @@ export function GoalItem({ goal }: GoalItemProps) {
         title: "Goal deleted",
         description: "The goal has been deleted successfully",
       });
+      if (onRefresh) onRefresh();
     }
   };
   
@@ -41,6 +43,7 @@ export function GoalItem({ goal }: GoalItemProps) {
         title: "Goal completed",
         description: "The goal has been marked as complete",
       });
+      if (onRefresh) onRefresh();
     }
   };
 
@@ -97,8 +100,8 @@ export function GoalItem({ goal }: GoalItemProps) {
         
         {expanded && (
           <div className="mt-4 space-y-4">
-            <GoalObjective objective={goal.objective} />
-            <KeyResultsSection goal={goal} isGoalActive={isGoalActive} />
+            <GoalObjective objective={goal.objective} progress={goal.progress} />
+            <KeyResultsSection goal={goal} isGoalActive={isGoalActive} onGoalUpdate={onRefresh} />
           </div>
         )}
       </CardContent>

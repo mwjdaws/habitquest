@@ -1,3 +1,4 @@
+
 import { Goal } from "@/hooks/useGoals";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GoalItem } from "./GoalItem";
@@ -7,7 +8,7 @@ import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { useState, useCallback } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/use-toast";
 
 interface GoalsListProps {
   goals: Goal[];
@@ -115,7 +116,7 @@ export function GoalsList({ goals, loading, onRefresh, error }: GoalsListProps) 
           <GoalItem 
             key={goal.id} 
             goal={goal} 
-            onUpdate={handleRefresh} 
+            onRefresh={handleRefresh} 
           />
         ))}
       </div>

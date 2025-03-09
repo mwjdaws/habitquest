@@ -11,9 +11,10 @@ interface KeyResultItemProps {
   keyResult: KeyResult;
   goalProgress: number;
   isGoalActive: boolean;
+  onProgressChange?: (newProgress: number) => Promise<void>;
 }
 
-export function KeyResultItem({ keyResult, goalProgress, isGoalActive }: KeyResultItemProps) {
+export function KeyResultItem({ keyResult, goalProgress, isGoalActive, onProgressChange }: KeyResultItemProps) {
   const { updateKeyResult } = useGoals();
   const { habits } = useHabits();
   
@@ -44,6 +45,9 @@ export function KeyResultItem({ keyResult, goalProgress, isGoalActive }: KeyResu
     }
     
     await updateKeyResult(keyResult.id!, updatedValue);
+    if (onProgressChange) {
+      await onProgressChange(progress);
+    }
     setIsUpdating(false);
   };
   
@@ -65,6 +69,10 @@ export function KeyResultItem({ keyResult, goalProgress, isGoalActive }: KeyResu
     
     if (success) {
       setShowUpdateForm(false);
+      if (onProgressChange) {
+        const newProgress = Math.min(100, Math.round((updatedValue / keyResult.target_value) * 100));
+        await onProgressChange(newProgress);
+      }
     }
     
     setIsUpdating(false);
