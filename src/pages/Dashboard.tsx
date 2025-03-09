@@ -122,18 +122,15 @@ const Dashboard = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="space-y-6">
-          <DashboardGrid>
-            {HabitTrackerMemo}
-            {TaskStatsMemo}
-            {StreakStatsMemo}
-            {UpcomingTasksMemo}
-            {GoalsProgressMemo}
-          </DashboardGrid>
-          
+        <DashboardGrid>
+          {HabitTrackerMemo}
+          {TaskStatsMemo}
+          {StreakStatsMemo}
+          {UpcomingTasksMemo}
+          {GoalsProgressMemo}
           {HabitTrendsMemo}
           {JournalStatsMemo}
-        </div>
+        </DashboardGrid>
       </motion.div>
     </AnimatePresence>
   );
