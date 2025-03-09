@@ -5,16 +5,23 @@ import { getAuthenticatedUser, handleApiError } from "./apiUtils";
 
 /**
  * Fetches all habits for the authenticated user
+ * @param includeArchived Whether to include archived habits
  */
-export const fetchHabits = async (): Promise<Habit[]> => {
+export const fetchHabits = async (includeArchived: boolean = false): Promise<Habit[]> => {
   try {
     const userId = await getAuthenticatedUser();
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("habits")
       .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .eq("user_id", userId);
+    
+    // Filter out archived habits by default
+    if (!includeArchived) {
+      query = query.is('archived', null).or('archived.eq.false');
+    }
+      
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) throw error;
     return data || [];
@@ -37,7 +44,8 @@ export const createHabit = async (habit: Omit<Habit, "id" | "created_at" | "upda
         ...habit,
         user_id: userId,
         current_streak: 0,
-        longest_streak: 0
+        longest_streak: 0,
+        archived: false
       })
       .select()
       .single();
@@ -74,6 +82,58 @@ export const updateHabit = async (id: string, habit: Partial<Omit<Habit, "id" | 
 };
 
 /**
+ * Archives a habit (soft delete)
+ */
+export const archiveHabit = async (id: string) => {
+  try {
+    const userId = await getAuthenticatedUser();
+
+    const { data, error } = await supabase
+      .from("habits")
+      .update({ 
+        archived: true,
+        updated_at: new Date().toISOString() 
+      })
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+    
+  } catch (error) {
+    return handleApiError(error, "archiving habit");
+  }
+};
+
+/**
+ * Unarchives a previously archived habit
+ */
+export const unarchiveHabit = async (id: string) => {
+  try {
+    const userId = await getAuthenticatedUser();
+
+    const { data, error } = await supabase
+      .from("habits")
+      .update({ 
+        archived: false,
+        updated_at: new Date().toISOString() 
+      })
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+    
+  } catch (error) {
+    return handleApiError(error, "unarchiving habit");
+  }
+};
+
+/**
  * Deletes a habit for the authenticated user
  */
 export const deleteHabit = async (id: string) => {
@@ -87,6 +147,7 @@ export const deleteHabit = async (id: string) => {
       .eq("user_id", userId);
 
     if (error) throw error;
+    return true;
     
   } catch (error) {
     return handleApiError(error, "deleting habit");

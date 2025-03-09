@@ -39,7 +39,7 @@ export const HabitItem = memo(function HabitItem({
       <div className="flex items-center gap-3">
         <div 
           className="w-1 h-10 rounded-full" 
-          style={{ backgroundColor: `var(--${habit.color})` }}
+          style={{ backgroundColor: habit.color ? `var(--${habit.color})` : 'var(--habit-purple)' }}
         />
         <div>
           <div className="flex items-center gap-2">

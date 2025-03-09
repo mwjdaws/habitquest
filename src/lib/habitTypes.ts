@@ -11,6 +11,7 @@ export type Habit = {
   updated_at: string;
   current_streak: number;
   longest_streak: number;
+  archived?: boolean;
 };
 
 export type HabitCompletion = {

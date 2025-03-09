@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { 
   createHabit, 
   updateHabit, 
-  deleteHabit, 
+  deleteHabit,
+  archiveHabit,
   Habit, 
   FrequencyType 
 } from "@/lib/habits";
@@ -104,7 +105,7 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
       await deleteHabit(habit.id);
       toast({
         title: "Habit deleted",
-        description: "Your habit has been deleted successfully",
+        description: "Your habit has been permanently deleted",
       });
       onSave();
     } catch (error) {
@@ -112,6 +113,29 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
       toast({
         title: "Error",
         description: "Failed to delete habit",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!isEdit) return;
+    
+    setLoading(true);
+    try {
+      await archiveHabit(habit.id);
+      toast({
+        title: "Habit archived",
+        description: "Your habit has been archived and can be restored later",
+      });
+      onSave();
+    } catch (error) {
+      console.error("Error archiving habit:", error);
+      toast({
+        title: "Error",
+        description: "Failed to archive habit",
         variant: "destructive",
       });
     } finally {
@@ -168,7 +192,11 @@ export function HabitForm({ habit, onSave, onCancel }: HabitFormProps) {
       {isEdit && (
         <>
           <Separator />
-          <DeleteConfirmation onConfirm={handleDelete} isLoading={loading} />
+          <DeleteConfirmation 
+            onConfirm={handleDelete} 
+            onArchive={handleArchive}
+            isLoading={loading} 
+          />
         </>
       )}
 

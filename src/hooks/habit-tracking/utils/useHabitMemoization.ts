@@ -93,8 +93,8 @@ export function habitItemPropsAreEqual(prevProps: any, nextProps: any) {
   if (prevCompleted !== nextCompleted) return false;
   
   // Use Map for O(1) lookups of failures
-  const prevFailureMap = new Map(prevProps.failures.map((f: any) => [f.habit_id, f]));
-  const nextFailureMap = new Map(nextProps.failures.map((f: any) => [f.habit_id, f]));
+  const prevFailureMap = new Map(prevProps.failures.map((f: HabitFailure) => [f.habit_id, f]));
+  const nextFailureMap = new Map(nextProps.failures.map((f: HabitFailure) => [f.habit_id, f]));
   
   const prevFailure = prevFailureMap.get(prevProps.habit.id);
   const nextFailure = nextFailureMap.get(nextProps.habit.id);
