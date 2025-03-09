@@ -1,4 +1,3 @@
-
 export type ColorTheme = {
   name: string;
   primaryColor: string;
@@ -72,5 +71,59 @@ export const colorThemes: ColorTheme[] = [
     foregroundColor: "hsl(80, 15%, 15%)",
     cardColor: "hsl(0, 0%, 100%)",
     cardForegroundColor: "hsl(80, 15%, 15%)",
+  },
+  {
+    name: "Retro Arcade",
+    primaryColor: "#FF2D55",
+    accentColor: "#4BD0EE",
+    backgroundColor: "#171221",
+    foregroundColor: "#E1F2FF",
+    cardColor: "#28203A",
+    cardForegroundColor: "#F0F6FF",
+  },
+  {
+    name: "Matcha Cream",
+    primaryColor: "#78A06E",
+    accentColor: "#F0EAD6",
+    backgroundColor: "#F8F6F0",
+    foregroundColor: "#33513E",
+    cardColor: "#FFFFFF",
+    cardForegroundColor: "#33513E",
+  },
+  {
+    name: "Sunset Horizon",
+    primaryColor: "#FF7E5F",
+    accentColor: "#FEB47B",
+    backgroundColor: "#18344A",
+    foregroundColor: "#F9F9EB",
+    cardColor: "#254B6E",
+    cardForegroundColor: "#F9F9EB",
+  },
+  {
+    name: "Cyberpunk Night",
+    primaryColor: "#F637EC",
+    accentColor: "#5EE2FF",
+    backgroundColor: "#090415",
+    foregroundColor: "#E1DFFF",
+    cardColor: "#1A1740",
+    cardForegroundColor: "#E1DFFF",
+  },
+  {
+    name: "Nordic Frost",
+    primaryColor: "#81A4CD",
+    accentColor: "#D1E5F5",
+    backgroundColor: "#F2F7FC",
+    foregroundColor: "#2E4057",
+    cardColor: "#FFFFFF",
+    cardForegroundColor: "#2E4057",
+  },
+  {
+    name: "Desert Sand",
+    primaryColor: "#CB904D",
+    accentColor: "#E3BC7E",
+    backgroundColor: "#FAF4EB",
+    foregroundColor: "#5D4A3E",
+    cardColor: "#FFFFFF",
+    cardForegroundColor: "#5D4A3E",
   },
 ];
