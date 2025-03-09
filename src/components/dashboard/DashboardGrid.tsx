@@ -1,4 +1,3 @@
-
 import React, { ReactNode, useState, useEffect, useMemo } from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
@@ -8,34 +7,35 @@ import { toast } from "sonner";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// Updated layouts to make narrower cards taller and journal statistics wider
+// Completely reworked layouts to ensure narrower cards are taller
+// and journal statistics is wider by default
 const DEFAULT_LAYOUTS = {
   lg: [
-    { i: "habit-tracker", x: 0, y: 0, w: 3, h: 4, minW: 1, minH: 3 },
-    { i: "task-stats", x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "goals-progress", x: 1, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "streak-stats", x: 2, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "upcoming-tasks", x: 0, y: 7, w: 3, h: 3, minW: 1, minH: 2 },
-    { i: "habit-trends", x: 0, y: 10, w: 3, h: 4, minW: 2, minH: 2 },
-    { i: "journal-stats", x: 0, y: 14, w: 3, h: 5, minW: 2, minH: 3 },
+    { i: "habit-tracker", x: 0, y: 0, w: 3, h: 5, minW: 2, minH: 4 },
+    { i: "task-stats", x: 0, y: 5, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "goals-progress", x: 1, y: 5, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "streak-stats", x: 2, y: 5, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "upcoming-tasks", x: 0, y: 9, w: 3, h: 4, minW: 2, minH: 3 },
+    { i: "habit-trends", x: 0, y: 13, w: 3, h: 5, minW: 2, minH: 4 },
+    { i: "journal-stats", x: 0, y: 18, w: 3, h: 6, minW: 3, minH: 5 },
   ],
   md: [
-    { i: "habit-tracker", x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 3 },
-    { i: "task-stats", x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "upcoming-tasks", x: 1, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "streak-stats", x: 0, y: 7, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "goals-progress", x: 1, y: 7, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "habit-trends", x: 0, y: 10, w: 2, h: 3, minW: 1, minH: 2 },
-    { i: "journal-stats", x: 0, y: 13, w: 2, h: 5, minW: 1, minH: 3 },
+    { i: "habit-tracker", x: 0, y: 0, w: 2, h: 5, minW: 2, minH: 4 },
+    { i: "task-stats", x: 0, y: 5, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "upcoming-tasks", x: 1, y: 5, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "streak-stats", x: 0, y: 9, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "goals-progress", x: 1, y: 9, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "habit-trends", x: 0, y: 13, w: 2, h: 5, minW: 2, minH: 4 },
+    { i: "journal-stats", x: 0, y: 18, w: 2, h: 6, minW: 2, minH: 5 },
   ],
   sm: [
-    { i: "habit-tracker", x: 0, y: 0, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: "task-stats", x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "upcoming-tasks", x: 0, y: 7, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "streak-stats", x: 0, y: 10, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "goals-progress", x: 0, y: 13, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: "habit-trends", x: 0, y: 16, w: 1, h: 4, minW: 1, minH: 2 },
-    { i: "journal-stats", x: 0, y: 20, w: 1, h: 5, minW: 1, minH: 3 },
+    { i: "habit-tracker", x: 0, y: 0, w: 1, h: 5, minW: 1, minH: 4 },
+    { i: "task-stats", x: 0, y: 5, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "upcoming-tasks", x: 0, y: 9, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "streak-stats", x: 0, y: 13, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "goals-progress", x: 0, y: 17, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "habit-trends", x: 0, y: 21, w: 1, h: 5, minW: 1, minH: 4 },
+    { i: "journal-stats", x: 0, y: 26, w: 1, h: 6, minW: 1, minH: 5 },
   ],
 };
 
@@ -162,12 +162,12 @@ export function DashboardGrid({ children }: DashboardGridProps) {
           layouts={layouts}
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           cols={{ lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 }}
-          rowHeight={100}
+          rowHeight={90}
           isDraggable={isDraggable}
           isResizable={isResizable}
           onLayoutChange={handleLayoutChange}
-          margin={[24, 24]}
-          containerPadding={[20, 20]}
+          margin={[16, 16]}
+          containerPadding={[16, 16]}
           preventCollision={true}
           compactType="vertical"
           useCSSTransforms={true}
