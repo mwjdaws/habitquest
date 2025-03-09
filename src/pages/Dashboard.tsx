@@ -1,29 +1,26 @@
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { HabitTracker } from "@/components/HabitTracker";
 import { StreakStats } from "@/components/dashboard/StreakStats";
 import { UpcomingTasks } from "@/components/dashboard/UpcomingTasks";
 import { GoalsProgress } from "@/components/dashboard/GoalsProgress";
 import { HabitTrends } from "@/components/dashboard/HabitTrends";
+import { TaskStats } from "@/components/dashboard/TaskStats";
 import { DashboardGrid } from "@/components/dashboard/DashboardGrid";
 import { AnimatePresence, motion } from "framer-motion";
 
 const Dashboard = () => {
-  // Use ref for last refresh time to avoid re-renders
   const lastRefreshRef = useRef(Date.now());
   const [refreshKey, setRefreshKey] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  // Function to trigger a refresh with debouncing
   const refreshData = useCallback(() => {
     const now = Date.now();
-    if (now - lastRefreshRef.current > 3000) { // Debounce refreshes
+    if (now - lastRefreshRef.current > 3000) {
       lastRefreshRef.current = now;
       setRefreshKey(prev => prev + 1);
     }
   }, []);
 
-  // Set isLoaded to true after initial render
   useEffect(() => {
     const timeout = setTimeout(() => {
       setIsLoaded(true);
@@ -55,7 +52,7 @@ const Dashboard = () => {
               animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
               transition={{ duration: 0.4, delay: staggerDelay * 1 }}
             >
-              <StreakStats onDataChange={refreshData} />
+              <TaskStats />
             </motion.div>
             
             <motion.div
@@ -63,13 +60,21 @@ const Dashboard = () => {
               animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
               transition={{ duration: 0.4, delay: staggerDelay * 2 }}
             >
-              <UpcomingTasks />
+              <StreakStats onDataChange={refreshData} />
             </motion.div>
             
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
               transition={{ duration: 0.4, delay: staggerDelay * 3 }}
+            >
+              <UpcomingTasks />
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+              transition={{ duration: 0.4, delay: staggerDelay * 4 }}
             >
               <GoalsProgress />
             </motion.div>
@@ -78,7 +83,7 @@ const Dashboard = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-            transition={{ duration: 0.4, delay: staggerDelay * 4 }}
+            transition={{ duration: 0.4, delay: staggerDelay * 5 }}
           >
             <HabitTrends />
           </motion.div>
