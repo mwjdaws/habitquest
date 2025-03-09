@@ -139,38 +139,57 @@ export const unarchiveHabit = async (id: string) => {
  * before deleting the habit itself
  */
 export const deleteHabit = async (id: string) => {
+  console.log(`Starting deletion process for habit ID: ${id}`);
   try {
     const userId = await getAuthenticatedUser();
+    console.log(`Authenticated user ID: ${userId}`);
 
     // First delete related habit completions
+    console.log(`Deleting completions for habit ID: ${id}`);
     const { error: completionsError } = await supabase
       .from("habit_completions")
       .delete()
       .eq("habit_id", id)
       .eq("user_id", userId);
 
-    if (completionsError) throw completionsError;
+    if (completionsError) {
+      console.error(`Error deleting completions: ${completionsError.message}`);
+      throw completionsError;
+    }
+    console.log("Completions deleted successfully");
     
     // Then delete related habit failures
+    console.log(`Deleting failures for habit ID: ${id}`);
     const { error: failuresError } = await supabase
       .from("habit_failures")
       .delete()
       .eq("habit_id", id)
       .eq("user_id", userId);
     
-    if (failuresError) throw failuresError;
+    if (failuresError) {
+      console.error(`Error deleting failures: ${failuresError.message}`);
+      throw failuresError;
+    }
+    console.log("Failures deleted successfully");
 
     // Finally delete the habit itself
+    console.log(`Deleting habit ID: ${id}`);
     const { error } = await supabase
       .from("habits")
       .delete()
       .eq("id", id)
       .eq("user_id", userId);
 
-    if (error) throw error;
+    if (error) {
+      console.error(`Error deleting habit: ${error.message}`);
+      throw error;
+    }
+    console.log("Habit deleted successfully");
+    
     return true;
     
   } catch (error) {
+    console.error("Deletion process failed:", error);
     return handleApiError(error, "deleting habit");
   }
 };

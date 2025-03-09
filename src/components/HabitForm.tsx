@@ -18,7 +18,10 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
     if (!isEdit || !habit) return;
     
     try {
+      console.log("Deleting habit:", habit.id);
       await deleteHabit(habit.id);
+      console.log("Habit deleted successfully");
+      
       toast({
         title: "Habit deleted",
         description: "Your habit has been permanently deleted",
@@ -34,7 +37,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
       console.error("Error deleting habit:", error);
       toast({
         title: "Error",
-        description: "Failed to delete habit",
+        description: "Failed to delete habit. Please try again.",
         variant: "destructive",
       });
     }
@@ -44,7 +47,10 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
     if (!isEdit || !habit) return;
     
     try {
+      console.log("Archiving habit:", habit.id);
       await archiveHabit(habit.id);
+      console.log("Habit archived successfully");
+      
       toast({
         title: "Habit archived",
         description: "Your habit has been archived and can be restored later",

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCompletionsForDate, toggleHabitCompletion, getTodayFormatted } from "@/lib/habits";
 import { fetchHabits } from "@/lib/api/habitCrudAPI";
@@ -51,13 +52,20 @@ export function HabitList() {
     fetchCompletions();
   }, []);
 
+  // Enhanced refetch function to ensure all data is refreshed
+  const refreshAllData = useCallback(async () => {
+    console.log("Refreshing all habit data...");
+    await refetchHabits();
+    await fetchCompletions();
+  }, [refetchHabits]);
+
   const handleToggleCompletion = async (habitId: string) => {
     try {
       setIsUpdating(habitId); // Show updating state for this specific habit
       const isCompleted = completions.some(c => c.habit_id === habitId);
       await toggleHabitCompletion(habitId, today, isCompleted);
       await fetchCompletions();
-      refetchHabits();
+      await refetchHabits();
       
       toast({
         title: isCompleted ? "Habit unmarked" : "Habit completed",
@@ -70,11 +78,8 @@ export function HabitList() {
     }
   };
 
-  const handleHabitSaved = () => {
-    refetchHabits();
-    setTimeout(() => {
-      refetchHabits();
-    }, 300);
+  const handleHabitSaved = async () => {
+    await refreshAllData();
     setShowForm(false);
     toast({
       title: "Habit saved",
@@ -82,13 +87,11 @@ export function HabitList() {
     });
   };
 
-  const handleHabitDeleted = () => {
+  const handleHabitDeleted = async () => {
     console.log("Habit deleted, refreshing list...");
-    refetchHabits();
-    setTimeout(() => {
-      refetchHabits();
-    }, 300);
+    await refreshAllData();
     setShowForm(false);
+    
     toast({
       title: "Habit removed",
       description: "Your habit has been removed successfully",

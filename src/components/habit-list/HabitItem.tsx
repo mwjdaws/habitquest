@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,11 +59,14 @@ export function HabitItem({
         title: "Habit deleted",
         description: "Your habit has been permanently deleted",
       });
+      
       if (onDelete) {
         onDelete();
       } else {
         onUpdate();
       }
+      
+      setShowDeleteDialog(false);
     } catch (error) {
       console.error("Error deleting habit:", error);
       toast({
@@ -74,7 +76,6 @@ export function HabitItem({
       });
     } finally {
       setIsProcessing(false);
-      setShowDeleteDialog(false);
     }
   };
 
@@ -86,11 +87,14 @@ export function HabitItem({
         title: "Habit archived",
         description: "Your habit has been archived and can be restored later",
       });
+      
       if (onDelete) {
         onDelete();
       } else {
         onUpdate();
       }
+      
+      setShowArchiveDialog(false);
     } catch (error) {
       console.error("Error archiving habit:", error);
       toast({
@@ -100,7 +104,6 @@ export function HabitItem({
       });
     } finally {
       setIsProcessing(false);
-      setShowArchiveDialog(false);
     }
   };
 
