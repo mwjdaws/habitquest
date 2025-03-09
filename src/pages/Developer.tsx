@@ -1,13 +1,12 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Code, FileText, Info, Database, Server, Zap } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 import { ApiDocumentation } from "@/components/developer/ApiDocumentation";
 import { ArchitectureOverview } from "@/components/developer/ArchitectureOverview";
 import { BusinessLogicDocs } from "@/components/developer/BusinessLogicDocs";
 import { DocumentationResources } from "@/components/developer/DocumentationResources";
+import { VersionInfo } from "@/components/developer/VersionInfo";
 
 const Developer = () => {
   return (
@@ -31,29 +30,7 @@ const Developer = () => {
         </TabsList>
         
         <TabsContent value="version" className="space-y-4 mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Version</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="font-medium">Version:</span>
-                  <span>1.0.0</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="font-medium">Last Updated:</span>
-                  <span>{new Date().toLocaleDateString()}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="font-medium">Build:</span>
-                  <span>2023.10.1</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <VersionInfo />
         </TabsContent>
         
         <TabsContent value="architecture" className="mt-6 space-y-4">
