@@ -1,6 +1,8 @@
-import { deleteHabit, archiveHabit, Habit } from "@/lib/habits";
+
 import { toast } from "@/components/ui/use-toast";
 import { HabitFormContainer } from "./habit/HabitFormContainer";
+import { Habit } from "@/lib/habitTypes";
+import { deleteHabit, archiveHabit } from "@/lib/api/habitCrudAPI";
 
 type HabitFormProps = {
   habit?: Habit;
@@ -64,20 +66,13 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
     }
   };
 
-  // Since we need to handle delete/archive from inside the HabitFormContainer,
-  // we'll pass a combined handler for both operations
-  const handleDeleteOrArchive = () => {
-    // For now we're keeping it simple with just delete
-    // In a future enhancement, we could add UI to choose between delete and archive
-    handleDelete();
-  };
-
   return (
     <HabitFormContainer
       habit={habit}
       onSave={onSave}
       onCancel={onCancel}
-      onDelete={handleDeleteOrArchive}
+      onDelete={handleDelete}
+      onArchive={handleArchive}
     />
   );
 }

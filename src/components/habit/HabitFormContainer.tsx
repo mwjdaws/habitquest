@@ -6,7 +6,7 @@ import { toast } from "@/components/ui/use-toast";
 import { 
   createHabit, 
   updateHabit
-} from "@/lib/habits";
+} from "@/lib/api/habitCrudAPI";
 import { Habit } from "@/lib/habitTypes";
 import { HabitBasicFields } from "./form-fields/HabitBasicFields";
 import { HabitFrequencyFields } from "./form-fields/HabitFrequencyFields";
@@ -18,9 +18,16 @@ type HabitFormContainerProps = {
   onSave: () => void;
   onCancel: () => void;
   onDelete?: () => void;
+  onArchive?: () => void;
 };
 
-export function HabitFormContainer({ habit, onSave, onCancel, onDelete }: HabitFormContainerProps) {
+export function HabitFormContainer({ 
+  habit, 
+  onSave, 
+  onCancel, 
+  onDelete,
+  onArchive
+}: HabitFormContainerProps) {
   const [name, setName] = useState(habit?.name || "");
   const [description, setDescription] = useState(habit?.description || "");
   const [frequency, setFrequency] = useState<string[]>(habit?.frequency || []);
@@ -105,7 +112,7 @@ export function HabitFormContainer({ habit, onSave, onCancel, onDelete }: HabitF
           <Separator />
           <DeleteConfirmation 
             onConfirm={onDelete} 
-            onArchive={onDelete}
+            onArchive={onArchive}
             isLoading={loading} 
           />
         </>

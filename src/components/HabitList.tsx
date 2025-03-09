@@ -22,7 +22,7 @@ export function HabitList() {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const today = getTodayFormatted();
 
-  // Fix the query configuration to properly handle the fetchHabits function
+  // Configure React Query with the correct fetchHabits function
   const { 
     data: habits = [], 
     isLoading, 
@@ -30,7 +30,7 @@ export function HabitList() {
     refetch: refetchHabits 
   } = useQuery({
     queryKey: ['habits'],
-    queryFn: () => fetchHabits(false), // Explicitly call fetchHabits with the boolean parameter
+    queryFn: () => fetchHabits(false), // Pass false to exclude archived habits
   });
 
   useEffect(() => {
@@ -73,10 +73,10 @@ export function HabitList() {
   };
 
   const handleHabitSaved = () => {
-    // Immediately refetch habits to ensure the list is up-to-date
+    // Force refetch immediately after saving to ensure fresh data
     refetchHabits();
     
-    // Force a refresh after a short delay to ensure all components have updated
+    // Force a second refresh after a short delay to ensure all components have updated
     setTimeout(() => {
       refetchHabits();
     }, 300);
@@ -89,18 +89,18 @@ export function HabitList() {
   };
 
   const handleHabitDeleted = () => {
-    // Immediately refetch habits when a habit is deleted
+    // Force refetch immediately after deletion to ensure fresh data
     refetchHabits();
     
-    // Force a second refresh after a delay to ensure UI is updated
+    // Also fetch a second time after a delay to ensure all components have updated
     setTimeout(() => {
       refetchHabits();
     }, 300);
     
     setShowForm(false);
     toast({
-      title: "Habit deleted",
-      description: "Your habit has been deleted successfully",
+      title: "Habit removed",
+      description: "Your habit has been removed successfully",
     });
   };
 
