@@ -1,6 +1,7 @@
+
 import { useState, useCallback } from "react";
 import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
-import { HabitTrackingState } from "./types";
+import { HabitTrackingState } from "../types";
 
 export const useHabitStateUpdate = () => {
   const [state, setState] = useState<HabitTrackingState>({
@@ -26,8 +27,11 @@ export const useHabitStateUpdate = () => {
       if (!habit) return prevState;
 
       const completion: HabitCompletion = {
-        habitId,
-        date: new Date().toISOString(),
+        id: crypto.randomUUID(),
+        habit_id: habitId,
+        user_id: "user-id", // This should be replaced with actual user ID
+        completed_date: new Date().toISOString(),
+        created_at: new Date().toISOString(),
       };
 
       return {
@@ -40,9 +44,12 @@ export const useHabitStateUpdate = () => {
   const failHabit = useCallback((habitId: string, reason: string) => {
     setState((prevState) => {
       const failure: HabitFailure = {
-        habitId,
-        reason,
-        date: new Date().toISOString(),
+        id: crypto.randomUUID(),
+        habit_id: habitId,
+        user_id: "user-id", // This should be replaced with actual user ID
+        failure_date: new Date().toISOString(),
+        reason: reason,
+        created_at: new Date().toISOString(),
       };
 
       return {
@@ -59,7 +66,7 @@ export const useHabitStateUpdate = () => {
     }));
   }, []);
 
-  const setError = useCallback((error: Error | null) => {
+  const setError = useCallback((error: string | null) => {
     setState((prevState) => ({
       ...prevState,
       error,
@@ -78,6 +85,19 @@ export const useHabitStateUpdate = () => {
     });
   }, []);
 
+  // Add resetState function that was missing
+  const resetState = useCallback(() => {
+    setState({
+      habits: [],
+      filteredHabits: [],
+      completions: [],
+      failures: [],
+      loading: true,
+      error: null,
+      isInitialized: false,
+    });
+  }, []);
+
   return {
     state,
     addHabit,
@@ -86,5 +106,6 @@ export const useHabitStateUpdate = () => {
     setLoading,
     setError,
     initializeState,
+    resetState
   };
 };

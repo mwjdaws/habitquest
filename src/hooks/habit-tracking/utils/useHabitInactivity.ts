@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { Habit, HabitCompletion, HABIT_LOSS_DAYS } from "@/lib/habitTypes";
 import { getTodayFormattedInToronto } from "@/lib/dateUtils";
