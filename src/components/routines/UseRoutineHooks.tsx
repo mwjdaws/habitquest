@@ -164,6 +164,7 @@ export function useRoutineHandlers() {
     currentRoutine,
     expandedRoutines,
     failureState,
+    setFailureState,
     handleCreateRoutine,
     handleEditRoutine,
     handleSubmitRoutine,

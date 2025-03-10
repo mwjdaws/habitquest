@@ -7,6 +7,7 @@ import { EmptyRoutines } from "./EmptyRoutines";
 import { LoadingRoutines } from "./LoadingRoutines";
 import { RoutineListContainer } from "./RoutineListContainer";
 import { useRoutineHandlers } from "./UseRoutineHooks";
+import { Habit } from "@/lib/habitTypes";
 
 export function RoutinesList() {
   const {
@@ -24,6 +25,7 @@ export function RoutinesList() {
     currentRoutine,
     expandedRoutines,
     failureState,
+    setFailureState,
     handleCreateRoutine,
     handleEditRoutine,
     handleSubmitRoutine,

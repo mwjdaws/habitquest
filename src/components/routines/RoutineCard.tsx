@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Check, ChevronDown, ChevronUp, Edit, MoreVertical, Trash } from "lucide-react";
 import { Routine } from "@/lib/routineTypes";
-import { Habit } from "@/lib/habitTypes";
+import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,8 +17,8 @@ import { Badge } from "@/components/ui/badge";
 interface RoutineCardProps {
   routine: Routine;
   habits: Habit[];
-  completions: any[];
-  failures: any[];
+  completions: HabitCompletion[];
+  failures: HabitFailure[];
   expanded?: boolean;
   onToggleExpand?: (id: string) => void;
   onEdit: (routine: Routine) => void;
