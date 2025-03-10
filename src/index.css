@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -162,5 +163,5 @@
 }
 
 .dashboard-grid-container .layout {
-  min-height: calc(100vh - 200px);
+  min-height: calc(100vh - 150px);
 }

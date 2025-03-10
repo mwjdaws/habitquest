@@ -1,3 +1,4 @@
+
 import React, { ReactNode, useState, useEffect, useMemo } from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
@@ -7,8 +8,7 @@ import { toast } from "sonner";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// Completely reworked layouts to ensure narrower cards are taller
-// and journal statistics is wider by default
+// Adjusting layouts to ensure cards are fully readable and grid is longer
 const DEFAULT_LAYOUTS = {
   lg: [
     { i: "habit-tracker", x: 0, y: 0, w: 3, h: 5, minW: 2, minH: 4 },
@@ -162,11 +162,11 @@ export function DashboardGrid({ children }: DashboardGridProps) {
           layouts={layouts}
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           cols={{ lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 }}
-          rowHeight={90}
+          rowHeight={80}
           isDraggable={isDraggable}
           isResizable={isResizable}
           onLayoutChange={handleLayoutChange}
-          margin={[16, 16]}
+          margin={[12, 12]}
           containerPadding={[16, 16]}
           preventCollision={true}
           compactType="vertical"
