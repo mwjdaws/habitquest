@@ -6,7 +6,20 @@ import { useHabitMetrics } from "./utils/useHabitMetrics";
 import { HabitTrackingResult } from "./types";
 
 /**
- * Primary hook for habit tracking functionality that combines data and actions
+ * Primary hook for habit tracking functionality that provides a complete solution
+ * for tracking, displaying, and interacting with habits
+ * 
+ * This hook combines data fetching, action handling, and metrics calculation into a
+ * single, easy-to-use interface for habit tracking components.
+ *
+ * @param {function} [onHabitChange] - Optional callback that runs when habits are modified
+ * @returns {HabitTrackingResult} Complete set of habit tracking data and functions
+ * 
+ * @example
+ * const { 
+ *   habits, completions, loading, error, progress, 
+ *   handleToggleCompletion, handleLogFailure, refreshData 
+ * } = useHabitTracking();
  */
 export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResult {
   const { state, setState, refreshData } = useHabitData(onHabitChange);

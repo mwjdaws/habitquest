@@ -6,6 +6,22 @@ import { useHabitFetcher } from "./data/useHabitFetcher";
 import { useHabitStateManager } from "./data/useHabitStateManager";
 import { useVisibilityManager } from "./utils/useVisibilityManager";
 
+/**
+ * Core hook that manages habit data fetching, caching, refreshing, and state management
+ * 
+ * This hook handles the complete lifecycle of habit data:
+ * - Initial loading on mount
+ * - Refreshing data when requested or when tab becomes visible
+ * - Managing cache and stale data
+ * - Handling loading states and errors
+ * - Debouncing and throttling requests to prevent API overload
+ *
+ * @param {function} [onHabitChange] - Optional callback that runs when habits are modified
+ * @returns {Object} State and functions for habit data management
+ * 
+ * @example
+ * const { state, setState, refreshData } = useHabitData(onHabitChange);
+ */
 export function useHabitData(onHabitChange?: () => void) {
   const { loadData, cancelPendingRequests, getCurrentVersion, clearCache } = useHabitFetcher();
   const { state, setState, updateHabits, setLoading, setError } = useHabitStateManager();
@@ -21,7 +37,14 @@ export function useHabitData(onHabitChange?: () => void) {
   // Time after which data is considered stale when tab becomes visible again (ms)
   const STALE_THRESHOLD = 60000; // 60 seconds
 
-  // Improved refresh function with better error handling, debouncing and queueing
+  /**
+   * Refreshes habit data with intelligent handling of concurrent requests,
+   * debouncing, throttling, and error management
+   * 
+   * @param {boolean} [showLoading=true] - Whether to show loading state during refresh
+   * @param {boolean} [forceRefresh=false] - Whether to ignore cache and force a refresh
+   * @returns {Promise<void>}
+   */
   const refreshData = useCallback(async (showLoading = true, forceRefresh = false) => {
     // Check if refresh is already in progress
     if (refreshInProgressRef.current) {

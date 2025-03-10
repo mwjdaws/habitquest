@@ -4,6 +4,15 @@ import { Button } from "@/components/ui/button";
 import { memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+/**
+ * Props for the StatusButtons component
+ * 
+ * @typedef {Object} StatusButtonsProps
+ * @property {string} habitId - ID of the habit
+ * @property {boolean} isCompleted - Whether the habit is completed
+ * @property {function} onToggleCompletion - Callback to toggle completion status
+ * @property {function} onLogFailure - Callback to mark habit as failed
+ */
 type StatusButtonsProps = {
   habitId: string;
   isCompleted: boolean;
@@ -18,6 +27,15 @@ const buttonVariants = {
   exit: { scale: 0.95, opacity: 0, transition: { duration: 0.15 } }
 };
 
+/**
+ * Renders the action buttons for a habit (Complete/Done and Skip)
+ * 
+ * This component is memoized for performance and uses AnimatePresence
+ * for smooth transitions when buttons appear/disappear.
+ * 
+ * @param {StatusButtonsProps} props - Component props
+ * @returns {JSX.Element} Memoized component
+ */
 export const StatusButtons = memo(function StatusButtons({
   habitId,
   isCompleted,

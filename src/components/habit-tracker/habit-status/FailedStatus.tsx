@@ -4,6 +4,14 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { memo, useCallback, useMemo } from "react";
 
+/**
+ * Props for the FailedStatus component
+ * 
+ * @typedef {Object} FailedStatusProps
+ * @property {string} habitId - ID of the failed habit
+ * @property {string} failureReason - Text description of why the habit failed
+ * @property {function} onUndoFailure - Callback to undo the failed status
+ */
 type FailedStatusProps = {
   habitId: string;
   failureReason: string;
@@ -17,6 +25,15 @@ const buttonVariants = {
   exit: { scale: 0.95, opacity: 0, transition: { duration: 0.15 } }
 };
 
+/**
+ * Displays a failed habit status with the failure reason and undo button
+ * 
+ * This component is optimized for performance with memoization to prevent
+ * unnecessary re-renders when parent components update.
+ * 
+ * @param {FailedStatusProps} props - Component props
+ * @returns {JSX.Element} Memoized component
+ */
 export const FailedStatus = memo(function FailedStatus({
   habitId,
   failureReason,
