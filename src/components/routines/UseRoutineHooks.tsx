@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Routine } from "@/lib/routineTypes";
 import { useRoutines } from "@/hooks/useRoutines";
@@ -61,7 +60,7 @@ export function useRoutineHandlers() {
         await editRoutine(currentRoutine.id, {
           name: values.name,
           description: values.description,
-          time_of_day: values.time_of_day,
+          time_of_day: values.time_of_day === "none" || !values.time_of_day ? null : values.time_of_day,
         });
 
         // Get the current habits for this routine
@@ -85,7 +84,7 @@ export function useRoutineHandlers() {
         const newRoutine = await addRoutine({
           name: values.name,
           description: values.description,
-          time_of_day: values.time_of_day,
+          time_of_day: values.time_of_day === "none" || !values.time_of_day ? null : values.time_of_day,
         });
 
         // Add habits to the new routine

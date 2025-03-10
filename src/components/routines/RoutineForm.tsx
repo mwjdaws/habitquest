@@ -187,7 +187,8 @@ export function RoutineForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      {/* Fix: Ensure "None" value is not an empty string but a valid string */}
+                      <SelectItem value="none">None</SelectItem>
                       {timeOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
