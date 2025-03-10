@@ -6,7 +6,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Habits from "./pages/Habits";
-import Routines from "./pages/Routines"; // New import
+import Routines from "./pages/Routines";
 import Tasks from "./pages/Tasks";
 import Goals from "./pages/Goals";
 import Journal from "./pages/Journal";
@@ -14,11 +14,11 @@ import Sleep from "./pages/Sleep";
 import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import { Layout } from "./components/Layout"; // Changed to named import
+import { Layout } from "./components/Layout";
 import AuthLayout from "./components/auth/AuthLayout";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Toaster } from "./components/ui/sonner";
-import { ThemeSwitcher } from "./components/ThemeSwitcher"; // Use ThemeSwitcher directly
+import { ThemeSwitcher } from "./components/ThemeSwitcher";
 import Developer from "./pages/Developer";
 import Mood from "./pages/Mood";
 
@@ -40,7 +40,7 @@ const router = createBrowserRouter([
         element: <Habits />,
       },
       {
-        path: "routines", // New route
+        path: "routines",
         element: <Routines />,
       },
       {
@@ -87,13 +87,16 @@ const router = createBrowserRouter([
   },
 ]);
 
+// The key change: RouterProvider needs to be the outermost component
+// that wraps AuthProvider which uses the useNavigate hook
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeSwitcher>
-      <AuthProvider>
-        <RouterProvider router={router} />
-        <Toaster />
-      </AuthProvider>
+      <RouterProvider router={router}>
+        <AuthProvider>
+          <Toaster />
+        </AuthProvider>
+      </RouterProvider>
     </ThemeSwitcher>
   </React.StrictMode>
 );

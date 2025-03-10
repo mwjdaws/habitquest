@@ -6,7 +6,11 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate("/dashboard");
+    // Add a small delay to ensure the router is fully initialized
+    const timer = setTimeout(() => {
+      navigate("/dashboard");
+    }, 50);
+    return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
