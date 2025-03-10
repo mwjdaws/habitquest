@@ -85,6 +85,19 @@ export const useHabitStateUpdate = () => {
     });
   }, []);
 
+  // Add resetState function that was missing
+  const resetState = useCallback(() => {
+    setState({
+      habits: [],
+      filteredHabits: [],
+      completions: [],
+      failures: [],
+      loading: true,
+      error: null,
+      isInitialized: false,
+    });
+  }, []);
+
   return {
     state,
     addHabit,
@@ -93,5 +106,6 @@ export const useHabitStateUpdate = () => {
     setLoading,
     setError,
     initializeState,
+    resetState
   };
 };

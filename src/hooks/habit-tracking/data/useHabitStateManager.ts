@@ -14,7 +14,9 @@ export function useHabitStateManager() {
   const [state, setState] = useState<HabitTrackingState>(initialState);
   
   const { filterHabitsForToday } = useHabitFiltering();
-  const stateUpdaters = useHabitStateUpdate(setState);
+  
+  // Initialize state updaters without passing setState - it now manages its own state internally
+  const stateUpdaters = useHabitStateUpdate();
   
   // Update habits with filtering
   const updateHabits = useCallback((habits: any[]) => {
@@ -34,8 +36,8 @@ export function useHabitStateManager() {
   const combinedStateUpdaters = useMemo(() => ({
     ...stateUpdaters,
     updateHabits,
-    resetState: () => stateUpdaters.resetState(initialState)
-  }), [stateUpdaters, updateHabits, initialState]);
+    resetState: () => stateUpdaters.resetState()
+  }), [stateUpdaters, updateHabits]);
   
   // Memoize the return value to prevent unnecessary re-renders
   return useMemo(() => ({
