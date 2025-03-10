@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { 
   createHabit, 
   updateHabit
@@ -46,10 +46,8 @@ export function HabitFormContainer({
     setError(null);
     
     if (!name.trim()) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Habit name is required",
-        variant: "destructive",
       });
       return;
     }
@@ -66,17 +64,21 @@ export function HabitFormContainer({
 
       if (isEdit && habit) {
         await updateHabit(habit.id, habitData);
+        toast.success("Habit updated", {
+          description: "Your changes have been saved",
+        });
       } else {
         await createHabit(habitData);
+        toast.success("Habit created", {
+          description: "Your new habit has been created",
+        });
       }
       onSave();
     } catch (error) {
       console.error("Error saving habit:", error);
       setError(error instanceof Error ? error.message : "Failed to save habit");
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: error instanceof Error ? error.message : `Failed to ${isEdit ? "update" : "create"} habit`,
-        variant: "destructive",
       });
     } finally {
       setLoading(false);

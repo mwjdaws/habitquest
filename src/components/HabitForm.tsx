@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { HabitFormContainer } from "./habit/HabitFormContainer";
 import { Habit } from "@/lib/habitTypes";
 import { deleteHabit, archiveHabit } from "@/lib/api/habit"; // Updated import path
@@ -26,8 +26,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
       const success = await deleteHabit(habit.id);
       
       if (success) {
-        toast({
-          title: "Habit deleted",
+        toast.error("Habit deleted", {
           description: "Your habit has been permanently deleted",
         });
         
@@ -42,10 +41,8 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
       }
     } catch (error) {
       console.error("Error deleting habit:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete habit. Please try again.",
-        variant: "destructive",
+      toast.error("Failed to delete habit", {
+        description: "Please try again.",
       });
     } finally {
       setIsProcessing(false);
@@ -61,8 +58,7 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
       
       await archiveHabit(habit.id);
       
-      toast({
-        title: "Habit archived",
+      toast.info("Habit archived", {
         description: "Your habit has been archived and can be restored later",
       });
       
@@ -73,10 +69,8 @@ export function HabitForm({ habit, onSave, onCancel, onDelete }: HabitFormProps)
       }
     } catch (error) {
       console.error("Error archiving habit:", error);
-      toast({
-        title: "Error",
-        description: "Failed to archive habit",
-        variant: "destructive",
+      toast.error("Failed to archive habit", {
+        description: error instanceof Error ? error.message : "Unknown error occurred",
       });
     } finally {
       setIsProcessing(false);

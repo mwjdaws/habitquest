@@ -3,7 +3,7 @@ import { KeyResult, Goal } from "@/hooks/useGoals";
 import { KeyResultItem } from "../KeyResultItem";
 import { useCallback } from "react";
 import { updateGoalProgress } from "@/lib/api/goal";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface KeyResultsSectionProps {
   goal: Goal;
@@ -18,8 +18,7 @@ export function KeyResultsSection({ goal, isGoalActive, onGoalUpdate }: KeyResul
       const { success, message } = await updateGoalProgress(goal.id, newProgress);
       
       if (success) {
-        toast({
-          title: "Progress updated",
+        toast.success("Progress updated", {
           description: message || "Goal progress has been updated",
         });
         

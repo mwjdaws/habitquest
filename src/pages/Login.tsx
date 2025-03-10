@@ -8,6 +8,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 import StatusMessage from "@/components/auth/StatusMessage";
 import { formatErrorMessage } from "@/lib/error-utils";
+import { toast } from "sonner";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -83,12 +84,21 @@ const Login = () => {
           if (error.message.includes("already registered")) {
             setErrorMessage("This email is already registered. Please log in instead.");
             setActiveTab("login");
+            toast.error("Account already exists", {
+              description: "This email is already registered. Please log in instead.",
+            });
           } else {
             setErrorMessage(formatErrorMessage(error));
+            toast.error("Signup failed", {
+              description: formatErrorMessage(error),
+            });
           }
         } else if (success) {
           setSuccessMessage("Account created successfully! You can now log in.");
           setActiveTab("login");
+          toast.success("Account created", {
+            description: "You can now log in with your credentials",
+          });
         }
       } else {
         // Login
@@ -99,16 +109,26 @@ const Login = () => {
         if (error) {
           console.error(`Login error:`, error);
           setErrorMessage(formatErrorMessage(error));
+          toast.error("Login failed", {
+            description: formatErrorMessage(error),
+          });
         }
         
         // If success, the navigation happens in the auth context
-        if (!success) {
+        if (success) {
+          toast.success("Login successful", {
+            description: "Redirecting to dashboard...",
+          });
+        } else {
           setInfoMessage("");
         }
       }
     } catch (error) {
       console.error("Unexpected error:", error);
       setErrorMessage(formatErrorMessage(error));
+      toast.error("Error", {
+        description: formatErrorMessage(error),
+      });
     } finally {
       setLoading(false);
     }
@@ -119,6 +139,9 @@ const Login = () => {
     setPassword("password123");
     setInfoMessage("Using test credentials. Click the login button to continue.");
     setErrorMessage("");
+    toast.info("Test credentials applied", {
+      description: "Click Login to continue with test account",
+    });
   };
 
   return (

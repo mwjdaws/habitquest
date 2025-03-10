@@ -25,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface GoalItemActionsProps {
   goal: Goal;
@@ -54,10 +54,8 @@ export function GoalItemActions({
     try {
       await onDelete();
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to delete goal. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsDeleting(false);
@@ -72,10 +70,8 @@ export function GoalItemActions({
     try {
       await onComplete();
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to complete goal. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsCompleting(false);

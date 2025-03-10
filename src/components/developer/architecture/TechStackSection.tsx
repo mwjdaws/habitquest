@@ -13,6 +13,7 @@ export const TechStackSection: React.FC = () => {
         <li><span className="font-medium">Data Visualization:</span> Recharts</li>
         <li><span className="font-medium">Layout System:</span> React Grid Layout (responsive, draggable grid)</li>
         <li><span className="font-medium">Animation:</span> Framer Motion</li>
+        <li><span className="font-medium">Notifications:</span> Sonner (toast notifications)</li>
       </ul>
 
       <h4 className="text-base font-medium mt-4">Dashboard Technologies</h4>

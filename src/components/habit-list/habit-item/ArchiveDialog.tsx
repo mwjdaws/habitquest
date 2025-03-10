@@ -1,5 +1,5 @@
 
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Archive } from "lucide-react";
 import { Habit } from "@/lib/habitTypes";
@@ -40,8 +40,7 @@ export function ArchiveDialog({
       await archiveHabit(habit.id);
       console.log(`Successfully archived habit ID: ${habit.id}`);
       
-      toast({
-        title: "Habit archived",
+      toast.info("Habit archived", {
         description: "Your habit has been archived and can be restored later",
       });
       
@@ -49,10 +48,8 @@ export function ArchiveDialog({
       onArchive();
     } catch (error) {
       console.error("Error archiving habit:", error);
-      toast({
-        title: "Error",
-        description: "Failed to archive habit",
-        variant: "destructive",
+      toast.error("Failed to archive habit", {
+        description: error instanceof Error ? error.message : "Unknown error occurred",
       });
     } finally {
       setIsProcessing(false);

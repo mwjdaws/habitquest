@@ -1,5 +1,5 @@
 
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Trash } from "lucide-react";
 import { Habit } from "@/lib/habitTypes";
@@ -40,19 +40,17 @@ export function DeleteDialog({
       await deleteHabit(habit.id);
       console.log(`Successfully deleted habit ID: ${habit.id}`);
       
-      toast({
-        title: "Habit deleted",
+      toast.error("Habit deleted", {
         description: "Your habit has been permanently deleted",
+        duration: 5000,
       });
       
       setIsOpen(false);
       onDelete();
     } catch (error) {
       console.error("Error deleting habit:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete habit",
-        variant: "destructive",
+      toast.error("Failed to delete habit", {
+        description: error instanceof Error ? error.message : "Unknown error occurred",
       });
     } finally {
       setIsProcessing(false);
