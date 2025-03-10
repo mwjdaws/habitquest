@@ -3,9 +3,18 @@ import { extractHSL } from './colorUtils';
 import { ColorTheme } from './colorThemes';
 import { toast } from "sonner";
 
+/**
+ * Applies the selected theme to the application
+ * 
+ * @param themeName - Name of the theme to apply
+ * @param themes - Array of available themes
+ */
 export const applyTheme = (themeName: string, themes: ColorTheme[]): void => {
   const theme = themes.find(t => t.name === themeName);
-  if (!theme) return;
+  if (!theme) {
+    console.error(`Theme '${themeName}' not found`);
+    return;
+  }
   
   try {
     // Convert colors to HSL values - do this once outside the loop
@@ -52,10 +61,14 @@ export const applyTheme = (themeName: string, themes: ColorTheme[]): void => {
       '--habit-purple': theme.primaryColor.startsWith('#') ? theme.primaryColor : `hsl(${primaryHSL})`,
       
       // Sidebar variables
-      '--sidebar-primary': theme.primaryColor.startsWith('#') ? theme.primaryColor : `hsl(${primaryHSL})`,
       '--sidebar-background': backgroundHSL,
       '--sidebar-foreground': foregroundHSL,
-      '--sidebar-border': borderHSL
+      '--sidebar-primary': theme.primaryColor.startsWith('#') ? theme.primaryColor : `hsl(${primaryHSL})`,
+      '--sidebar-primary-foreground': '0 0% 100%',
+      '--sidebar-accent': accentHSL,
+      '--sidebar-accent-foreground': foregroundHSL,
+      '--sidebar-border': borderHSL,
+      '--sidebar-ring': primaryHSL
     };
     
     // Apply all CSS variables in a batch using fewer DOM operations

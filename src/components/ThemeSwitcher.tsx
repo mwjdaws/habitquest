@@ -14,14 +14,23 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// Local storage key for theme persistence
+const THEME_STORAGE_KEY = 'app-color-theme';
+
 // Theme provider component
 export function ThemeSwitcher({ children }: { children: ReactNode }) {
-  const [currentTheme, setCurrentTheme] = useState<string>("Default Purple");
+  // Initialize with stored theme or default
+  const [currentTheme, setCurrentTheme] = useState<string>(() => {
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    return savedTheme || "Default Purple";
+  });
 
   // Memoize the theme application function to avoid recreating it on every render
   const handleThemeChange = useCallback((themeName: string) => {
     applyTheme(themeName, colorThemes);
     setCurrentTheme(themeName);
+    // Save theme preference to localStorage for persistence
+    localStorage.setItem(THEME_STORAGE_KEY, themeName);
   }, []);
 
   // Apply theme when component mounts
@@ -49,7 +58,12 @@ export function ThemeSelector() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Change theme">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-9 w-9" 
+          aria-label="Change theme"
+        >
           <Palette className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
@@ -70,15 +84,19 @@ export function ThemeSelector() {
                 }}
                 onClick={() => handleThemeChange(theme.name)}
                 title={theme.name}
+                aria-pressed={currentTheme === theme.name}
+                aria-label={`Select ${theme.name} theme`}
               >
                 <div className="flex flex-col w-full h-full">
                   <div 
                     className="w-full h-6" 
                     style={{ backgroundColor: theme.primaryColor }}
+                    aria-hidden="true"
                   ></div>
                   <div 
                     className="w-full h-3" 
                     style={{ backgroundColor: theme.accentColor }}
+                    aria-hidden="true"
                   ></div>
                 </div>
                 <span className="sr-only">{theme.name}</span>

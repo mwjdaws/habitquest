@@ -23,9 +23,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
         },
         duration: 4000,
         closeButton: true,
-        // WCAG contrast requirements
+        // WCAG contrast requirements - Fixed TypeScript error by using style object properly
         style: {
-          '--border-radius': '0.5rem',
+          borderRadius: '0.5rem',
         }
       }}
       position="bottom-right"
