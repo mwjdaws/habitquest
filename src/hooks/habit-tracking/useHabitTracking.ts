@@ -2,6 +2,7 @@
 import { useMemo, useCallback } from "react";
 import { useHabitData } from "./useHabitData";
 import { useHabitActions } from "./useHabitActions";
+import { useHabitMetrics } from "./utils/useHabitMetrics";
 import { HabitTrackingResult } from "./types";
 
 /**
@@ -10,25 +11,15 @@ import { HabitTrackingResult } from "./types";
 export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResult {
   const { state, setState, refreshData } = useHabitData(onHabitChange);
   
+  // Get actions from separate hook
   const { 
     handleToggleCompletion, 
     handleLogFailure,
     handleUndoFailure
   } = useHabitActions(state, setState, refreshData);
 
-  // Calculate UI metrics once per render with proper dependencies
-  const metrics = useMemo(() => {
-    const totalCount = state.filteredHabits.length;
-    const completedCount = state.filteredHabits.filter(habit => 
-      state.completions.some(c => c.habit_id === habit.id)
-    ).length;
-    
-    const progress = totalCount > 0 
-      ? Math.round((completedCount / totalCount) * 100) 
-      : 0;
-    
-    return { totalCount, completedCount, progress };
-  }, [state.filteredHabits, state.completions]);
+  // Calculate UI metrics using a dedicated hook
+  const metrics = useHabitMetrics(state.filteredHabits, state.completions);
 
   // Wrap refreshData with useCallback to stabilize reference
   const stableRefreshData = useCallback((showLoading = true) => {

@@ -3,20 +3,15 @@ import { useState, useCallback, useMemo } from "react";
 import { HabitTrackingState } from "../types";
 import { useHabitFiltering } from "../useHabitFiltering";
 import { useHabitStateUpdate } from "../utils/useHabitStateUpdate";
+import { useHabitInitialState } from "./useHabitInitialState";
 
 /**
  * Hook to manage habit tracking state with optimized update functions
  */
 export function useHabitStateManager() {
-  const [state, setState] = useState<HabitTrackingState>({
-    habits: [],
-    filteredHabits: [],
-    completions: [],
-    failures: [],
-    loading: true,
-    error: null,
-    isInitialized: false
-  });
+  // Get initial state from a dedicated hook
+  const initialState = useHabitInitialState();
+  const [state, setState] = useState<HabitTrackingState>(initialState);
   
   const { filterHabitsForToday } = useHabitFiltering();
   const { setLoading, setError } = useHabitStateUpdate(setState);
@@ -35,12 +30,38 @@ export function useHabitStateManager() {
     }));
   }, [filterHabitsForToday]);
   
+  // Encapsulate state update functions in a separate object
+  const stateUpdaters = useMemo(() => ({
+    updateHabits,
+    setLoading,
+    setError,
+    
+    // Add a new convenient function to update completions
+    updateCompletions: (completions: any[]) => {
+      setState(prev => ({
+        ...prev,
+        completions,
+        loading: false
+      }));
+    },
+    
+    // Add a new convenient function to update failures
+    updateFailures: (failures: any[]) => {
+      setState(prev => ({
+        ...prev,
+        failures,
+        loading: false
+      }));
+    },
+    
+    // Reset state function
+    resetState: () => setState(initialState)
+  }), [updateHabits, setLoading, setError, initialState]);
+  
   // Memoize the return value to prevent unnecessary re-renders
   return useMemo(() => ({
     state,
     setState,
-    updateHabits,
-    setLoading,
-    setError
-  }), [state, updateHabits, setLoading, setError]);
+    ...stateUpdaters
+  }), [state, stateUpdaters]);
 }
