@@ -1,57 +1,71 @@
+import {
+  LayoutDashboard,
+  CheckCircle,
+  ListChecks,
+  CheckSquare,
+  Target,
+  Book,
+  Moon,
+  BarChart2,
+} from "lucide-react";
 
-import { Calendar, CheckSquare, BarChart, Diamond, BookOpen, Heart, Home, Code, Moon } from "lucide-react";
-import { LucideIcon } from "lucide-react";
-
-export interface NavigationItem {
+export type NavItem = {
   title: string;
-  path: string;
-  icon: LucideIcon;
-}
+  href: string;
+  icon: keyof typeof Icons;
+};
 
-export const navigationItems: NavigationItem[] = [
+const Icons = {
+  "layout-dashboard": LayoutDashboard,
+  "check-circle": CheckCircle,
+  "list-checks": ListChecks,
+  "check-square": CheckSquare,
+  target: Target,
+  book: Book,
+  moon: Moon,
+  "bar-chart-2": BarChart2,
+};
+
+// Update the navigation items to include Routines
+export const navItems = [
   {
     title: "Dashboard",
-    path: "/dashboard",
-    icon: Home,
+    href: "/dashboard",
+    icon: "layout-dashboard",
   },
   {
     title: "Habits",
-    path: "/habits",
-    icon: Diamond,
+    href: "/habits",
+    icon: "check-circle",
+  },
+  {
+    title: "Routines", // New item
+    href: "/routines",
+    icon: "list-checks",
   },
   {
     title: "Tasks",
-    path: "/tasks",
-    icon: CheckSquare,
+    href: "/tasks",
+    icon: "check-square",
   },
   {
     title: "Goals",
-    path: "/goals",
-    icon: Calendar,
+    href: "/goals",
+    icon: "target",
   },
   {
     title: "Journal",
-    path: "/journal",
-    icon: BookOpen,
-  },
-  {
-    title: "Mood",
-    path: "/mood",
-    icon: Heart,
+    href: "/journal",
+    icon: "book",
   },
   {
     title: "Sleep",
-    path: "/sleep",
-    icon: Moon,
+    href: "/sleep",
+    icon: "moon",
   },
   {
     title: "Analytics",
-    path: "/analytics",
-    icon: BarChart,
-  },
-  {
-    title: "Developer",
-    path: "/developer",
-    icon: Code,
+    href: "/analytics",
+    icon: "bar-chart-2",
   },
 ];

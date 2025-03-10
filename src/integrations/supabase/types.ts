@@ -256,6 +256,75 @@ export type Database = {
           },
         ]
       }
+      routine_habits: {
+        Row: {
+          created_at: string
+          habit_id: string
+          id: string
+          position: number | null
+          routine_id: string
+        }
+        Insert: {
+          created_at?: string
+          habit_id: string
+          id?: string
+          position?: number | null
+          routine_id: string
+        }
+        Update: {
+          created_at?: string
+          habit_id?: string
+          id?: string
+          position?: number | null
+          routine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routine_habits_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "routine_habits_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      routines: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          time_of_day: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          time_of_day?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          time_of_day?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sleep_entries: {
         Row: {
           bedtime: string
@@ -356,7 +425,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      complete_routine: {
+        Args: {
+          p_routine_id: string
+          p_completed_date: string
+        }
+        Returns: string[]
+      }
     }
     Enums: {
       [_ in never]: never

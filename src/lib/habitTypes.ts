@@ -1,3 +1,4 @@
+
 export type Habit = {
   id: string;
   name: string;
@@ -64,3 +65,7 @@ export const commonFailureReasons = [
   "Changed plans",
   "Other"
 ];
+
+// Added export for established habit calculation
+export const ESTABLISHED_HABIT_DAYS = 60; // Number of days needed to consider a habit "established"
+export const HABIT_LOSS_DAYS = 7; // Number of days of inactivity to consider a habit "lost"
