@@ -19,7 +19,7 @@ export function CategorySelector({ selectedCategory, onCategoryChange }: Categor
     <div>
       <Label htmlFor="category">Category</Label>
       <Select
-        value={selectedCategory}
+        value={selectedCategory || "General"} // Ensure we always have a default value
         onValueChange={onCategoryChange}
       >
         <SelectTrigger className="w-full">
@@ -27,8 +27,9 @@ export function CategorySelector({ selectedCategory, onCategoryChange }: Categor
         </SelectTrigger>
         <SelectContent>
           {defaultCategories.map((cat) => (
-            <SelectItem key={cat} value={cat}>
-              {cat}
+            // Ensure each category is not an empty string
+            <SelectItem key={cat} value={cat || "Other"}>
+              {cat || "Other"}
             </SelectItem>
           ))}
         </SelectContent>

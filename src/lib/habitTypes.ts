@@ -44,7 +44,7 @@ export const weekdays = [
 // Frequency types for habit creation
 export type FrequencyType = "daily" | "weekly" | "custom";
 
-// Default categories
+// Default categories - ensure no empty strings
 export const defaultCategories = [
   "General",
   "Health",
