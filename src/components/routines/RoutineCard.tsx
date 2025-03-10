@@ -144,9 +144,9 @@ export function RoutineCard({
             <HabitItem
               key={habit.id}
               habit={habit}
-              isCompleted={completions.some(c => c.habit_id === habit.id)}
-              isFailed={failures.some(f => f.habit_id === habit.id)}
-              onToggle={onToggleHabit}
+              completions={completions}
+              failures={failures}
+              onToggleCompletion={onToggleHabit}
               onLogFailure={handleLogFailure}
               onUndoFailure={onUndoFailure}
             />
