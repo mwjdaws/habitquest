@@ -1,14 +1,14 @@
 
 import { useCallback, useMemo } from "react";
 import { Habit } from "@/lib/habitTypes";
-import { getDayName } from "@/lib/habitUtils";
+import { getTodayName, isHabitForToday } from "./utils/commonUtils";
 
 /**
  * Hook to handle habit filtering logic with improved performance
  */
 export function useHabitFiltering() {
   // Get today's name once - memoized to prevent recalculation
-  const todayName = useMemo(() => getDayName(new Date()).toLowerCase(), []);
+  const todayName = useMemo(() => getTodayName(), []);
   
   // Create a more efficient filtering function with optimizations
   const filterHabitsForToday = useCallback((allHabits: Habit[]) => {
@@ -16,10 +16,6 @@ export function useHabitFiltering() {
     if (!allHabits || allHabits.length === 0) {
       return [];
     }
-    
-    // Optimize by using a reusable test function
-    const isHabitForToday = (habit: Habit) => 
-      habit.frequency.length === 0 || habit.frequency.includes(todayName);
     
     // Pre-allocate array size if possible for better memory performance
     const estimatedFilteredSize = Math.ceil(allHabits.length * 0.7); // Assuming ~70% match
@@ -31,7 +27,7 @@ export function useHabitFiltering() {
     // Manual loop is faster than filter for large arrays
     for (let i = 0; i < allHabits.length; i++) {
       const habit = allHabits[i];
-      if (isHabitForToday(habit)) {
+      if (isHabitForToday(habit, todayName)) {
         if (resultIndex < estimatedFilteredSize) {
           result[resultIndex] = habit;
         } else {

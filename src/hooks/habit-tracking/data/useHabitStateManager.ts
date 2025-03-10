@@ -14,7 +14,7 @@ export function useHabitStateManager() {
   const [state, setState] = useState<HabitTrackingState>(initialState);
   
   const { filterHabitsForToday } = useHabitFiltering();
-  const { setLoading, setError } = useHabitStateUpdate(setState);
+  const stateUpdaters = useHabitStateUpdate(setState);
   
   // Update habits with filtering
   const updateHabits = useCallback((habits: any[]) => {
@@ -30,38 +30,17 @@ export function useHabitStateManager() {
     }));
   }, [filterHabitsForToday]);
   
-  // Encapsulate state update functions in a separate object
-  const stateUpdaters = useMemo(() => ({
+  // Combine all state updaters
+  const combinedStateUpdaters = useMemo(() => ({
+    ...stateUpdaters,
     updateHabits,
-    setLoading,
-    setError,
-    
-    // Add a new convenient function to update completions
-    updateCompletions: (completions: any[]) => {
-      setState(prev => ({
-        ...prev,
-        completions,
-        loading: false
-      }));
-    },
-    
-    // Add a new convenient function to update failures
-    updateFailures: (failures: any[]) => {
-      setState(prev => ({
-        ...prev,
-        failures,
-        loading: false
-      }));
-    },
-    
-    // Reset state function
-    resetState: () => setState(initialState)
-  }), [updateHabits, setLoading, setError, initialState]);
+    resetState: () => stateUpdaters.resetState(initialState)
+  }), [stateUpdaters, updateHabits, initialState]);
   
   // Memoize the return value to prevent unnecessary re-renders
   return useMemo(() => ({
     state,
     setState,
-    ...stateUpdaters
-  }), [state, stateUpdaters]);
+    ...combinedStateUpdaters
+  }), [state, combinedStateUpdaters]);
 }

@@ -1,10 +1,19 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
+type VisibilityOptions = {
+  debounceMs?: number;
+  onMount?: () => void;
+};
+
 /**
  * Hook to manage visibility change events with better debouncing
  */
-export function useVisibilityManager(onVisible: () => void) {
+export function useVisibilityManager(
+  onVisible: () => void, 
+  options: VisibilityOptions = {}
+) {
+  const { debounceMs = 300, onMount } = options;
   const isMountedRef = useRef(true);
   
   // Enhanced visibility change handler with better debouncing
@@ -23,18 +32,24 @@ export function useVisibilityManager(onVisible: () => void) {
           console.log("Tab became visible, refreshing data");
           onVisible();
           visibilityTimeout = null;
-        }, 300);
+        }, debounceMs);
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Call onMount handler if provided
+    if (onMount && isMountedRef.current) {
+      onMount();
+    }
+    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (visibilityTimeout) {
         window.clearTimeout(visibilityTimeout);
       }
     };
-  }, [onVisible]);
+  }, [onVisible, debounceMs, onMount]);
   
   // Cleanup effect for component unmount
   useEffect(() => {
