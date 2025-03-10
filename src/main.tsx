@@ -1,3 +1,4 @@
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
@@ -13,11 +14,11 @@ import Sleep from "./pages/Sleep";
 import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import Layout from "./components/Layout";
+import { Layout } from "./components/Layout"; // Changed to named import
 import AuthLayout from "./components/auth/AuthLayout";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Toaster } from "./components/ui/sonner";
-import { ThemeProvider } from "./components/ThemeSwitcher";
+import { ThemeSwitcher } from "./components/ThemeSwitcher"; // Use ThemeSwitcher directly
 import Developer from "./pages/Developer";
 import Mood from "./pages/Mood";
 
@@ -88,11 +89,11 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
+    <ThemeSwitcher>
       <AuthProvider>
         <RouterProvider router={router} />
         <Toaster />
       </AuthProvider>
-    </ThemeProvider>
+    </ThemeSwitcher>
   </React.StrictMode>
 );

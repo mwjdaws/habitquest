@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Check, ChevronDown, ChevronUp, Edit, MoreVertical, Trash } from "lucide-react";
 import { Routine } from "@/lib/routineTypes";
@@ -24,7 +23,7 @@ interface RoutineCardProps {
   onEdit: (routine: Routine) => void;
   onDelete: (id: string) => void;
   onCompleteRoutine: (id: string) => void;
-  onToggleHabit: (habitId: string) => void;
+  onToggleHabit: (habitId: string) => Promise<void>;
   onLogFailure: (habitId: string) => void;
   onUndoFailure: (habitId: string) => void;
 }

@@ -1,19 +1,17 @@
 
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UserMenu } from "./UserMenu";
-import { ThemeSwitcher } from "./ThemeSwitcher";
+import { ThemeSelector } from "./ThemeSwitcher";
 
 export function AppHeader() {
   return (
-    <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center">
-        <SidebarTrigger />
-        <h1 className="text-2xl font-bold ml-4">Perfectio</h1>
+    <header className="flex justify-between items-center mb-8">
+      <div className="flex-1">
+        {/* Left side content if needed */}
       </div>
-      <div className="flex items-center gap-3">
-        <ThemeSwitcher />
+      <div className="flex items-center space-x-2">
+        <ThemeSelector />
         <UserMenu />
       </div>
-    </div>
+    </header>
   );
 }

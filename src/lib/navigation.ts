@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   CheckCircle,
@@ -69,3 +70,10 @@ export const navItems = [
     icon: "bar-chart-2",
   },
 ];
+
+// Export the navigation items with the correct name
+export const navigationItems = navItems.map(item => ({
+  title: item.title,
+  path: item.href,
+  icon: Icons[item.icon],
+}));

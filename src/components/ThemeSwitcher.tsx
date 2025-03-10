@@ -1,12 +1,21 @@
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, createContext, useContext, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Palette } from "lucide-react";
 import { colorThemes } from "@/lib/theme/colorThemes";
 import { applyTheme } from "@/lib/theme/themeApplier";
 
-export function ThemeSwitcher() {
+// Create a context for theme state
+type ThemeContextType = {
+  theme: string;
+  setTheme: (theme: string) => void;
+};
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+// Theme provider component
+export function ThemeSwitcher({ children }: { children: ReactNode }) {
   const [currentTheme, setCurrentTheme] = useState<string>("Default Purple");
 
   // Memoize the theme application function to avoid recreating it on every render
@@ -19,6 +28,23 @@ export function ThemeSwitcher() {
   useEffect(() => {
     handleThemeChange(currentTheme);
   }, [currentTheme, handleThemeChange]);
+
+  return (
+    <ThemeContext.Provider value={{ theme: currentTheme, setTheme: handleThemeChange }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+// Theme selector component
+export function ThemeSelector() {
+  const context = useContext(ThemeContext);
+  
+  if (!context) {
+    throw new Error("ThemeSelector must be used within a ThemeSwitcher");
+  }
+  
+  const { theme: currentTheme, setTheme: handleThemeChange } = context;
 
   return (
     <Popover>
@@ -66,4 +92,13 @@ export function ThemeSwitcher() {
       </PopoverContent>
     </Popover>
   );
+}
+
+// Hook for accessing theme context
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeSwitcher');
+  }
+  return context;
 }
