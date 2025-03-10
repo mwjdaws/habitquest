@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Check, ChevronDown, ChevronUp, Edit, MoreVertical, Trash } from "lucide-react";
 import { Routine } from "@/lib/routineTypes";
@@ -25,7 +26,7 @@ interface RoutineCardProps {
   onCompleteRoutine: (id: string) => void;
   onToggleHabit: (habitId: string) => Promise<void>;
   onLogFailure: (habitId: string) => void;
-  onUndoFailure: (habitId: string) => void;
+  onUndoFailure: (habitId: string) => Promise<void>;
 }
 
 export function RoutineCard({
@@ -63,6 +64,14 @@ export function RoutineCard({
   const formattedTimeOfDay = routine.time_of_day 
     ? routine.time_of_day.charAt(0).toUpperCase() + routine.time_of_day.slice(1) 
     : null;
+
+  // Create a wrapper function that returns a Promise for onLogFailure
+  const handleLogFailure = (habitId: string): Promise<void> => {
+    return new Promise<void>((resolve) => {
+      onLogFailure(habitId);
+      resolve();
+    });
+  };
 
   return (
     <Card className="overflow-hidden transition-all duration-200">
@@ -138,7 +147,7 @@ export function RoutineCard({
               isCompleted={completions.some(c => c.habit_id === habit.id)}
               isFailed={failures.some(f => f.habit_id === habit.id)}
               onToggle={onToggleHabit}
-              onLogFailure={onLogFailure}
+              onLogFailure={handleLogFailure}
               onUndoFailure={onUndoFailure}
             />
           ))}
