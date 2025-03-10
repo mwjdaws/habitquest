@@ -33,9 +33,14 @@ export function useHabitData(onHabitChange?: () => void) {
       error: null,
       isInitialized: true
     }));
-  }, [setState, updateHabits]);
+    
+    // Optional callback when habits change
+    if (onHabitChange) {
+      onHabitChange();
+    }
+  }, [setState, updateHabits, onHabitChange]);
   
-  // Handle refresh using the dedicated refresh hook
+  // Handle refresh using the dedicated refresh hook with debouncing
   const { refreshData, lastRefreshTime, refreshAttempts, clearRefreshTimer } = useDataRefresh(
     loadData,
     updateState,
@@ -44,29 +49,25 @@ export function useHabitData(onHabitChange?: () => void) {
     onHabitChange
   );
   
-  // Handle visibility-based refreshes
+  // Handle visibility-based refreshes - only refresh if data is stale
   const { isInitializedRef } = useVisibilityRefresh(refreshData, lastRefreshTime);
 
   // Initial data load on component mount - only once
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!isInitializedRef.current) {
-        console.log("[useHabitData] Initial mount, triggering data refresh");
-        refreshData(true, true); // Force refresh on initial load
-      }
-    }, 50); // Small delay to avoid concurrent rendering issues
-    
-    return () => clearTimeout(timeout);
-  }, [refreshData, isInitializedRef]);
+    // Check if already loaded or is loading
+    if (!isInitializedRef.current && !state.isInitialized && !state.loading) {
+      console.log("[useHabitData] Initial mount, triggering data refresh");
+      refreshData(true, true); // Force refresh on initial load
+    }
+  }, [refreshData, isInitializedRef, state.isInitialized, state.loading]);
 
   // Enhanced cleanup effect
   useEffect(() => {
     return () => {
       clearRefreshTimer();
       cancelPendingRequests();
-      clearCache();
     };
-  }, [cancelPendingRequests, clearCache, clearRefreshTimer]);
+  }, [cancelPendingRequests, clearRefreshTimer]);
 
   return {
     state,

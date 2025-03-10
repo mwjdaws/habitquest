@@ -17,10 +17,7 @@ interface HabitTrackerProps {
 
 // Using memo for HabitTracker component to prevent unnecessary re-renders
 export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitTrackerProps) {
-  // Add render counter for debugging
-  const renderCount = useRef(0);
-  
-  // Use a ref to track initialization to prevent multiple data loads
+  // Track initialization to prevent multiple data loads
   const isInitializedRef = useRef(false);
   
   // State for failure dialog - local to this component
@@ -48,24 +45,14 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
 
   // Initial data load on component mount - only once with better tracking
   useEffect(() => {
-    if (!isInitializedRef.current) {
-      const timeout = setTimeout(() => {
-        console.log("[HabitTracker] Initial mount, triggering data refresh");
-        refreshData(true);
-        isInitializedRef.current = true;
-      }, 200); // Small delay to avoid concurrent rendering issues
-      
-      return () => clearTimeout(timeout);
+    if (!isInitializedRef.current && !isInitialized) {
+      console.log("[HabitTracker] Initial mount, triggering data refresh");
+      refreshData(true);
+      isInitializedRef.current = true;
     }
-  }, [refreshData]); // Keep refreshData in dependency array
+  }, [refreshData, isInitialized]);
   
-  // Debug render tracking
-  useEffect(() => {
-    renderCount.current += 1;
-    console.log(`[HabitTracker] Render #${renderCount.current}, habits: ${habits.length}, loading: ${loading}`);
-  });
-  
-  // Optimized retry handler with debounce
+  // Optimized retry handler
   const handleRetry = useCallback(() => {
     toast({ title: "Refreshing", description: "Refreshing your habit data..." });
     refreshData(true);
@@ -104,17 +91,6 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     onConfirm: onConfirmFailure,
     onCancel: onCancelFailure
   }), [failureState, handleDialogOpenChange, onConfirmFailure, onCancelFailure]);
-
-  // Debug output to help troubleshoot
-  useEffect(() => {
-    console.log("[HabitTracker] State update:", {
-      habitCount: habits.length,
-      isLoading: loading,
-      isInitialized,
-      hasError: !!error,
-      completionsCount: completions.length,
-    });
-  }, [habits, loading, isInitialized, error, completions]);
 
   // More efficient content rendering with early returns
   if (loading || !isInitialized) {
