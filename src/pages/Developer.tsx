@@ -1,13 +1,14 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Code, FileText, Info, Database, Server, Zap, BarChart } from "lucide-react";
+import { Code, FileText, Info, Database, Server, Zap, BarChart, Lock } from "lucide-react";
 import { ApiDocumentation } from "@/components/developer/ApiDocumentation";
 import { ArchitectureOverview } from "@/components/developer/ArchitectureOverview";
 import { BusinessLogicDocs } from "@/components/developer/BusinessLogicDocs";
 import { DocumentationResources } from "@/components/developer/DocumentationResources";
 import { VersionInfo } from "@/components/developer/VersionInfo";
 import { DataManagement } from "@/components/developer/DataManagement";
+import { AuthenticationOverview } from "@/components/developer/auth/AuthenticationOverview";
 
 const Developer = () => {
   return (
@@ -28,6 +29,7 @@ const Developer = () => {
           <TabsTrigger value="data"><Database className="mr-2 h-4 w-4" /> Data Management</TabsTrigger>
           <TabsTrigger value="api"><BarChart className="mr-2 h-4 w-4" /> API Services</TabsTrigger>
           <TabsTrigger value="business"><Zap className="mr-2 h-4 w-4" /> Business Logic</TabsTrigger>
+          <TabsTrigger value="auth"><Lock className="mr-2 h-4 w-4" /> Authentication</TabsTrigger>
           <TabsTrigger value="docs"><FileText className="mr-2 h-4 w-4" /> Documentation</TabsTrigger>
         </TabsList>
         
@@ -49,6 +51,10 @@ const Developer = () => {
         
         <TabsContent value="business" className="mt-6">
           <BusinessLogicDocs />
+        </TabsContent>
+        
+        <TabsContent value="auth" className="mt-6">
+          <AuthenticationOverview />
         </TabsContent>
         
         <TabsContent value="docs" className="mt-6">

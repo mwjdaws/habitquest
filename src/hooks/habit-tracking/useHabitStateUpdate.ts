@@ -1,29 +1,90 @@
+import { useState, useCallback } from "react";
+import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
+import { HabitTrackingState } from "./types";
 
-import { useCallback } from "react";
-import { HabitTrackingState } from "../types";
-import { useStateUpdaters } from "./utils/useStateUpdaters";
+export const useHabitStateUpdate = () => {
+  const [state, setState] = useState<HabitTrackingState>({
+    habits: [],
+    filteredHabits: [],
+    completions: [],
+    failures: [],
+    loading: true,
+    error: null,
+    isInitialized: false,
+  });
 
-/**
- * Hook for optimized habit state update functions that extends common updaters
- * with habit-specific functionality
- * 
- * This hook builds on the base state updaters and adds specialized functions
- * needed for habit tracking operations.
- *
- * @param {React.Dispatch<React.SetStateAction<HabitTrackingState>>} setState - State setter function
- * @returns {Object} Collection of state update functions specialized for habit tracking
- * 
- * @example
- * const stateUpdaters = useHabitStateUpdate(setState);
- * // Later: stateUpdaters.updateCompletions(newCompletions);
- */
-export function useHabitStateUpdate(setState: React.Dispatch<React.SetStateAction<HabitTrackingState>>) {
-  // Get common state updaters
-  const commonUpdaters = useStateUpdaters(setState);
-  
-  // Return the common updaters plus any habit-specific updaters
+  const addHabit = useCallback((habit: Habit) => {
+    setState((prevState) => ({
+      ...prevState,
+      habits: [...prevState.habits, habit],
+    }));
+  }, []);
+
+  const completeHabit = useCallback((habitId: string) => {
+    setState((prevState) => {
+      const habit = prevState.habits.find((h) => h.id === habitId);
+      if (!habit) return prevState;
+
+      const completion: HabitCompletion = {
+        habitId,
+        date: new Date().toISOString(),
+      };
+
+      return {
+        ...prevState,
+        completions: [...prevState.completions, completion],
+      };
+    });
+  }, []);
+
+  const failHabit = useCallback((habitId: string, reason: string) => {
+    setState((prevState) => {
+      const failure: HabitFailure = {
+        habitId,
+        reason,
+        date: new Date().toISOString(),
+      };
+
+      return {
+        ...prevState,
+        failures: [...prevState.failures, failure],
+      };
+    });
+  }, []);
+
+  const setLoading = useCallback((loading: boolean) => {
+    setState((prevState) => ({
+      ...prevState,
+      loading,
+    }));
+  }, []);
+
+  const setError = useCallback((error: Error | null) => {
+    setState((prevState) => ({
+      ...prevState,
+      error,
+    }));
+  }, []);
+
+  const initializeState = useCallback((habits: Habit[]) => {
+    setState({
+      habits,
+      filteredHabits: habits,
+      completions: [],
+      failures: [],
+      loading: false,
+      error: null,
+      isInitialized: true,
+    });
+  }, []);
+
   return {
-    ...commonUpdaters
-    // Additional habit-specific updaters can be added here as needed
+    state,
+    addHabit,
+    completeHabit,
+    failHabit,
+    setLoading,
+    setError,
+    initializeState,
   };
-}
+};
