@@ -165,3 +165,7 @@
 .dashboard-grid-container .layout {
   min-height: calc(100vh - 150px);
 }
+
+.dashboard-grid-container .react-grid-layout {
+  min-height: 2000px;
+}

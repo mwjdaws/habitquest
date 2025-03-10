@@ -171,6 +171,7 @@ export function DashboardGrid({ children }: DashboardGridProps) {
           preventCollision={true}
           compactType="vertical"
           useCSSTransforms={true}
+          verticalCompact={false}
         >
           {gridItems}
         </ResponsiveGridLayout>
