@@ -20,8 +20,17 @@ export function useHabitStateUpdate(setState: React.Dispatch<React.SetStateActio
   // Get common state updaters
   const commonUpdaters = useStateUpdaters(setState);
   
-  // Return the common updaters plus any habit-specific updaters
+  // Define habit-specific state updaters
+  const updateFilteredHabits = useCallback((filteredHabits: any[]) => {
+    setState(prev => ({
+      ...prev,
+      filteredHabits
+    }));
+  }, [setState]);
+  
+  // Return the common updaters plus the habit-specific updaters
   return {
-    ...commonUpdaters
+    ...commonUpdaters,
+    updateFilteredHabits
   };
 }
