@@ -5,6 +5,7 @@ import { HabitTrackingState } from "../types";
 import { Habit } from "@/lib/habitTypes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActionHandler } from "../utils/useActionHandler";
+import { useStreakCalculation } from "../utils/useStreakCalculation";
 
 /**
  * Hook for managing habit completion actions
@@ -19,6 +20,7 @@ export function useCompletionActions(
   const { user } = useAuth();
   const today = getTodayFormatted();
   const { handleAction } = useActionHandler();
+  const { calculateHabitStreak } = useStreakCalculation();
 
   // Handle toggling habit completion with optimistic updates and request deduplication
   const handleToggleCompletion = useCallback(async (habitId: string) => {
@@ -37,8 +39,11 @@ export function useCompletionActions(
     setState(prev => {
       // Handle completion removal
       if (isCompleted) {
-        // Calculate new streak for optimistic UI update
-        const newStreak = Math.max(0, (habit.current_streak || 0) - 1);
+        // Create updated completions list without this habit
+        const newCompletions = prev.completions.filter(c => c.habit_id !== habitId);
+        
+        // Calculate new streak for optimistic UI update using frequency-aware calculation
+        const newStreak = calculateHabitStreak(habit, newCompletions, prev.failures);
         
         // Update habits and filtered habits with new streak
         const updatedHabits = prev.habits.map(h => 
@@ -53,7 +58,7 @@ export function useCompletionActions(
           ...prev,
           habits: updatedHabits,
           filteredHabits: updatedFiltered,
-          completions: prev.completions.filter(c => c.habit_id !== habitId)
+          completions: newCompletions
         };
       } 
       // Handle completion addition
@@ -66,8 +71,13 @@ export function useCompletionActions(
           created_at: new Date().toISOString()
         };
         
-        // Calculate new streak for optimistic UI update
-        const newStreak = (habit.current_streak || 0) + 1;
+        // Create updated completions list with new completion
+        const newCompletions = [...prev.completions, newCompletion];
+        
+        // Calculate new streak for optimistic UI update using frequency-aware calculation
+        const newStreak = calculateHabitStreak(habit, newCompletions, 
+          prev.failures.filter(f => f.habit_id !== habitId)); // Remove any existing failures
+        
         const newLongestStreak = Math.max(newStreak, habit.longest_streak || 0);
         
         // Update habits and filtered habits with new streak
@@ -91,7 +101,7 @@ export function useCompletionActions(
           ...prev,
           habits: updatedHabits,
           filteredHabits: updatedFiltered,
-          completions: [...prev.completions, newCompletion],
+          completions: newCompletions,
           // Remove any failure for this habit when marking as completed
           failures: prev.failures.filter(f => f.habit_id !== habitId)
         };
@@ -111,7 +121,7 @@ export function useCompletionActions(
         description: isCompleted ? "Keep working on it!" : "Great job!"
       }
     );
-  }, [user, state.completions, state.failures, today, setState, findHabit, handleAction, pendingActionsRef, refreshData]);
+  }, [user, state.completions, state.failures, state.habits, today, setState, findHabit, handleAction, pendingActionsRef, refreshData, calculateHabitStreak]);
 
   return {
     handleToggleCompletion
