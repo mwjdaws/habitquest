@@ -1,12 +1,13 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Code, FileText, Info, Database, Server, Zap } from "lucide-react";
+import { Code, FileText, Info, Database, Server, Zap, BarChart } from "lucide-react";
 import { ApiDocumentation } from "@/components/developer/ApiDocumentation";
 import { ArchitectureOverview } from "@/components/developer/ArchitectureOverview";
 import { BusinessLogicDocs } from "@/components/developer/BusinessLogicDocs";
 import { DocumentationResources } from "@/components/developer/DocumentationResources";
 import { VersionInfo } from "@/components/developer/VersionInfo";
+import { DataManagement } from "@/components/developer/DataManagement";
 
 const Developer = () => {
   return (
@@ -21,10 +22,11 @@ const Developer = () => {
       </Alert>
 
       <Tabs defaultValue="version" className="w-full">
-        <TabsList className="w-full md:w-auto">
+        <TabsList className="w-full md:w-auto flex flex-wrap">
           <TabsTrigger value="version"><Code className="mr-2 h-4 w-4" /> Version</TabsTrigger>
           <TabsTrigger value="architecture"><Server className="mr-2 h-4 w-4" /> Architecture</TabsTrigger>
-          <TabsTrigger value="api"><Database className="mr-2 h-4 w-4" /> API Services</TabsTrigger>
+          <TabsTrigger value="data"><Database className="mr-2 h-4 w-4" /> Data Management</TabsTrigger>
+          <TabsTrigger value="api"><BarChart className="mr-2 h-4 w-4" /> API Services</TabsTrigger>
           <TabsTrigger value="business"><Zap className="mr-2 h-4 w-4" /> Business Logic</TabsTrigger>
           <TabsTrigger value="docs"><FileText className="mr-2 h-4 w-4" /> Documentation</TabsTrigger>
         </TabsList>
@@ -35,6 +37,10 @@ const Developer = () => {
         
         <TabsContent value="architecture" className="mt-6 space-y-4">
           <ArchitectureOverview />
+        </TabsContent>
+        
+        <TabsContent value="data" className="mt-6 space-y-4">
+          <DataManagement />
         </TabsContent>
         
         <TabsContent value="api" className="mt-6">
