@@ -8,6 +8,7 @@ import {
   Book,
   Moon,
   BarChart2,
+  Code,
 } from "lucide-react";
 
 export type NavItem = {
@@ -25,6 +26,7 @@ const Icons = {
   book: Book,
   moon: Moon,
   "bar-chart-2": BarChart2,
+  code: Code,
 };
 
 // Update the navigation items to include Routines
@@ -68,6 +70,11 @@ export const navItems = [
     title: "Analytics",
     href: "/analytics",
     icon: "bar-chart-2",
+  },
+  {
+    title: "Developer",
+    href: "/developer",
+    icon: "code",
   },
 ];
 
