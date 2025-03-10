@@ -1,7 +1,6 @@
 
 import { useCallback, useRef, useState } from "react";
 import { toast } from "@/components/ui/use-toast";
-import { HabitTrackingState } from "../types";
 
 /**
  * Hook to manage habit data refreshing with throttling and debouncing
