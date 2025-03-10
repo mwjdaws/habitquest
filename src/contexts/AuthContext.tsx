@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { signIn, signUp, signOut as authSignOut } from '@/lib/authUtils';
 import { handleError } from '@/lib/error-utils';
@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [initError, setInitError] = useState<Error | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     console.log('AuthProvider initializing...');
@@ -54,18 +55,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        console.log('Auth state changed:', _event);
+      (event, session) => {
+        console.log('Auth state changed:', event);
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+        
+        // Redirect to login page if signed out
+        if (event === 'SIGNED_OUT') {
+          navigate('/login');
+        }
       }
     );
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
+
+  // Redirect to login if not authenticated and not already on login page
+  useEffect(() => {
+    if (!isLoading && !user && location.pathname !== '/login') {
+      console.log('User not authenticated, redirecting to login page');
+      navigate('/login');
+    }
+  }, [user, isLoading, navigate, location.pathname]);
 
   // Show initialization error if auth setup failed
   if (initError && !isLoading) {
@@ -148,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         title: "Signed Out",
         description: "You have been successfully signed out.",
       });
-      navigate('/login');
+      // We don't need to navigate here because the onAuthStateChange listener will do it
     } catch (error) {
       console.error('Error during sign out:', error);
       handleError(error, 'Sign out failed');
