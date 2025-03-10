@@ -14,12 +14,6 @@ import { HabitTrackingResult } from "./types";
  *
  * @param {function} [onHabitChange] - Optional callback that runs when habits are modified
  * @returns {HabitTrackingResult} Complete set of habit tracking data and functions
- * 
- * @example
- * const { 
- *   habits, completions, loading, error, progress, 
- *   handleToggleCompletion, handleLogFailure, refreshData 
- * } = useHabitTracking();
  */
 export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResult {
   const { state, setState, refreshData } = useHabitData(onHabitChange);
@@ -36,7 +30,8 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
 
   // Wrap refreshData with useCallback to stabilize reference
   const stableRefreshData = useCallback((showLoading = true) => {
-    refreshData(showLoading);
+    console.log('Refreshing habit data from useHabitTracking');
+    refreshData(showLoading, true); // Force refresh to ensure data is loaded
   }, [refreshData]);
 
   // Return a more efficiently memoized object with flattened metrics

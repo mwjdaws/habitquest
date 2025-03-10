@@ -17,6 +17,8 @@ interface HabitTrackerProps {
 
 // Using memo for HabitTracker component to prevent unnecessary re-renders
 export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitTrackerProps) {
+  console.log("HabitTracker component rendering");
+  
   // Track initialization to prevent multiple data loads
   const isInitializedRef = useRef(false);
   
@@ -43,14 +45,15 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     isInitialized
   } = useHabitTracking(onHabitChange);
 
-  // Initial data load on component mount - only once with better tracking
+  // Initial data load on component mount - force a refresh on mount
   useEffect(() => {
-    if (!isInitializedRef.current && !isInitialized) {
+    console.log("[HabitTracker] Component mounted, initializing data");
+    if (!isInitializedRef.current) {
       console.log("[HabitTracker] Initial mount, triggering data refresh");
       refreshData(true);
       isInitializedRef.current = true;
     }
-  }, [refreshData, isInitialized]);
+  }, [refreshData]);
   
   // Optimized retry handler
   const handleRetry = useCallback(() => {
@@ -91,6 +94,13 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     onConfirm: onConfirmFailure,
     onCancel: onCancelFailure
   }), [failureState, handleDialogOpenChange, onConfirmFailure, onCancelFailure]);
+
+  console.log("[HabitTracker] Rendering with", {
+    loading,
+    isInitialized,
+    habitsCount: habits?.length || 0,
+    error: error ? 'Error exists' : 'No error'
+  });
 
   // More efficient content rendering with early returns
   if (loading || !isInitialized) {

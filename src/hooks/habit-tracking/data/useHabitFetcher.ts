@@ -88,6 +88,8 @@ export function useHabitFetcher() {
         throw new Error("Failed to fetch habits data");
       }
       
+      console.log("Habits data fetched successfully:", habitsData.length, "habits");
+      
       // Cache the result
       const result = {
         habits: habitsData,
@@ -126,8 +128,8 @@ export function useHabitFetcher() {
     
     // Invalidate cache if force refresh requested
     if (forceRefresh) {
-      cacheExpiryRef.current = 0;
       console.log("Forcing data refresh (cache invalidated)");
+      cacheExpiryRef.current = 0;
     }
     
     const result = await fetchHabitData(signal);

@@ -27,6 +27,8 @@ export function useDataRefresh(
    * debouncing, throttling, and error management
    */
   const refreshData = useCallback(async (showLoading = true, forceRefresh = false) => {
+    console.log(`Refreshing data (show loading: ${showLoading}, force refresh: ${forceRefresh})`);
+    
     // Check if refresh is already in progress
     if (refreshInProgressRef.current) {
       console.log("Refresh already in progress, queueing request");
@@ -60,6 +62,7 @@ export function useDataRefresh(
       refreshInProgressRef.current = true;
       
       if (showLoading) {
+        console.log("Setting loading state to true");
         setLoading(true);
       }
       
@@ -82,8 +85,8 @@ export function useDataRefresh(
         }
         
         if (result.error) {
-          setError(result.error);
           console.error("Error loading habit data:", result.error);
+          setError(result.error);
           
           // Only show toast for user-initiated refreshes
           if (showLoading) {
@@ -98,6 +101,7 @@ export function useDataRefresh(
         }
         
         // Update state with the new data
+        console.log("Data fetched successfully, updating state");
         updateState(result);
         
         setLastRefreshTime(now);
@@ -107,7 +111,7 @@ export function useDataRefresh(
           onSuccess();
         }
         
-        console.log(`Data fetch complete (v${result.version}): ${result.habits.length} habits, ${result.completions.length} completions, ${result.failures.length} failures`);
+        console.log(`Data fetch complete (v${result.version}): ${result.habits.length} habits, ${result.completions.length} completions, ${result.failures?.length || 0} failures`);
       } catch (error) {
         console.error("Unexpected error refreshing data:", error);
         setError(error instanceof Error ? error.message : "An unexpected error occurred");
@@ -121,6 +125,10 @@ export function useDataRefresh(
           });
         }
       } finally {
+        if (showLoading) {
+          console.log("Setting loading state to false");
+          setLoading(false);
+        }
         refreshInProgressRef.current = false;
         
         // Process queued refresh requests
