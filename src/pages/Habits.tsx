@@ -6,10 +6,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { ErrorState } from "@/components/habit-tracker/ErrorState";
+import { useHabits } from "@/hooks/useHabits";
+import { EstablishedHabits } from "@/components/habit-tracker/EstablishedHabits";
 
 const Habits = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const { habits, loading: habitsLoading } = useHabits();
 
   const handleErrorOccurred = (errorMessage: string) => {
     setError(errorMessage);
@@ -20,7 +23,7 @@ const Habits = () => {
     window.location.reload();
   };
 
-  if (isLoading) {
+  if (authLoading) {
     return (
       <div className="space-y-6">
         <Card>
@@ -75,6 +78,10 @@ const Habits = () => {
 
   return (
     <div className="space-y-6">
+      {/* Established Habits Section */}
+      <EstablishedHabits habits={habits} loading={habitsLoading} />
+      
+      {/* Regular Habits List */}
       <Card>
         <CardHeader>
           <CardTitle>Habit Tracking</CardTitle>
