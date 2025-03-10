@@ -22,7 +22,7 @@ export const HabitList = memo(function HabitList({
   onUndoFailure
 }: HabitListProps) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {habits.map(habit => (
         <HabitItem
           key={habit.id}
