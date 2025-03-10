@@ -22,10 +22,18 @@ import { ThemeSwitcher } from "./components/ThemeSwitcher";
 import Developer from "./pages/Developer";
 import Mood from "./pages/Mood";
 
+// Wrap the Layout component with AuthProvider and Toaster
+const LayoutWithAuth = () => (
+  <AuthProvider>
+    <Layout />
+    <Toaster />
+  </AuthProvider>
+);
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
+    element: <LayoutWithAuth />,
     children: [
       {
         index: true,
@@ -87,16 +95,10 @@ const router = createBrowserRouter([
   },
 ]);
 
-// The key change: RouterProvider needs to be the outermost component
-// that wraps AuthProvider which uses the useNavigate hook
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeSwitcher>
-      <RouterProvider router={router}>
-        <AuthProvider>
-          <Toaster />
-        </AuthProvider>
-      </RouterProvider>
+      <RouterProvider router={router} />
     </ThemeSwitcher>
   </React.StrictMode>
 );
