@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import AuthLayout from "@/components/auth/AuthLayout";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 import StatusMessage from "@/components/auth/StatusMessage";
@@ -145,45 +144,43 @@ const Login = () => {
   };
 
   return (
-    <AuthLayout>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="signup">Sign Up</TabsTrigger>
-        </TabsList>
-        
-        <StatusMessage 
-          errorMessage={errorMessage}
-          infoMessage={infoMessage}
-          successMessage={successMessage}
-          className="mb-4"
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-2 mb-4">
+        <TabsTrigger value="login">Login</TabsTrigger>
+        <TabsTrigger value="signup">Sign Up</TabsTrigger>
+      </TabsList>
+      
+      <StatusMessage 
+        errorMessage={errorMessage}
+        infoMessage={infoMessage}
+        successMessage={successMessage}
+        className="mb-4"
+      />
+      
+      <TabsContent value="login">
+        <LoginForm
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          loading={loading}
+          handleAuth={() => handleAuth("login")}
+          useTestCredentials={useTestCredentials}
         />
-        
-        <TabsContent value="login">
-          <LoginForm
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            loading={loading}
-            handleAuth={() => handleAuth("login")}
-            useTestCredentials={useTestCredentials}
-          />
-        </TabsContent>
-        
-        <TabsContent value="signup">
-          <SignupForm
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            loading={loading}
-            handleAuth={() => handleAuth("signup")}
-            useTestCredentials={useTestCredentials}
-          />
-        </TabsContent>
-      </Tabs>
-    </AuthLayout>
+      </TabsContent>
+      
+      <TabsContent value="signup">
+        <SignupForm
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          loading={loading}
+          handleAuth={() => handleAuth("signup")}
+          useTestCredentials={useTestCredentials}
+        />
+      </TabsContent>
+    </Tabs>
   );
 };
 

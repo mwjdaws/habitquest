@@ -26,30 +26,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Create a client
 const queryClient = new QueryClient();
 
-// Wrap the Layout component with AuthProvider, QueryClientProvider and Toaster
-const LayoutWithAuth = () => (
-  <AuthProvider>
-    <QueryClientProvider client={queryClient}>
-      <Layout />
-      <Toaster />
-    </QueryClientProvider>
-  </AuthProvider>
-);
-
-// Wrap the Login component with AuthProvider
-const LoginWithAuth = () => (
-  <AuthProvider>
-    <AuthLayout>
-      <Login />
-      <Toaster />
-    </AuthLayout>
-  </AuthProvider>
-);
-
+// Create a router with all routes
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <LayoutWithAuth />,
+    element: <AuthWrapper><Layout /></AuthWrapper>,
     children: [
       {
         index: true,
@@ -103,9 +84,28 @@ const router = createBrowserRouter([
   },
   {
     path: "/login",
-    element: <LoginWithAuth />,
+    element: (
+      <AuthProvider>
+        <AuthLayout>
+          <Login />
+          <Toaster />
+        </AuthLayout>
+      </AuthProvider>
+    ),
   },
 ]);
+
+// Wrapper component that provides both Auth and Query contexts
+function AuthWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <Toaster />
+      </QueryClientProvider>
+    </AuthProvider>
+  );
+}
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

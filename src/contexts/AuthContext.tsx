@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Redirect to login if not authenticated and not already on login page
   useEffect(() => {
-    if (!isLoading && !user && location.pathname !== '/login') {
+    if (!isLoading && !user && !location.pathname.includes('/login')) {
       console.log('User not authenticated, redirecting to login page');
       navigate('/login');
     }
