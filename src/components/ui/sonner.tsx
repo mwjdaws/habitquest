@@ -22,8 +22,16 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
         },
         duration: 4000,
+        closeButton: true,
+        // WCAG contrast requirements
+        style: {
+          '--border-radius': '0.5rem',
+        }
       }}
       position="bottom-right"
+      // Improved accessibility
+      richColors
+      closeButton
       {...props}
     />
   )

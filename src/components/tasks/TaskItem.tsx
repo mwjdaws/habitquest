@@ -29,6 +29,7 @@ interface TaskItemProps {
 export const TaskItem = memo(function TaskItem({ task, onToggleComplete, onEdit, onDelete }: TaskItemProps) {
   const [isCompleting, setIsCompleting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   
   const handleToggleComplete = useCallback(async () => {
     try {
@@ -45,6 +46,7 @@ export const TaskItem = memo(function TaskItem({ task, onToggleComplete, onEdit,
       await onDelete(task.id);
     } finally {
       setIsDeleting(false);
+      setDialogOpen(false);
     }
   }, [task.id, onDelete]);
   
@@ -53,63 +55,74 @@ export const TaskItem = memo(function TaskItem({ task, onToggleComplete, onEdit,
   const isCompleted = task.status === 'completed';
   
   return (
-    <div className={`flex items-start p-4 border rounded-md mb-2 ${isCompleted ? 'bg-muted/50' : 'bg-card'}`}>
+    <div 
+      className={`flex items-start p-4 border rounded-md mb-2 ${isCompleted ? 'bg-muted/50' : 'bg-card'}`}
+      role="listitem"
+    >
       <div className="flex-shrink-0 pt-1">
         <Checkbox 
           checked={isCompleted}
           onCheckedChange={handleToggleComplete}
           disabled={isCompleting}
           className="size-5"
+          id={`task-${task.id}`}
+          aria-label={`Mark task "${task.name}" as ${isCompleted ? 'incomplete' : 'complete'}`}
         />
       </div>
       
       <div className="ml-3 flex-grow">
-        <div className={`text-base font-medium ${isCompleted ? 'line-through text-muted-foreground' : ''}`}>
+        <label 
+          htmlFor={`task-${task.id}`}
+          className={`text-base font-medium ${isCompleted ? 'line-through text-muted-foreground' : ''}`}
+        >
           {task.name}
-        </div>
+        </label>
         
         {task.description && (
-          <div className={`mt-1 text-sm ${isCompleted ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
+          <div 
+            className={`mt-1 text-sm ${isCompleted ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}
+            id={`description-${task.id}`}
+          >
             {task.description}
           </div>
         )}
         
         <div className="flex flex-wrap gap-2 mt-2">
           {task.due_date && (
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground" aria-label="Due date">
               Due: {formatInTorontoTimezone(new Date(task.due_date), 'PPP')}
             </div>
           )}
           
           {task.tag && (
             <Badge variant="outline" className="flex items-center gap-1 text-xs">
-              <TagIcon className="h-3 w-3" />
+              <TagIcon className="h-3 w-3" aria-hidden="true" />
               {task.tag}
             </Badge>
           )}
         </div>
       </div>
       
-      <div className="flex-shrink-0 flex space-x-1">
+      <div className="flex-shrink-0 flex space-x-1" role="group" aria-label="Task actions">
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={handleEdit}
           className="h-8 w-8"
+          aria-label="Edit task"
         >
-          <Edit className="h-4 w-4" />
-          <span className="sr-only">Edit</span>
+          <Edit className="h-4 w-4" aria-hidden="true" />
         </Button>
         
-        <AlertDialog>
+        <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <AlertDialogTrigger asChild>
             <Button 
               variant="ghost" 
               size="icon"
               className="h-8 w-8 text-destructive hover:text-destructive"
+              aria-label="Delete task"
             >
-              <Trash2 className="h-4 w-4" />
-              <span className="sr-only">Delete</span>
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
