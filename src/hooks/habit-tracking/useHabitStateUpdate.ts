@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
-import { HabitTrackingState } from "../types";
+import { HabitTrackingState } from "./types";
 
 export const useHabitStateUpdate = () => {
   const [state, setState] = useState<HabitTrackingState>({
