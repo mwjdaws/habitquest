@@ -3,12 +3,13 @@ import React, { ReactNode, useState, useEffect, useMemo } from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import { Button } from "@/components/ui/button";
-import { Save, RotateCcw, Lock, Unlock } from "lucide-react";
+import { Save, RotateCcw, Lock, Unlock, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// Adjusting layouts to ensure cards are fully readable and grid is longer
+// Enhanced default layouts with improved mobile breakpoints
 const DEFAULT_LAYOUTS = {
   lg: [
     { i: "habit-tracker", x: 0, y: 0, w: 3, h: 5, minW: 2, minH: 4 },
@@ -29,13 +30,22 @@ const DEFAULT_LAYOUTS = {
     { i: "journal-stats", x: 0, y: 18, w: 2, h: 6, minW: 2, minH: 5 },
   ],
   sm: [
-    { i: "habit-tracker", x: 0, y: 0, w: 1, h: 5, minW: 1, minH: 4 },
-    { i: "task-stats", x: 0, y: 5, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: "upcoming-tasks", x: 0, y: 9, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: "streak-stats", x: 0, y: 13, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: "goals-progress", x: 0, y: 17, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: "habit-trends", x: 0, y: 21, w: 1, h: 5, minW: 1, minH: 4 },
-    { i: "journal-stats", x: 0, y: 26, w: 1, h: 6, minW: 1, minH: 5 },
+    { i: "habit-tracker", x: 0, y: 0, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "task-stats", x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "upcoming-tasks", x: 0, y: 7, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "streak-stats", x: 0, y: 10, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "goals-progress", x: 0, y: 13, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "habit-trends", x: 0, y: 16, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "journal-stats", x: 0, y: 20, w: 1, h: 5, minW: 1, minH: 4 },
+  ],
+  xs: [
+    { i: "habit-tracker", x: 0, y: 0, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "task-stats", x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "upcoming-tasks", x: 0, y: 7, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "streak-stats", x: 0, y: 10, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "goals-progress", x: 0, y: 13, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: "habit-trends", x: 0, y: 16, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: "journal-stats", x: 0, y: 20, w: 1, h: 5, minW: 1, minH: 4 },
   ],
 };
 
@@ -55,16 +65,27 @@ interface DashboardGridProps {
 }
 
 export function DashboardGrid({ children }: DashboardGridProps) {
+  const isMobile = useIsMobile();
+  
   // Load layouts from localStorage or use defaults
   const [layouts, setLayouts] = useState(() => {
     const savedLayouts = localStorage.getItem("dashboard-layouts");
     return savedLayouts ? JSON.parse(savedLayouts) : DEFAULT_LAYOUTS;
   });
   
-  const [isDraggable, setIsDraggable] = useState(true);
-  const [isResizable, setIsResizable] = useState(true);
+  const [isDraggable, setIsDraggable] = useState(!isMobile);
+  const [isResizable, setIsResizable] = useState(!isMobile);
   const [layoutChanged, setLayoutChanged] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
+  const [isLocked, setIsLocked] = useState(isMobile);
+
+  // Update lock state when mobile state changes
+  useEffect(() => {
+    if (isMobile) {
+      setIsDraggable(false);
+      setIsResizable(false);
+      setIsLocked(true);
+    }
+  }, [isMobile]);
 
   // Update localStorage when layouts change
   useEffect(() => {
@@ -93,10 +114,14 @@ export function DashboardGrid({ children }: DashboardGridProps) {
   };
 
   const toggleLock = () => {
-    setIsDraggable(!isDraggable);
-    setIsResizable(!isResizable);
-    setIsLocked(!isLocked);
-    toast.info(isDraggable ? "Dashboard locked" : "Dashboard unlocked");
+    if (!isMobile) {
+      setIsDraggable(!isDraggable);
+      setIsResizable(!isResizable);
+      setIsLocked(!isLocked);
+      toast.info(isDraggable ? "Dashboard locked" : "Dashboard unlocked");
+    } else {
+      toast.info("Layout editing is disabled on mobile devices");
+    }
   };
 
   // Memoize grid items for better performance
@@ -115,45 +140,53 @@ export function DashboardGrid({ children }: DashboardGridProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end space-x-2 mb-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={toggleLock}
-          className="flex items-center gap-1"
-        >
-          {isLocked ? (
-            <>
-              <Unlock className="h-4 w-4" />
-              Unlock Layout
-            </>
-          ) : (
-            <>
-              <Lock className="h-4 w-4" />
-              Lock Layout
-            </>
-          )}
-        </Button>
-        {layoutChanged && (
+      <div className="flex justify-between items-center mb-4 gap-2">
+        <div className="flex items-center gap-2">
+          <LayoutDashboard className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-semibold">Dashboard</h2>
+        </div>
+        
+        <div className="flex flex-wrap justify-end gap-2">
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handleSaveLayout}
+            onClick={toggleLock}
+            className="flex items-center gap-1"
+            disabled={isMobile}
+          >
+            {isLocked ? (
+              <>
+                <Unlock className="h-4 w-4" />
+                <span className="hidden sm:inline">Unlock Layout</span>
+              </>
+            ) : (
+              <>
+                <Lock className="h-4 w-4" />
+                <span className="hidden sm:inline">Lock Layout</span>
+              </>
+            )}
+          </Button>
+          {layoutChanged && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSaveLayout}
+              className="flex items-center gap-1"
+            >
+              <Save className="h-4 w-4" />
+              <span className="hidden sm:inline">Save Layout</span>
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleResetLayout}
             className="flex items-center gap-1"
           >
-            <Save className="h-4 w-4" />
-            Save Layout
+            <RotateCcw className="h-4 w-4" />
+            <span className="hidden sm:inline">Reset Layout</span>
           </Button>
-        )}
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleResetLayout}
-          className="flex items-center gap-1"
-        >
-          <RotateCcw className="h-4 w-4" />
-          Reset Layout
-        </Button>
+        </div>
       </div>
 
       <div className="dashboard-grid-container">
@@ -162,7 +195,7 @@ export function DashboardGrid({ children }: DashboardGridProps) {
           layouts={layouts}
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           cols={{ lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 }}
-          rowHeight={80}
+          rowHeight={isMobile ? 70 : 80}
           isDraggable={isDraggable}
           isResizable={isResizable}
           onLayoutChange={handleLayoutChange}
@@ -172,6 +205,7 @@ export function DashboardGrid({ children }: DashboardGridProps) {
           compactType="vertical"
           useCSSTransforms={true}
           verticalCompact={false}
+          draggableHandle=".dashboard-item-header"
         >
           {gridItems}
         </ResponsiveGridLayout>
