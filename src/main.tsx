@@ -36,6 +36,16 @@ const LayoutWithAuth = () => (
   </AuthProvider>
 );
 
+// Wrap the Login component with AuthProvider
+const LoginWithAuth = () => (
+  <AuthProvider>
+    <AuthLayout>
+      <Login />
+      <Toaster />
+    </AuthLayout>
+  </AuthProvider>
+);
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -93,11 +103,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/login",
-    element: (
-      <AuthLayout>
-        <Login />
-      </AuthLayout>
-    ),
+    element: <LoginWithAuth />,
   },
 ]);
 
