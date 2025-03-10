@@ -1,6 +1,7 @@
+
 import { useMemo } from "react";
 import { Habit, HabitCompletion, HABIT_LOSS_DAYS } from "@/lib/habitTypes";
-import { getTodayFormatted } from "@/lib/dateUtils";
+import { getTodayFormattedInToronto } from "@/lib/dateUtils";
 
 // Constants for inactive states
 export const HABIT_INCONSISTENT_MIN_DAYS = 3;
@@ -51,7 +52,7 @@ export function useHabitInactivity(
     );
     
     const lastCompletionDate = new Date(sortedCompletions[0].completed_date);
-    const today = new Date(getTodayFormatted());
+    const today = new Date(getTodayFormattedInToronto());
     
     // Calculate days since last completion
     const daysSinceLastCompletion = Math.floor(
