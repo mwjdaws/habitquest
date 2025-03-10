@@ -21,12 +21,18 @@ import { Toaster } from "./components/ui/sonner";
 import { ThemeSwitcher } from "./components/ThemeSwitcher";
 import Developer from "./pages/Developer";
 import Mood from "./pages/Mood";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// Wrap the Layout component with AuthProvider and Toaster
+// Create a client
+const queryClient = new QueryClient();
+
+// Wrap the Layout component with AuthProvider, QueryClientProvider and Toaster
 const LayoutWithAuth = () => (
   <AuthProvider>
-    <Layout />
-    <Toaster />
+    <QueryClientProvider client={queryClient}>
+      <Layout />
+      <Toaster />
+    </QueryClientProvider>
   </AuthProvider>
 );
 
