@@ -1,5 +1,5 @@
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
 import { shouldShowHabitForDay } from "@/lib/habitUtils";
 import { formatTorontoDate, getTodayFormattedInToronto } from "@/lib/dateUtils";
@@ -17,13 +17,15 @@ export function isRequiredHabitDay(habit: Habit, dateString: string): boolean {
 
 /**
  * Hook to calculate the streak for a habit based on its custom frequency
+ * Optimized to avoid redundant calculations
  */
 export function useStreakCalculation() {
   
   /**
    * Calculate the correct streak for a habit considering its frequency pattern
+   * Using useCallback to prevent recreation of the function on each render
    */
-  const calculateHabitStreak = useMemo(() => (
+  const calculateHabitStreak = useCallback((
     habit: Habit, 
     completions: HabitCompletion[],
     failures: HabitFailure[]
@@ -35,6 +37,7 @@ export function useStreakCalculation() {
     }
     
     // Get completions for this habit, sorted by date (newest first)
+    // First filter completions by habit_id to avoid unnecessary sorting
     const habitCompletions = completions
       .filter(c => c.habit_id === habit.id)
       .sort((a, b) => new Date(b.completed_date).getTime() - new Date(a.completed_date).getTime());
@@ -58,6 +61,9 @@ export function useStreakCalculation() {
     let streak = completedToday ? 1 : 0;
     let daysChecked = completedToday ? 1 : 0;
     
+    // Create a Set of completed dates for O(1) lookups
+    const completedDatesSet = new Set(habitCompletions.map(c => c.completed_date));
+    
     // Go back in time to check previous days
     while (daysChecked < 60) { // Limit check to last 60 days
       // Move to previous day
@@ -72,8 +78,8 @@ export function useStreakCalculation() {
         continue;
       }
       
-      // This is a required day, check if it was completed
-      const isCompleted = habitCompletions.some(c => c.completed_date === dateStr);
+      // This is a required day, check if it was completed using the Set for faster lookup
+      const isCompleted = completedDatesSet.has(dateStr);
       
       // If a required day was missed, streak is broken
       if (!isCompleted) {
