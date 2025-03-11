@@ -21,21 +21,25 @@ export function useRefreshQueue() {
   // Mark refresh as started
   const markRefreshStarted = useCallback(() => {
     refreshInProgressRef.current = true;
+    return true;
   }, []);
   
   // Mark refresh as completed
   const markRefreshCompleted = useCallback(() => {
     refreshInProgressRef.current = false;
+    return false;
   }, []);
   
   // Queue a refresh
   const queueRefresh = useCallback(() => {
     refreshQueuedRef.current = true;
+    return true;
   }, []);
   
   // Clear queued refresh
   const clearQueuedRefresh = useCallback(() => {
     refreshQueuedRef.current = false;
+    return false;
   }, []);
   
   return {

@@ -7,6 +7,7 @@ import { useState, useCallback, useRef } from "react";
 export function useRefreshThrottling(throttleMs: number = 800) {
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   const [refreshAttempts, setRefreshAttempts] = useState(0);
+  const timerRef = useRef<number | null>(null);
   
   // Check if refresh should be throttled
   const shouldThrottleRefresh = useCallback((forceRefresh: boolean) => {
@@ -35,11 +36,20 @@ export function useRefreshThrottling(throttleMs: number = 800) {
     return Math.max(0, throttleMs - elapsed);
   }, [lastRefreshTime, throttleMs]);
   
+  // Clear any timers
+  const clearThrottleTimer = useCallback(() => {
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+  
   return {
     lastRefreshTime,
     refreshAttempts,
     shouldThrottleRefresh,
     markRefreshComplete,
-    getTimeUntilAvailable
+    getTimeUntilAvailable,
+    clearThrottleTimer
   };
 }

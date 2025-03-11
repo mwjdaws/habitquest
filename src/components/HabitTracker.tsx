@@ -11,7 +11,7 @@ import { EmptyState } from "./habit-tracker/EmptyState";
 import { useState, useCallback, memo, useMemo, useEffect, useRef } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { LogIn } from "lucide-react";
+import { LogIn, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -21,7 +21,7 @@ interface HabitTrackerProps {
 
 // Using memo for HabitTracker component to prevent unnecessary re-renders
 export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitTrackerProps) {
-  console.log("HabitTracker component rendering");
+  console.log("[HabitTracker] Component rendering");
   const { user } = useAuth(); // Use Auth context directly for auth state
   const isAuthenticated = !!user;
   
@@ -32,6 +32,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
   }>({ habitId: null, habitName: "" });
   
   const didInitialRefreshRef = useRef(false);
+  const dataFetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Use the optimized hook
   const { 
@@ -54,24 +55,41 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
   useEffect(() => {
     if (isAuthenticated && !didInitialRefreshRef.current) {
       console.log("[HabitTracker] Component mounted, initializing data");
-      console.log("[HabitTracker] Initial mount, triggering data refresh");
-      
       didInitialRefreshRef.current = true;
       
-      // Delay slightly to avoid race conditions during initial mounting
-      const timer = setTimeout(() => {
-        refreshData(true); // Force loading indicator
-      }, 200);
+      // Clear any existing timeout
+      if (dataFetchTimeoutRef.current) {
+        clearTimeout(dataFetchTimeoutRef.current);
+      }
       
-      return () => clearTimeout(timer);
+      // Delay slightly to avoid race conditions during initial mounting
+      dataFetchTimeoutRef.current = setTimeout(() => {
+        console.log("[HabitTracker] Triggering initial data refresh");
+        refreshData(true, true); // Force loading indicator and refresh
+      }, 200);
     }
+    
+    return () => {
+      if (dataFetchTimeoutRef.current) {
+        clearTimeout(dataFetchTimeoutRef.current);
+      }
+    };
   }, [refreshData, isAuthenticated]);
+  
+  // Add an effect to retry if auth state changes after mount
+  useEffect(() => {
+    if (isAuthenticated && didInitialRefreshRef.current && !habits.length && !loading) {
+      console.log("[HabitTracker] Auth state changed, retrying data fetch");
+      refreshData(true, true);
+    }
+  }, [isAuthenticated, habits.length, loading, refreshData]);
   
   // Optimized retry handler
   const handleRetry = useCallback(() => {
     if (isAuthenticated) {
       toast({ title: "Refreshing", description: "Refreshing your habit data..." });
-      refreshData(true);
+      console.log("[HabitTracker] Manual refresh requested by user");
+      refreshData(true, true);
     }
   }, [refreshData, isAuthenticated]);
 
@@ -155,6 +173,29 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
         <HabitTrackerHeader totalHabits={totalCount} isLoading={false} />
         <CardContent>
           <ErrorState error={error} onRetry={handleRetry} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Add retry button if no habits loaded but user is authenticated
+  if (isAuthenticated && habits.length === 0 && isInitialized) {
+    return (
+      <Card className="w-full">
+        <HabitTrackerHeader totalHabits={totalCount} isLoading={false} />
+        <CardContent>
+          <EmptyState hasHabits={totalCount > 0} />
+          <div className="mt-4 flex justify-center">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRetry}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Retry loading habits
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

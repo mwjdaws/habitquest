@@ -9,10 +9,12 @@ export function useRefreshDebounce(debounceMs: number = 50) {
   
   // Clear any existing debounce timer
   const clearDebounceTimer = useCallback(() => {
-    if (refreshDebounceTimerRef.current) {
+    if (refreshDebounceTimerRef.current !== null) {
       window.clearTimeout(refreshDebounceTimerRef.current);
       refreshDebounceTimerRef.current = null;
+      return true;
     }
+    return false;
   }, []);
   
   // Set a debounce timer with a callback

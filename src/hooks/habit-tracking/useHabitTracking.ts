@@ -9,16 +9,10 @@ import { useAuth } from "@/contexts/AuthContext";
 /**
  * Primary hook for habit tracking functionality that provides a complete solution
  * for tracking, displaying, and interacting with habits
- * 
- * This hook combines data fetching, action handling, and metrics calculation into a
- * single, easy-to-use interface for habit tracking components.
- *
- * @param {function} [onHabitChange] - Optional callback that runs when habits are modified
- * @returns {HabitTrackingResult} Complete set of habit tracking data and functions
  */
 export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResult {
   const { user, isLoading: authLoading } = useAuth();
-  const { state, setState, refreshData } = useHabitData(onHabitChange);
+  const { state, setState, refreshData, clearCache } = useHabitData(onHabitChange);
   const initialLoadAttemptedRef = useRef(false);
   
   // Get actions from separate hook
@@ -32,35 +26,50 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
   const metrics = useHabitMetrics(state.filteredHabits || [], state.completions || []);
 
   // Wrap refreshData with useCallback to stabilize reference
-  const stableRefreshData = useCallback((showLoading = true) => {
-    console.log('Refreshing habit data from useHabitTracking');
+  const stableRefreshData = useCallback((showLoading = true, forceRefresh = true) => {
+    console.log('[useHabitTracking] Refreshing habit data', { isAuthenticated: !!user });
     
     // Only refresh data if user is authenticated
     if (user) {
-      refreshData(showLoading, true); // Force refresh to ensure data is loaded
+      refreshData(showLoading, forceRefresh);
+      
+      // Force clear cache and retry if force refresh is requested
+      if (forceRefresh) {
+        clearCache();
+      }
     } else {
-      console.log('Skipping habit data refresh - user not authenticated');
+      console.log('[useHabitTracking] Skipping habit data refresh - user not authenticated');
     }
-  }, [refreshData, user]);
+  }, [refreshData, user, clearCache]);
   
   // Effect to handle initial data loading after authentication is complete
   useEffect(() => {
     // Only attempt to load data once authentication check is complete
-    if (!authLoading && user && !initialLoadAttemptedRef.current) {
-      console.log('Authentication complete, user authenticated. Loading initial habit data.');
+    if (!authLoading && !initialLoadAttemptedRef.current) {
       initialLoadAttemptedRef.current = true;
-      stableRefreshData(true);
-    } else if (!authLoading && !user && !initialLoadAttemptedRef.current) {
-      console.log('Authentication complete, but user is not authenticated. Skipping data load.');
-      initialLoadAttemptedRef.current = true;
-      // Set initialized to true even without data to avoid loading state for unauthenticated users
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        isInitialized: true
-      }));
+      
+      if (user) {
+        console.log('[useHabitTracking] Authentication complete, user authenticated. Loading initial habit data.');
+        stableRefreshData(true, true);
+      } else {
+        console.log('[useHabitTracking] Authentication complete, but user is not authenticated. Skipping data load.');
+        // Set initialized to true even without data to avoid loading state for unauthenticated users
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          isInitialized: true
+        }));
+      }
     }
   }, [authLoading, user, stableRefreshData, setState]);
+
+  // Retry data loading if auth state changes to logged in after component mount
+  useEffect(() => {
+    if (user && initialLoadAttemptedRef.current && !state.habits?.length && !state.loading) {
+      console.log('[useHabitTracking] User authenticated after initial load, retrying data fetch');
+      stableRefreshData(true, true);
+    }
+  }, [user, state.habits, state.loading, stableRefreshData]);
 
   // Return a more efficiently memoized object with flattened metrics
   return useMemo(() => ({

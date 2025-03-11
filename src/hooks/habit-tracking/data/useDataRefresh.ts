@@ -21,7 +21,8 @@ export function useDataRefresh(
     refreshAttempts, 
     shouldThrottleRefresh, 
     markRefreshComplete,
-    getTimeUntilAvailable
+    getTimeUntilAvailable,
+    clearThrottleTimer
   } = useRefreshThrottling();
   
   const {
@@ -43,10 +44,11 @@ export function useDataRefresh(
    * debouncing, throttling, and error management
    */
   const refreshData = useCallback(async (showLoading = true, forceRefresh = false) => {
-    console.log(`Refreshing data (show loading: ${showLoading}, force refresh: ${forceRefresh})`);
+    console.log(`[useDataRefresh] Refreshing data (show loading: ${showLoading}, force refresh: ${forceRefresh})`);
     
-    // Always clear any pending debounce timer
+    // Always clear any pending debounce timer and throttle timer
     clearDebounceTimer();
+    clearThrottleTimer();
     
     // If force refresh, always proceed regardless of in-progress state
     if (forceRefresh) {
@@ -55,14 +57,14 @@ export function useDataRefresh(
     
     // Check if refresh is already in progress
     if (isRefreshInProgress()) {
-      console.log("Refresh already in progress, queueing request");
+      console.log("[useDataRefresh] Refresh already in progress, queueing request");
       queueRefresh();
       return;
     }
     
     // Check throttling unless forced
     if (!forceRefresh && shouldThrottleRefresh(forceRefresh)) {
-      console.log(`Throttling refresh (${getTimeUntilAvailable()}ms until next available)`);
+      console.log(`[useDataRefresh] Throttling refresh (${getTimeUntilAvailable()}ms until next available)`);
       
       if (hasQueuedRefresh()) {
         clearQueuedRefresh();
@@ -79,16 +81,16 @@ export function useDataRefresh(
         markRefreshStarted();
         
         if (showLoading) {
-          console.log("Setting loading state to true");
+          console.log("[useDataRefresh] Setting loading state to true");
           setLoading(true);
         }
         
-        console.log(`Starting data refresh #${refreshAttempts + 1}${forceRefresh ? ' (forced)' : ''}`);
+        console.log(`[useDataRefresh] Starting data refresh #${refreshAttempts + 1}${forceRefresh ? ' (forced)' : ''}`);
         
         const result = await loadData(showLoading, forceRefresh);
         
         if (!result) {
-          console.log("No data returned from loadData");
+          console.log("[useDataRefresh] No data returned from loadData");
           if (showLoading) {
             setLoading(false);
           }
@@ -103,7 +105,7 @@ export function useDataRefresh(
         }
         
         if (result.error) {
-          console.error("Error loading habit data:", result.error);
+          console.error("[useDataRefresh] Error loading habit data:", result.error);
           setError(result.error);
           
           // Only show toast for user-initiated refreshes
@@ -122,7 +124,7 @@ export function useDataRefresh(
         }
         
         // Update state with the new data
-        console.log("Data fetched successfully, updating state");
+        console.log("[useDataRefresh] Data fetched successfully, updating state");
         updateState(result);
         
         markRefreshComplete();
@@ -132,9 +134,9 @@ export function useDataRefresh(
           onSuccess();
         }
         
-        console.log(`Data fetch complete (v${result.version}): ${result.habits?.length || 0} habits, ${result.completions?.length || 0} completions, ${result.failures?.length || 0} failures`);
+        console.log(`[useDataRefresh] Data fetch complete (v${result.version}): ${result.habits?.length || 0} habits, ${result.completions?.length || 0} completions, ${result.failures?.length || 0} failures`);
       } catch (error) {
-        console.error("Unexpected error refreshing data:", error);
+        console.error("[useDataRefresh] Unexpected error refreshing data:", error);
         setError(error instanceof Error ? error.message : "An unexpected error occurred");
         
         if (showLoading) {
@@ -146,7 +148,7 @@ export function useDataRefresh(
         }
       } finally {
         if (showLoading) {
-          console.log("Setting loading state to false");
+          console.log("[useDataRefresh] Setting loading state to false");
           setLoading(false);
         }
         markRefreshCompleted();
@@ -154,7 +156,7 @@ export function useDataRefresh(
         // Process queued refresh requests
         if (hasQueuedRefresh()) {
           clearQueuedRefresh();
-          console.log("Processing queued refresh request");
+          console.log("[useDataRefresh] Processing queued refresh request");
           setTimeout(() => refreshData(false), 50);
         }
       }
@@ -177,13 +179,17 @@ export function useDataRefresh(
     clearQueuedRefresh,
     shouldThrottleRefresh,
     getTimeUntilAvailable,
-    markRefreshComplete
+    markRefreshComplete,
+    clearThrottleTimer
   ]);
 
   return {
     refreshData,
     lastRefreshTime,
     refreshAttempts,
-    clearRefreshTimer: clearDebounceTimer
+    clearRefreshTimer: useCallback(() => {
+      clearDebounceTimer();
+      clearThrottleTimer();
+    }, [clearDebounceTimer, clearThrottleTimer])
   };
 }
