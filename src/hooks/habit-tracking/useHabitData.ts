@@ -1,10 +1,11 @@
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { useHabitFetcher } from "./data/useHabitFetcher";
 import { useHabitStateManager } from "./data/useHabitStateManager";
 import { useDataRefresh } from "./data/useDataRefresh";
 import { useVisibilityRefresh } from "./data/useVisibilityRefresh";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Core hook that manages habit data fetching, caching, refreshing, and state management
@@ -17,18 +18,22 @@ import { useVisibilityRefresh } from "./data/useVisibilityRefresh";
  * - Debouncing and throttling requests to prevent API overload
  */
 export function useHabitData(onHabitChange?: () => void) {
+  const { user } = useAuth();
   const { loadData, cancelPendingRequests, getCurrentVersion, clearCache } = useHabitFetcher();
   const { state, setState, updateHabits, setLoading, setError } = useHabitStateManager();
+  const initialLoadAttemptedRef = useRef(false);
   
   // Update state with fetched data
   const updateState = useCallback((data) => {
+    if (!data) return;
+    
     // Batch state updates to reduce renders
-    updateHabits(data.habits);
+    updateHabits(data.habits || []);
     
     setState(prev => ({
       ...prev,
-      completions: data.completions,
-      failures: data.failures,
+      completions: data.completions || [],
+      failures: data.failures || [],
       loading: false,
       error: null,
       isInitialized: true
@@ -55,11 +60,20 @@ export function useHabitData(onHabitChange?: () => void) {
   // Initial data load on component mount - only once
   useEffect(() => {
     // Check if already loaded or is loading
-    if (!isInitializedRef.current && !state.isInitialized && !state.loading) {
+    if (!initialLoadAttemptedRef.current && !state.isInitialized && !state.loading && user) {
       console.log("[useHabitData] Initial mount, triggering data refresh");
+      initialLoadAttemptedRef.current = true;
       refreshData(true, true); // Force refresh on initial load
+    } else if (!user && !initialLoadAttemptedRef.current) {
+      // If no user, mark as initialized to avoid loading state
+      initialLoadAttemptedRef.current = true;
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        isInitialized: true
+      }));
     }
-  }, [refreshData, isInitializedRef, state.isInitialized, state.loading]);
+  }, [refreshData, isInitializedRef, state.isInitialized, state.loading, user, setState]);
 
   // Enhanced cleanup effect
   useEffect(() => {

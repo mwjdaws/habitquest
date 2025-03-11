@@ -9,11 +9,13 @@ import {
 } from "@/lib/habits";
 import { withRetry, handleApiError } from "@/lib/error-utils";
 import { useRequestManager } from "../utils/useRequestManager";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Hook to handle habit data fetching with improved error handling, cancellation, and caching
  */
 export function useHabitFetcher() {
+  const { user } = useAuth();
   const { 
     createAbortController, 
     trackPromise, 
@@ -29,6 +31,12 @@ export function useHabitFetcher() {
 
   // Enhanced data loading with improved error handling, request cancellation, and batch fetching
   const fetchHabitData = useCallback(async (signal?: AbortSignal) => {
+    // Skip if not authenticated
+    if (!user) {
+      console.log("Skipping habit data fetch - user not authenticated");
+      return { habits: [], completions: [], failures: [], version: 0 };
+    }
+    
     // Improved request throttling
     const now = Date.now();
     
@@ -79,7 +87,7 @@ export function useHabitFetcher() {
       trackPromise(failuresPromise);
       
       // Optimized data fetching with parallel requests
-      const [habitsData, completionsData, failuresData] = await Promise.all([
+      const results = await Promise.allSettled([
         habitsPromise,
         completionsPromise,
         failuresPromise
@@ -91,11 +99,23 @@ export function useHabitFetcher() {
         return null;
       }
       
-      if (!habitsData) {
-        throw new Error("Failed to fetch habits data");
+      // Extract results with proper error handling
+      const habitsData = results[0].status === 'fulfilled' ? results[0].value : [];
+      const completionsData = results[1].status === 'fulfilled' ? results[1].value : [];
+      const failuresData = results[2].status === 'fulfilled' ? results[2].value : [];
+      
+      // Log any individual failures
+      if (results[0].status === 'rejected') {
+        console.error("Failed to fetch habits:", results[0].reason);
+      }
+      if (results[1].status === 'rejected') {
+        console.error("Failed to fetch completions:", results[1].reason);
+      }
+      if (results[2].status === 'rejected') {
+        console.error("Failed to fetch failures:", results[2].reason);
       }
       
-      console.log("Habits data fetched successfully:", habitsData.length, "habits");
+      console.log("Habits data fetched successfully:", habitsData?.length || 0, "habits");
       
       // Cache the result
       const result = {
@@ -125,10 +145,16 @@ export function useHabitFetcher() {
     } finally {
       fetchInProgressRef.current = false;
     }
-  }, [today, trackPromise]);
+  }, [today, trackPromise, user]);
 
   // Function to setup abort controller and handle fetch request with cache control
   const loadData = useCallback(async (showLoading = true, forceRefresh = false) => {
+    // Skip if not authenticated
+    if (!user) {
+      console.log("Skipping loadData - user not authenticated");
+      return { habits: [], completions: [], failures: [], version: 0 };
+    }
+    
     try {
       // Cancel any in-flight requests
       cancelPendingRequests();
@@ -157,9 +183,9 @@ export function useHabitFetcher() {
       return result;
     } catch (error) {
       console.error("Unexpected error in loadData:", error);
-      return { error: "An unexpected error occurred while loading data" };
+      return { error: "An unexpected error occurred while loading data", habits: [], completions: [], failures: [], version: 0 };
     }
-  }, [fetchHabitData, createAbortController, cancelPendingRequests]);
+  }, [fetchHabitData, createAbortController, cancelPendingRequests, user]);
 
   // Added ability to clear cache explicitly
   const clearCache = useCallback(() => {

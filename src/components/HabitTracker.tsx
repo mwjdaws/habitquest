@@ -10,6 +10,9 @@ import { ErrorState } from "./habit-tracker/ErrorState";
 import { EmptyState } from "./habit-tracker/EmptyState";
 import { useState, useCallback, memo, useMemo, useEffect, useRef } from "react";
 import { toast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { LogIn } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface HabitTrackerProps {
   onHabitChange?: () => void;
@@ -39,27 +42,32 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     handleLogFailure,
     handleUndoFailure,
     refreshData,
-    isInitialized
+    isInitialized,
+    isAuthenticated
   } = useHabitTracking(onHabitChange);
 
   // Initial data load on component mount - force a refresh on mount
   useEffect(() => {
-    console.log("[HabitTracker] Component mounted, initializing data");
-    console.log("[HabitTracker] Initial mount, triggering data refresh");
-    
-    // Delay slightly to avoid race conditions during initial mounting
-    const timer = setTimeout(() => {
-      refreshData(true); // Force loading indicator
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [refreshData]);
+    if (isAuthenticated) {
+      console.log("[HabitTracker] Component mounted, initializing data");
+      console.log("[HabitTracker] Initial mount, triggering data refresh");
+      
+      // Delay slightly to avoid race conditions during initial mounting
+      const timer = setTimeout(() => {
+        refreshData(true); // Force loading indicator
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [refreshData, isAuthenticated]);
   
   // Optimized retry handler
   const handleRetry = useCallback(() => {
-    toast({ title: "Refreshing", description: "Refreshing your habit data..." });
-    refreshData(true);
-  }, [refreshData]);
+    if (isAuthenticated) {
+      toast({ title: "Refreshing", description: "Refreshing your habit data..." });
+      refreshData(true);
+    }
+  }, [refreshData, isAuthenticated]);
 
   // Memoized handlers for failure dialog
   const onLogFailure = useCallback((habitId: string) => {
@@ -98,9 +106,30 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
   console.log("[HabitTracker] Rendering with", {
     loading,
     isInitialized,
+    isAuthenticated,
     habitsCount: habits?.length || 0,
     error: error ? 'Error exists' : 'No error'
   });
+
+  // Show auth required state if not authenticated
+  if (!isAuthenticated && !loading) {
+    return (
+      <Card className="w-full">
+        <HabitTrackerHeader totalHabits={0} isLoading={false} />
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <p className="text-muted-foreground text-center mb-4">
+            You need to be signed in to view and track your habits.
+          </p>
+          <Button asChild>
+            <Link to="/login" className="flex items-center gap-2">
+              <LogIn className="h-4 w-4" />
+              Sign in
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // More efficient content rendering with early returns
   if (loading || !isInitialized) {

@@ -4,11 +4,13 @@ import { HabitTrackingState } from "../types";
 import { useHabitFiltering } from "../useHabitFiltering";
 import { useHabitStateUpdate } from "../utils/useHabitStateUpdate";
 import { useHabitInitialState } from "./useHabitInitialState";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Hook to manage habit tracking state with optimized update functions
  */
 export function useHabitStateManager() {
+  const { user } = useAuth();
   // Get initial state from a dedicated hook
   const initialState = useHabitInitialState();
   const [state, setState] = useState<HabitTrackingState>(initialState);
@@ -28,17 +30,25 @@ export function useHabitStateManager() {
   
   // Update habits with filtering
   const updateHabits = useCallback((habits: any[]) => {
-    const filteredHabits = filterHabitsForToday(habits);
+    // Skip if no user is authenticated
+    if (!user) {
+      console.log("Skipping updateHabits - user not authenticated");
+      return;
+    }
+    
+    // Make sure habits is always an array
+    const habitsArray = Array.isArray(habits) ? habits : [];
+    const filteredHabits = filterHabitsForToday(habitsArray);
     
     setState(prev => ({
       ...prev,
-      habits,
+      habits: habitsArray,
       filteredHabits,
       isInitialized: true,
       loading: false,
       error: null
     }));
-  }, [filterHabitsForToday]);
+  }, [filterHabitsForToday, user]);
   
   // Wrapper for setLoading to update the state
   const handleSetLoading = useCallback((loading: boolean) => {
@@ -52,7 +62,8 @@ export function useHabitStateManager() {
   const handleSetError = useCallback((error: string | null) => {
     setState(prev => ({
       ...prev,
-      error
+      error,
+      loading: false
     }));
   }, []);
   

@@ -9,17 +9,21 @@ import { TaskStats } from "@/components/dashboard/TaskStats";
 import { DashboardGrid } from "@/components/dashboard/DashboardGrid";
 import { JournalStats } from "@/components/dashboard/JournalStats";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Minimum interval between refreshes (ms)
 const REFRESH_COOLDOWN = 3000;
 
 const Dashboard = () => {
+  const { user, isLoading: authLoading } = useAuth();
   const lastRefreshRef = useRef(Date.now());
   const [refreshKey, setRefreshKey] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   
   // Optimize refresh data with improved throttling
   const refreshData = useCallback(() => {
+    if (!user) return; // Skip if not authenticated
+    
     const now = Date.now();
     // Prevent refresh spam with a cooldown
     if (now - lastRefreshRef.current > REFRESH_COOLDOWN) {
@@ -28,15 +32,17 @@ const Dashboard = () => {
     } else {
       console.log('Refresh throttled, wait a moment before trying again');
     }
-  }, []);
+  }, [user]);
 
   // Load animation state only once
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setIsLoaded(true);
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, []);
+    if (!authLoading) {
+      const timeout = setTimeout(() => {
+        setIsLoaded(true);
+      }, 100);
+      return () => clearTimeout(timeout);
+    }
+  }, [authLoading]);
 
   // Memoize stagger delay to prevent recalculation
   const staggerDelay = useMemo(() => 0.1, []);
