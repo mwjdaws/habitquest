@@ -1,6 +1,6 @@
 
 import { useRef } from "react";
-import { HabitTrackingState } from "./types";
+import { StateManagerType } from "./types";
 import { useHabitFinder } from "./utils/useHabitFinder";
 import { useCompletionActions } from "./actions/useCompletionActions";
 import { useFailureActions } from "./actions/useFailureActions";
@@ -13,16 +13,16 @@ import { useState } from "react";
  * This hook orchestrates completion and failure actions with a shared pending
  * actions reference to prevent duplicate operations and race conditions.
  *
- * @param {HabitTrackingState} state - Current habit tracking state
+ * @param {StateManagerType} state - Current habit tracking state with setState function
  * @param {function} refreshData - Function to refresh all habit data
- * @returns {Object} Collection of habit action handlers
+ * @returns {Object} Collection of habit action handlers and date selection state
  * 
  * @example
  * const { handleToggleCompletion, handleLogFailure } = useHabitActions(state, refreshData);
  * // Later: handleToggleCompletion(habitId);
  */
 export function useHabitActions(
-  state: HabitTrackingState,
+  state: StateManagerType,
   refreshData: (showLoading?: boolean, forceRefresh?: boolean) => void
 ) {
   // Shared reference for tracking pending actions to prevent duplicates

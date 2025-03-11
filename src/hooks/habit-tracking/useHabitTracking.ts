@@ -9,6 +9,9 @@ import { useAuth } from "@/contexts/AuthContext";
 /**
  * Primary hook for habit tracking functionality that provides a complete solution
  * for tracking, displaying, and interacting with habits
+ * 
+ * @param {Function} onHabitChange - Optional callback that runs when habits change
+ * @returns {HabitTrackingResult} Complete API for habit tracking
  */
 export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResult {
   const { user, isLoading: authLoading } = useAuth();

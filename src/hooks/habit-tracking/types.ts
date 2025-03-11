@@ -2,6 +2,10 @@
 // Types used across habit tracking hooks
 import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
 
+/**
+ * Core state interface for habit tracking
+ * Contains all data needed for tracking habits including habits, completions, and UI state
+ */
 export interface HabitTrackingState {
   habits: Habit[];
   filteredHabits: Habit[];
@@ -10,9 +14,12 @@ export interface HabitTrackingState {
   loading: boolean;
   error: string | null;
   isInitialized: boolean;
-  setState: React.Dispatch<React.SetStateAction<HabitTrackingState>>;
 }
 
+/**
+ * Interface representing the complete public API of the habit tracking system
+ * Provides data, actions, and metadata for habit tracking components
+ */
 export interface HabitTrackingResult {
   habits: Habit[];
   completions: HabitCompletion[];
@@ -31,4 +38,12 @@ export interface HabitTrackingResult {
   selectedDate: string;
   setSelectedDate: (date: string) => void;
   isToday: boolean;
+}
+
+/**
+ * Interface for the state manager object that includes state setter
+ * This is used internally to provide a self-referencing state object
+ */
+export interface StateManagerType extends HabitTrackingState {
+  setState: React.Dispatch<React.SetStateAction<HabitTrackingState>>;
 }

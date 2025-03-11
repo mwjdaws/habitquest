@@ -1,11 +1,13 @@
+
 import { HabitTrackingState } from "../types";
+import { Habit } from "@/lib/habitTypes";
 
 /**
  * Creates a default habit tracking state object with empty arrays and default values
  * 
- * @returns {Omit<HabitTrackingState, 'setState'>} Default habit tracking state
+ * @returns {HabitTrackingState} Default habit tracking state
  */
-export function createDefaultHabitState(): Omit<HabitTrackingState, 'setState'> {
+export function createDefaultHabitState(): HabitTrackingState {
   return {
     habits: [],
     filteredHabits: [],

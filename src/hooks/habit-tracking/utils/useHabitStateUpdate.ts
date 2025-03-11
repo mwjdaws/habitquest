@@ -5,6 +5,12 @@ import { HabitTrackingState } from "../types";
 
 /**
  * Hook providing functions to update habit state
+ * 
+ * These updater functions are designed to be used with React's setState pattern,
+ * either directly or with useReducer. They follow the immutable update pattern
+ * for React state.
+ * 
+ * @returns Object containing updater functions for habit state
  */
 export const useHabitStateUpdate = () => {
   const addHabit = useCallback((habit: Habit) => {
@@ -67,7 +73,8 @@ export const useHabitStateUpdate = () => {
   }, []);
 
   const initializeState = useCallback((habits: Habit[]) => {
-    return (): HabitTrackingState => ({
+    return (prevState: HabitTrackingState): HabitTrackingState => ({
+      ...prevState,
       habits,
       filteredHabits: habits,
       completions: [],
@@ -79,7 +86,8 @@ export const useHabitStateUpdate = () => {
   }, []);
 
   const resetState = useCallback(() => {
-    return (): HabitTrackingState => ({
+    return (prevState: HabitTrackingState): HabitTrackingState => ({
+      ...prevState,
       habits: [],
       filteredHabits: [],
       completions: [],

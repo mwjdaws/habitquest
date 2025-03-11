@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { HabitTrackingState } from "../types";
+import { HabitTrackingState, StateManagerType } from "../types";
 import { useHabitFiltering } from "../useHabitFiltering";
 import { useHabitStateUpdate } from "../utils/useHabitStateUpdate";
 import { useHabitInitialState } from "./useHabitInitialState";
@@ -8,22 +8,31 @@ import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Hook to manage habit tracking state with optimized update functions
+ * 
+ * This hook centralizes state management for the habit tracking system, providing:
+ * - State initialization
+ * - State updates with proper immutability
+ * - Filtered habit calculations
+ * - Integration with auth context
+ * 
+ * @returns An object containing the state and state update functions
  */
 export function useHabitStateManager() {
   const { user } = useAuth();
+  
   // Get initial state from a dedicated hook
   const initialState = useHabitInitialState();
   
-  // Create state with setState reference
-  const [stateInternal, setStateInternal] = useState<Omit<HabitTrackingState, 'setState'>>(initialState);
+  // Create state
+  const [state, setStateInternal] = useState<HabitTrackingState>(initialState);
   
   // Create a self-referencing state object that includes the setState function
-  const state = useMemo(() => {
+  const stateManager = useMemo<StateManagerType>(() => {
     return {
-      ...stateInternal,
+      ...state,
       setState: setStateInternal
-    } as HabitTrackingState;
-  }, [stateInternal]);
+    };
+  }, [state]);
   
   const { filterHabitsForToday } = useHabitFiltering();
   
@@ -112,10 +121,10 @@ export function useHabitStateManager() {
     handleResetState
   ]);
   
-  // Memoize the return value to prevent unnecessary re-renders
+  // Return state manager and updaters
   return useMemo(() => ({
-    state,
+    state: stateManager,
     setState: setStateInternal,
     ...stateUpdaters
-  }), [state, stateUpdaters]);
+  }), [stateManager, stateUpdaters]);
 }

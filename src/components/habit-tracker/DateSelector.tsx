@@ -1,125 +1,110 @@
 
-import { useState, useEffect } from "react";
-import { format, isToday as dateFnsIsToday, parseISO } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
-import { formatTorontoDate } from "@/lib/dateUtils";
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, addDays, isBefore, isAfter, isToday as dateFnsIsToday } from "date-fns";
+import { cn } from "@/lib/utils";
+import { getTodayFormatted } from "@/lib/habitUtils";
 
-type DateSelectorProps = {
+interface DateSelectorProps {
   selectedDate: string;
   onDateChange: (date: string) => void;
   isToday: boolean;
-};
+}
 
+/**
+ * Date selector component for habit tracking that allows users to:
+ * - View and select dates from a calendar
+ * - Navigate between days using previous/next buttons
+ * - Return to today with a dedicated button
+ * 
+ * The component prevents selection of future dates for habit tracking.
+ */
 export function DateSelector({ selectedDate, onDateChange, isToday }: DateSelectorProps) {
-  // Local state for the date
-  const [date, setDate] = useState<Date | undefined>(
-    selectedDate ? parseISO(selectedDate) : new Date()
-  );
-
-  // Function to format the date for display
-  const formatDateForDisplay = (date: Date) => {
-    if (dateFnsIsToday(date)) {
-      return "Today";
-    }
-    return format(date, "EEEE, MMMM d");
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  
+  // Convert ISO date string to Date object
+  const selectedDateObj = new Date(selectedDate);
+  const today = new Date();
+  
+  // Set time to 00:00:00 for accurate date comparison
+  today.setHours(0, 0, 0, 0);
+  
+  // Handle date selection from calendar
+  const handleSelectDate = (date: Date | undefined) => {
+    if (!date) return;
+    
+    // Format as YYYY-MM-DD ISO string
+    const formattedDate = format(date, "yyyy-MM-dd");
+    onDateChange(formattedDate);
+    setIsCalendarOpen(false);
   };
-
-  // Update the date when selectedDate changes
-  useEffect(() => {
-    if (selectedDate) {
-      setDate(parseISO(selectedDate));
-    }
-  }, [selectedDate]);
-
-  // Handle date change from the calendar
-  const handleDateSelect = (newDate: Date | undefined) => {
-    if (newDate) {
-      setDate(newDate);
-      onDateChange(formatTorontoDate(newDate));
-    }
+  
+  // Handle navigation to previous day
+  const goToPreviousDay = () => {
+    const previousDay = addDays(selectedDateObj, -1);
+    onDateChange(format(previousDay, "yyyy-MM-dd"));
   };
-
-  // Handle navigating to previous day
-  const handlePreviousDay = () => {
-    if (date) {
-      const newDate = new Date(date);
-      newDate.setDate(newDate.getDate() - 1);
-      setDate(newDate);
-      onDateChange(formatTorontoDate(newDate));
+  
+  // Handle navigation to next day (only if not beyond today)
+  const goToNextDay = () => {
+    const nextDay = addDays(selectedDateObj, 1);
+    if (!isAfter(nextDay, today)) {
+      onDateChange(format(nextDay, "yyyy-MM-dd"));
     }
   };
-
-  // Handle navigating to next day
-  const handleNextDay = () => {
-    if (date) {
-      const newDate = new Date(date);
-      newDate.setDate(newDate.getDate() + 1);
-      
-      // Don't allow selecting future dates
-      if (newDate <= new Date()) {
-        setDate(newDate);
-        onDateChange(formatTorontoDate(newDate));
-      }
-    }
+  
+  // Handle return to today
+  const goToToday = () => {
+    onDateChange(getTodayFormatted());
   };
-
-  // Handle returning to today
-  const handleGoToToday = () => {
-    const today = new Date();
-    setDate(today);
-    onDateChange(formatTorontoDate(today));
-  };
-
+  
+  // Determine if we can go to next day (not beyond today)
+  const canGoToNextDay = !dateFnsIsToday(selectedDateObj);
+  
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
+    <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-2">
       <div className="flex items-center gap-2">
-        <Button 
-          variant="outline" 
-          size="icon" 
-          onClick={handlePreviousDay}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={goToPreviousDay}
           aria-label="Previous day"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         
-        <Popover>
+        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <PopoverTrigger asChild>
-            <Button 
+            <Button
               variant="outline"
               className={cn(
                 "w-[240px] justify-start text-left font-normal",
-                !date && "text-muted-foreground"
+                !selectedDate && "text-muted-foreground"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? formatDateForDisplay(date) : "Select date"}
+              {format(selectedDateObj, "EEEE, MMMM d, yyyy")}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
+          <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
-              selected={date}
-              onSelect={handleDateSelect}
-              disabled={(date) => date > new Date()}
+              selected={selectedDateObj}
+              onSelect={handleSelectDate}
+              disabled={(date) => isAfter(date, today)}
               initialFocus
-              className="p-3 pointer-events-auto"
             />
           </PopoverContent>
         </Popover>
         
-        <Button 
-          variant="outline" 
-          size="icon" 
-          onClick={handleNextDay}
-          disabled={isToday}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={goToNextDay}
+          disabled={!canGoToNextDay}
           aria-label="Next day"
         >
           <ChevronRight className="h-4 w-4" />
@@ -129,8 +114,8 @@ export function DateSelector({ selectedDate, onDateChange, isToday }: DateSelect
       {!isToday && (
         <Button 
           variant="secondary" 
-          size="sm" 
-          onClick={handleGoToToday}
+          onClick={goToToday}
+          size="sm"
         >
           Go to Today
         </Button>
