@@ -29,6 +29,17 @@ export function useDataRefresh(
   const refreshData = useCallback(async (showLoading = true, forceRefresh = false) => {
     console.log(`Refreshing data (show loading: ${showLoading}, force refresh: ${forceRefresh})`);
     
+    // Always clear any pending debounce timer
+    if (refreshDebounceTimerRef.current) {
+      window.clearTimeout(refreshDebounceTimerRef.current);
+      refreshDebounceTimerRef.current = null;
+    }
+    
+    // If force refresh, always proceed regardless of in-progress state
+    if (forceRefresh) {
+      refreshInProgressRef.current = false;
+    }
+    
     // Check if refresh is already in progress
     if (refreshInProgressRef.current) {
       console.log("Refresh already in progress, queueing request");
@@ -36,44 +47,42 @@ export function useDataRefresh(
       return;
     }
     
-    // Debounce rapid refresh requests
-    if (refreshDebounceTimerRef.current) {
-      window.clearTimeout(refreshDebounceTimerRef.current);
-      refreshDebounceTimerRef.current = null;
-    }
+    // Mark refresh as in progress immediately
+    refreshInProgressRef.current = true;
     
     // Short debounce delay to prevent duplicate calls
     refreshDebounceTimerRef.current = window.setTimeout(async () => {
-      const now = new Date();
-      const elapsed = lastRefreshTime ? now.getTime() - lastRefreshTime.getTime() : REFRESH_THROTTLE + 1;
-      
-      // Throttle refreshes that happen too quickly unless forced
-      if (!forceRefresh && elapsed < REFRESH_THROTTLE) {
-        console.log(`Throttling refresh (${elapsed}ms since last refresh)`);
-        refreshInProgressRef.current = false;
-        
-        if (refreshQueuedRef.current) {
-          refreshQueuedRef.current = false;
-          setTimeout(() => refreshData(false), REFRESH_THROTTLE - elapsed);
-        }
-        return;
-      }
-      
-      refreshInProgressRef.current = true;
-      
-      if (showLoading) {
-        console.log("Setting loading state to true");
-        setLoading(true);
-      }
-      
       try {
+        const now = new Date();
+        const elapsed = lastRefreshTime ? now.getTime() - lastRefreshTime.getTime() : REFRESH_THROTTLE + 1;
+        
+        // Throttle refreshes that happen too quickly unless forced
+        if (!forceRefresh && elapsed < REFRESH_THROTTLE) {
+          console.log(`Throttling refresh (${elapsed}ms since last refresh)`);
+          refreshInProgressRef.current = false;
+          
+          if (refreshQueuedRef.current) {
+            refreshQueuedRef.current = false;
+            setTimeout(() => refreshData(false), REFRESH_THROTTLE - elapsed);
+          }
+          return;
+        }
+        
+        if (showLoading) {
+          console.log("Setting loading state to true");
+          setLoading(true);
+        }
+        
         setRefreshAttempts(prev => prev + 1);
         console.log(`Starting data refresh #${refreshAttempts + 1}${forceRefresh ? ' (forced)' : ''}`);
         
         const result = await loadData(showLoading, forceRefresh);
         
         if (!result) {
-          console.log("Request was throttled, aborted, or using cached data");
+          console.log("No data returned from loadData");
+          if (showLoading) {
+            setLoading(false);
+          }
           refreshInProgressRef.current = false;
           
           // Process queued refresh if needed
@@ -96,6 +105,9 @@ export function useDataRefresh(
               variant: "destructive"
             });
           }
+          if (showLoading) {
+            setLoading(false);
+          }
           refreshInProgressRef.current = false;
           return;
         }
@@ -111,11 +123,10 @@ export function useDataRefresh(
           onSuccess();
         }
         
-        console.log(`Data fetch complete (v${result.version}): ${result.habits.length} habits, ${result.completions.length} completions, ${result.failures?.length || 0} failures`);
+        console.log(`Data fetch complete (v${result.version}): ${result.habits?.length || 0} habits, ${result.completions?.length || 0} completions, ${result.failures?.length || 0} failures`);
       } catch (error) {
         console.error("Unexpected error refreshing data:", error);
         setError(error instanceof Error ? error.message : "An unexpected error occurred");
-        setLoading(false);
         
         if (showLoading) {
           toast({
@@ -138,7 +149,7 @@ export function useDataRefresh(
           setTimeout(() => refreshData(false), DEBOUNCE_DELAY);
         }
       }
-    }, DEBOUNCE_DELAY);
+    }, forceRefresh ? 0 : DEBOUNCE_DELAY); // Skip debounce for force refreshes
     
   }, [loadData, onSuccess, refreshAttempts, setError, setLoading, lastRefreshTime, updateState]);
 

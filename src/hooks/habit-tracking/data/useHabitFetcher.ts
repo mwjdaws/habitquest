@@ -62,6 +62,12 @@ export function useHabitFetcher() {
     console.log(`Starting data fetch (version ${currentVersion})`);
     
     try {
+      // Check for aborted signal first
+      if (signal?.aborted) {
+        console.log('Fetch aborted before starting');
+        return null;
+      }
+      
       // Create fetch promises with retry and abort signal
       const habitsPromise = withRetry(() => fetchHabits(), 2, signal);
       const completionsPromise = withRetry(() => getCompletionsForDate(today), 2, signal);
@@ -79,6 +85,7 @@ export function useHabitFetcher() {
         failuresPromise
       ]);
       
+      // Check for abort after network requests complete
       if (signal?.aborted) {
         console.log('Fetch aborted mid-operation');
         return null;
@@ -92,7 +99,7 @@ export function useHabitFetcher() {
       
       // Cache the result
       const result = {
-        habits: habitsData,
+        habits: habitsData || [],
         completions: completionsData || [],
         failures: failuresData || [],
         version: currentVersion
@@ -122,28 +129,37 @@ export function useHabitFetcher() {
 
   // Function to setup abort controller and handle fetch request with cache control
   const loadData = useCallback(async (showLoading = true, forceRefresh = false) => {
-    // Cancel any in-flight requests
-    const controller = createAbortController();
-    const signal = controller.signal;
-    
-    // Invalidate cache if force refresh requested
-    if (forceRefresh) {
-      console.log("Forcing data refresh (cache invalidated)");
-      cacheExpiryRef.current = 0;
+    try {
+      // Cancel any in-flight requests
+      cancelPendingRequests();
+      
+      // Setup new controller
+      const controller = createAbortController();
+      const signal = controller.signal;
+      
+      // Invalidate cache if force refresh requested
+      if (forceRefresh) {
+        console.log("Forcing data refresh (cache invalidated)");
+        cacheExpiryRef.current = 0;
+        cachedDataRef.current = null;
+      }
+      
+      const result = await fetchHabitData(signal);
+      
+      if (result?.error && showLoading) {
+        toast({
+          title: "Error",
+          description: "Failed to load habit data. Please try again.",
+          variant: "destructive",
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Unexpected error in loadData:", error);
+      return { error: "An unexpected error occurred while loading data" };
     }
-    
-    const result = await fetchHabitData(signal);
-    
-    if (result?.error && showLoading) {
-      toast({
-        title: "Error",
-        description: "Failed to load habit data. Please try again.",
-        variant: "destructive",
-      });
-    }
-    
-    return result;
-  }, [fetchHabitData, createAbortController]);
+  }, [fetchHabitData, createAbortController, cancelPendingRequests]);
 
   // Added ability to clear cache explicitly
   const clearCache = useCallback(() => {

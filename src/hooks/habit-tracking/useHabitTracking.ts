@@ -26,7 +26,7 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
   } = useHabitActions(state, setState, refreshData);
 
   // Calculate UI metrics using a dedicated hook
-  const metrics = useHabitMetrics(state.filteredHabits, state.completions);
+  const metrics = useHabitMetrics(state.filteredHabits || [], state.completions || []);
 
   // Wrap refreshData with useCallback to stabilize reference
   const stableRefreshData = useCallback((showLoading = true) => {
@@ -36,9 +36,9 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
 
   // Return a more efficiently memoized object with flattened metrics
   return useMemo(() => ({
-    habits: state.filteredHabits,
-    completions: state.completions,
-    failures: state.failures,
+    habits: state.filteredHabits || [],
+    completions: state.completions || [],
+    failures: state.failures || [],
     loading: state.loading,
     error: state.error,
     progress: metrics.progress,

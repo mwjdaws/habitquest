@@ -19,9 +19,6 @@ interface HabitTrackerProps {
 export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   console.log("HabitTracker component rendering");
   
-  // Track initialization to prevent multiple data loads
-  const isInitializedRef = useRef(false);
-  
   // State for failure dialog - local to this component
   const [failureState, setFailureState] = useState<{
     habitId: string | null;
@@ -48,11 +45,14 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
   // Initial data load on component mount - force a refresh on mount
   useEffect(() => {
     console.log("[HabitTracker] Component mounted, initializing data");
-    if (!isInitializedRef.current) {
-      console.log("[HabitTracker] Initial mount, triggering data refresh");
-      refreshData(true);
-      isInitializedRef.current = true;
-    }
+    console.log("[HabitTracker] Initial mount, triggering data refresh");
+    
+    // Delay slightly to avoid race conditions during initial mounting
+    const timer = setTimeout(() => {
+      refreshData(true); // Force loading indicator
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [refreshData]);
   
   // Optimized retry handler
