@@ -18,9 +18,9 @@ interface HabitContentProps {
   failures: any[];
   progress: number;
   completedCount: number;
-  onToggleCompletion: (id: string) => void;
-  onLogFailure: (id: string) => void;
-  onUndoFailure: (id: string) => void;
+  onToggleCompletion: (id: string) => Promise<void>;
+  onLogFailure: (id: string) => Promise<void>;
+  onUndoFailure: (id: string) => Promise<void>;
   onRetry: () => void;
 }
 

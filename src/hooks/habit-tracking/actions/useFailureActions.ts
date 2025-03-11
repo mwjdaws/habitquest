@@ -12,7 +12,7 @@ import { useActionHandler } from "../utils/useActionHandler";
 export function useFailureActions(
   state: HabitTrackingState,
   setState: React.Dispatch<React.SetStateAction<HabitTrackingState>>,
-  refreshData: (showLoading?: boolean) => void,
+  refreshData: (showLoading?: boolean, forceRefresh?: boolean) => void,
   findHabit: (habitId: string) => Habit | undefined,
   pendingActionsRef: React.MutableRefObject<Set<string>>
 ) {

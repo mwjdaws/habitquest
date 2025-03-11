@@ -23,7 +23,7 @@ import { useFailureActions } from "./actions/useFailureActions";
 export function useHabitActions(
   state: HabitTrackingState,
   setState: React.Dispatch<React.SetStateAction<HabitTrackingState>>,
-  refreshData: (showLoading?: boolean) => void
+  refreshData: (showLoading?: boolean, forceRefresh?: boolean) => void
 ) {
   // Shared reference for tracking pending actions to prevent duplicates
   const pendingActionsRef = useRef<Set<string>>(new Set());

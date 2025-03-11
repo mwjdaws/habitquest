@@ -116,8 +116,8 @@ export function useHabitData(onHabitChange?: () => void) {
     setState,
     lastRefreshTime,
     refreshAttempts,
-    loadData: refreshData,
     refreshData,
-    clearCache
+    clearCache,
+    isInitialized: state.isInitialized
   };
 }
