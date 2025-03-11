@@ -1,6 +1,9 @@
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
+import { useRefreshThrottling } from "./refresh/useRefreshThrottling";
+import { useRefreshQueue } from "./refresh/useRefreshQueue";
+import { useRefreshDebounce } from "./refresh/useRefreshDebounce";
 
 /**
  * Hook to manage habit data refreshing with throttling and debouncing
@@ -12,15 +15,28 @@ export function useDataRefresh(
   setError: (error: string | null) => void,
   onSuccess?: () => void
 ) {
-  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
-  const [refreshAttempts, setRefreshAttempts] = useState(0);
-  const refreshInProgressRef = useRef(false);
-  const refreshQueuedRef = useRef(false);
-  const refreshDebounceTimerRef = useRef<number | null>(null);
+  // Use specialized hooks for different concerns
+  const { 
+    lastRefreshTime, 
+    refreshAttempts, 
+    shouldThrottleRefresh, 
+    markRefreshComplete,
+    getTimeUntilAvailable
+  } = useRefreshThrottling();
   
-  // Constants for throttling and debouncing
-  const REFRESH_THROTTLE = 800; // Min time between refreshes (ms)
-  const DEBOUNCE_DELAY = 50; // Short debounce to combine rapid requests
+  const {
+    isRefreshInProgress,
+    hasQueuedRefresh,
+    markRefreshStarted,
+    markRefreshCompleted,
+    queueRefresh,
+    clearQueuedRefresh
+  } = useRefreshQueue();
+  
+  const {
+    clearDebounceTimer,
+    setDebounceTimer
+  } = useRefreshDebounce();
 
   /**
    * Refreshes habit data with intelligent handling of concurrent requests,
@@ -30,50 +46,43 @@ export function useDataRefresh(
     console.log(`Refreshing data (show loading: ${showLoading}, force refresh: ${forceRefresh})`);
     
     // Always clear any pending debounce timer
-    if (refreshDebounceTimerRef.current) {
-      window.clearTimeout(refreshDebounceTimerRef.current);
-      refreshDebounceTimerRef.current = null;
-    }
+    clearDebounceTimer();
     
     // If force refresh, always proceed regardless of in-progress state
     if (forceRefresh) {
-      refreshInProgressRef.current = false;
+      markRefreshCompleted();
     }
     
     // Check if refresh is already in progress
-    if (refreshInProgressRef.current) {
+    if (isRefreshInProgress()) {
       console.log("Refresh already in progress, queueing request");
-      refreshQueuedRef.current = true;
+      queueRefresh();
       return;
     }
     
-    // Mark refresh as in progress immediately
-    refreshInProgressRef.current = true;
+    // Check throttling unless forced
+    if (!forceRefresh && shouldThrottleRefresh(forceRefresh)) {
+      console.log(`Throttling refresh (${getTimeUntilAvailable()}ms until next available)`);
+      
+      if (hasQueuedRefresh()) {
+        clearQueuedRefresh();
+        const delay = getTimeUntilAvailable();
+        setTimeout(() => refreshData(false), delay);
+      }
+      return;
+    }
     
-    // Short debounce delay to prevent duplicate calls
-    refreshDebounceTimerRef.current = window.setTimeout(async () => {
+    // Set debounce timer with the main refresh logic
+    setDebounceTimer(async () => {
       try {
-        const now = new Date();
-        const elapsed = lastRefreshTime ? now.getTime() - lastRefreshTime.getTime() : REFRESH_THROTTLE + 1;
-        
-        // Throttle refreshes that happen too quickly unless forced
-        if (!forceRefresh && elapsed < REFRESH_THROTTLE) {
-          console.log(`Throttling refresh (${elapsed}ms since last refresh)`);
-          refreshInProgressRef.current = false;
-          
-          if (refreshQueuedRef.current) {
-            refreshQueuedRef.current = false;
-            setTimeout(() => refreshData(false), REFRESH_THROTTLE - elapsed);
-          }
-          return;
-        }
+        // Mark refresh as started
+        markRefreshStarted();
         
         if (showLoading) {
           console.log("Setting loading state to true");
           setLoading(true);
         }
         
-        setRefreshAttempts(prev => prev + 1);
         console.log(`Starting data refresh #${refreshAttempts + 1}${forceRefresh ? ' (forced)' : ''}`);
         
         const result = await loadData(showLoading, forceRefresh);
@@ -83,12 +92,12 @@ export function useDataRefresh(
           if (showLoading) {
             setLoading(false);
           }
-          refreshInProgressRef.current = false;
+          markRefreshCompleted();
           
           // Process queued refresh if needed
-          if (refreshQueuedRef.current) {
-            refreshQueuedRef.current = false;
-            setTimeout(() => refreshData(false), DEBOUNCE_DELAY);
+          if (hasQueuedRefresh()) {
+            clearQueuedRefresh();
+            setTimeout(() => refreshData(false), 50);
           }
           return;
         }
@@ -108,7 +117,7 @@ export function useDataRefresh(
           if (showLoading) {
             setLoading(false);
           }
-          refreshInProgressRef.current = false;
+          markRefreshCompleted();
           return;
         }
         
@@ -116,7 +125,7 @@ export function useDataRefresh(
         console.log("Data fetched successfully, updating state");
         updateState(result);
         
-        setLastRefreshTime(now);
+        markRefreshComplete();
         
         // Call success callback if provided
         if (onSuccess) {
@@ -140,27 +149,41 @@ export function useDataRefresh(
           console.log("Setting loading state to false");
           setLoading(false);
         }
-        refreshInProgressRef.current = false;
+        markRefreshCompleted();
         
         // Process queued refresh requests
-        if (refreshQueuedRef.current) {
-          refreshQueuedRef.current = false;
+        if (hasQueuedRefresh()) {
+          clearQueuedRefresh();
           console.log("Processing queued refresh request");
-          setTimeout(() => refreshData(false), DEBOUNCE_DELAY);
+          setTimeout(() => refreshData(false), 50);
         }
       }
-    }, forceRefresh ? 0 : DEBOUNCE_DELAY); // Skip debounce for force refreshes
+    }, forceRefresh);
     
-  }, [loadData, onSuccess, refreshAttempts, setError, setLoading, lastRefreshTime, updateState]);
+  }, [
+    clearDebounceTimer,
+    setDebounceTimer,
+    loadData,
+    updateState,
+    setLoading,
+    setError,
+    onSuccess,
+    refreshAttempts,
+    isRefreshInProgress,
+    hasQueuedRefresh,
+    markRefreshStarted,
+    markRefreshCompleted,
+    queueRefresh,
+    clearQueuedRefresh,
+    shouldThrottleRefresh,
+    getTimeUntilAvailable,
+    markRefreshComplete
+  ]);
 
   return {
     refreshData,
     lastRefreshTime,
     refreshAttempts,
-    clearRefreshTimer: () => {
-      if (refreshDebounceTimerRef.current) {
-        window.clearTimeout(refreshDebounceTimerRef.current);
-      }
-    }
+    clearRefreshTimer: clearDebounceTimer
   };
 }
