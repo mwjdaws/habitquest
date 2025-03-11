@@ -13,6 +13,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HabitTrackerProps {
   onHabitChange?: () => void;
@@ -21,6 +22,8 @@ interface HabitTrackerProps {
 // Using memo for HabitTracker component to prevent unnecessary re-renders
 export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitTrackerProps) {
   console.log("HabitTracker component rendering");
+  const { user } = useAuth(); // Use Auth context directly for auth state
+  const isAuthenticated = !!user;
   
   // State for failure dialog - local to this component
   const [failureState, setFailureState] = useState<{
@@ -44,8 +47,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     handleLogFailure,
     handleUndoFailure,
     refreshData,
-    isInitialized,
-    isAuthenticated
+    isInitialized
   } = useHabitTracking(onHabitChange);
 
   // Initial data load on component mount - force a refresh on mount
