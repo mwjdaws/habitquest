@@ -65,7 +65,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
       // Delay slightly to avoid race conditions during initial mounting
       dataFetchTimeoutRef.current = setTimeout(() => {
         console.log("[HabitTracker] Triggering initial data refresh");
-        refreshData(true, true); // Force loading indicator and refresh
+        refreshData(true, true); // This call is now valid
       }, 200);
     }
     
@@ -80,7 +80,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
   useEffect(() => {
     if (isAuthenticated && didInitialRefreshRef.current && !habits.length && !loading) {
       console.log("[HabitTracker] Auth state changed, retrying data fetch");
-      refreshData(true, true);
+      refreshData(true, true); // This call is now valid
     }
   }, [isAuthenticated, habits.length, loading, refreshData]);
   
@@ -89,7 +89,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     if (isAuthenticated) {
       toast({ title: "Refreshing", description: "Refreshing your habit data..." });
       console.log("[HabitTracker] Manual refresh requested by user");
-      refreshData(true, true);
+      refreshData(true, true); // This call is now valid
     }
   }, [refreshData, isAuthenticated]);
 
