@@ -13,6 +13,14 @@ import { useAuth } from "@/contexts/AuthContext";
 export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResult {
   const { user, isLoading: authLoading } = useAuth();
   
+  // Get data with the selected date
+  const { 
+    state, 
+    refreshData, 
+    clearCache,
+    isInitialized
+  } = useHabitData(onHabitChange);
+  
   // Get actions from separate hook
   const { 
     handleToggleCompletion, 
@@ -21,16 +29,8 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     selectedDate,
     setSelectedDate,
     isToday
-  } = useHabitActions(state, state.setState, refreshData);
+  } = useHabitActions(state, refreshData);
   
-  // Get data with the selected date
-  const { 
-    state, 
-    refreshData, 
-    clearCache,
-    isInitialized
-  } = useHabitData(onHabitChange, selectedDate);
-
   // Calculate UI metrics using a dedicated hook
   const metrics = useHabitMetrics(state.filteredHabits || [], state.completions || [], selectedDate);
 

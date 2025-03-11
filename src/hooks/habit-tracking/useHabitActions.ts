@@ -14,17 +14,15 @@ import { useState } from "react";
  * actions reference to prevent duplicate operations and race conditions.
  *
  * @param {HabitTrackingState} state - Current habit tracking state
- * @param {React.Dispatch<React.SetStateAction<HabitTrackingState>>} setState - State setter function
  * @param {function} refreshData - Function to refresh all habit data
  * @returns {Object} Collection of habit action handlers
  * 
  * @example
- * const { handleToggleCompletion, handleLogFailure } = useHabitActions(state, setState, refreshData);
+ * const { handleToggleCompletion, handleLogFailure } = useHabitActions(state, refreshData);
  * // Later: handleToggleCompletion(habitId);
  */
 export function useHabitActions(
   state: HabitTrackingState,
-  setState: React.Dispatch<React.SetStateAction<HabitTrackingState>>,
   refreshData: (showLoading?: boolean, forceRefresh?: boolean) => void
 ) {
   // Shared reference for tracking pending actions to prevent duplicates
@@ -40,7 +38,7 @@ export function useHabitActions(
   // Get completion actions
   const { handleToggleCompletion } = useCompletionActions(
     state, 
-    setState, 
+    state.setState, 
     refreshData, 
     findHabit, 
     pendingActionsRef,
@@ -50,7 +48,7 @@ export function useHabitActions(
   // Get failure actions
   const { handleLogFailure, handleUndoFailure } = useFailureActions(
     state, 
-    setState, 
+    state.setState, 
     refreshData, 
     findHabit, 
     pendingActionsRef,
