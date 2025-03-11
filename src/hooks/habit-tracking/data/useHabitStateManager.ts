@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { HabitTrackingState } from "../types";
 import { useHabitFiltering } from "../useHabitFiltering";
 import { useHabitStateUpdate } from "../utils/useHabitStateUpdate";
@@ -27,6 +27,17 @@ export function useHabitStateManager() {
     initializeState, 
     resetState 
   } = useHabitStateUpdate();
+  
+  // Force initialization of state if not already initialized
+  useEffect(() => {
+    if (!state.isInitialized && !state.loading) {
+      console.log("Initializing habit state in useHabitStateManager");
+      setState(prev => ({
+        ...prev,
+        isInitialized: true
+      }));
+    }
+  }, [state.isInitialized, state.loading]);
   
   // Update habits with filtering
   const updateHabits = useCallback((habits: any[]) => {

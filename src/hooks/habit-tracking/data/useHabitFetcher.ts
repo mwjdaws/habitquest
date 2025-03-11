@@ -1,5 +1,5 @@
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { 
   fetchHabits, 
@@ -28,6 +28,22 @@ export function useHabitFetcher() {
   const cacheExpiryRef = useRef(0);
   const cachedDataRef = useRef<any>(null);
   const today = getTodayFormatted();
+  const [initialized, setInitialized] = useState(false);
+
+  // Clear cache on user change
+  useEffect(() => {
+    cachedDataRef.current = null;
+    cacheExpiryRef.current = 0;
+    console.log("Cache cleared due to user change");
+  }, [user]);
+  
+  // Mark as initialized
+  useEffect(() => {
+    if (!initialized) {
+      setInitialized(true);
+      console.log("useHabitFetcher initialized");
+    }
+  }, [initialized]);
 
   // Enhanced data loading with improved error handling, request cancellation, and batch fetching
   const fetchHabitData = useCallback(async (signal?: AbortSignal) => {
@@ -42,7 +58,7 @@ export function useHabitFetcher() {
     
     // Cache is valid for 30 seconds unless force refresh is requested
     const CACHE_TTL = 30000; // 30 seconds
-    const THROTTLE_MS = 700; // 700ms minimum between requests
+    const THROTTLE_MS = 500; // 500ms minimum between requests
     
     // Check for valid cache first
     if (cachedDataRef.current && now < cacheExpiryRef.current && !signal?.aborted) {
@@ -178,6 +194,13 @@ export function useHabitFetcher() {
           description: "Failed to load habit data. Please try again.",
           variant: "destructive",
         });
+      }
+      
+      // Added debugging for result
+      if (!result) {
+        console.log("Fetch returned null result (likely throttled)");
+      } else {
+        console.log(`Fetch completed with ${result.habits?.length || 0} habits`);
       }
       
       return result;

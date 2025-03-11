@@ -25,7 +25,16 @@ export function useHabitData(onHabitChange?: () => void) {
   
   // Update state with fetched data
   const updateState = useCallback((data) => {
-    if (!data) return;
+    if (!data) {
+      console.log("No data to update state with");
+      setLoading(false);  // Ensure loading is set to false
+      return;
+    }
+    
+    console.log("Updating state with fetched data:", {
+      habits: data.habits?.length || 0,
+      completions: data.completions?.length || 0
+    });
     
     // Batch state updates to reduce renders
     updateHabits(data.habits || []);
@@ -43,7 +52,7 @@ export function useHabitData(onHabitChange?: () => void) {
     if (onHabitChange) {
       onHabitChange();
     }
-  }, [setState, updateHabits, onHabitChange]);
+  }, [setState, updateHabits, onHabitChange, setLoading]);
   
   // Handle refresh using the dedicated refresh hook with debouncing
   const { refreshData, lastRefreshTime, refreshAttempts, clearRefreshTimer } = useDataRefresh(
@@ -61,9 +70,15 @@ export function useHabitData(onHabitChange?: () => void) {
   useEffect(() => {
     // Check if already loaded or is loading
     if (!initialLoadAttemptedRef.current && !state.isInitialized && !state.loading && user) {
-      console.log("[useHabitData] Initial mount, triggering data refresh");
+      console.log("[useHabitData] Initial mount, triggering data refresh with hard force");
       initialLoadAttemptedRef.current = true;
-      refreshData(true, true); // Force refresh on initial load
+      
+      // Use a short delay to avoid race conditions during initialization
+      const timer = setTimeout(() => {
+        refreshData(true, true); // Force refresh on initial load
+      }, 50);
+      
+      return () => clearTimeout(timer);
     } else if (!user && !initialLoadAttemptedRef.current) {
       // If no user, mark as initialized to avoid loading state
       initialLoadAttemptedRef.current = true;

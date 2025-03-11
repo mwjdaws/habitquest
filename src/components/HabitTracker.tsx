@@ -28,6 +28,8 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     habitName: string;
   }>({ habitId: null, habitName: "" });
   
+  const didInitialRefreshRef = useRef(false);
+  
   // Use the optimized hook
   const { 
     habits,
@@ -48,14 +50,16 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
 
   // Initial data load on component mount - force a refresh on mount
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !didInitialRefreshRef.current) {
       console.log("[HabitTracker] Component mounted, initializing data");
       console.log("[HabitTracker] Initial mount, triggering data refresh");
+      
+      didInitialRefreshRef.current = true;
       
       // Delay slightly to avoid race conditions during initial mounting
       const timer = setTimeout(() => {
         refreshData(true); // Force loading indicator
-      }, 100);
+      }, 200);
       
       return () => clearTimeout(timer);
     }
@@ -132,7 +136,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
   }
 
   // More efficient content rendering with early returns
-  if (loading || !isInitialized) {
+  if (loading) {
     return (
       <Card className="w-full">
         <HabitTrackerHeader totalHabits={totalCount} isLoading={true} />
