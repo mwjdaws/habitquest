@@ -1,77 +1,98 @@
 
-import { useMemo, useCallback } from "react";
-import { useHabitData } from "./useHabitData";
-import { useHabitActions } from "./useHabitActions";
-import { useHabitMetrics } from "./utils/useHabitMetrics";
-import { HabitTrackingResult } from "./types";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Habit } from "@/lib/habitTypes";
+import { useHabitInit } from "./useHabitInit";
+import { useHabitActions } from "./useHabitActions";
+import { useHabitStats } from "./useHabitStats";
+import { useHabitData } from "./data/useHabitData";
+import { getTodayFormatted } from "@/lib/habits";
 
 /**
- * Primary hook for habit tracking functionality that provides a complete solution
- * for tracking, displaying, and interacting with habits
+ * This hook integrates all habit tracking functionality into a single interface
+ * for use in components.
  * 
- * @param {Function} onHabitChange - Optional callback that runs when habits change
- * @returns {HabitTrackingResult} Complete API for habit tracking
+ * @param {Function} onHabitChange - Optional callback when habits change
+ * @returns {Object} Combined habit tracking functionality
  */
-export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResult {
-  const { user, isLoading: authLoading } = useAuth();
+export function useHabitTracking(onHabitChange?: () => void) {
+  const { user } = useAuth();
   
-  // Get data with the selected date
+  // State for selected date
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayFormatted());
+  const isToday = useMemo(() => selectedDate === getTodayFormatted(), [selectedDate]);
+  
+  // Get core data state and functionality
   const { 
     state, 
     refreshData, 
-    clearCache,
-    isInitialized
-  } = useHabitData(onHabitChange);
+    isInitialized 
+  } = useHabitData(onHabitChange, selectedDate);
   
-  // Get actions from separate hook
+  // Destructure state for easier use
+  const { habits, completions, failures, loading, error } = state;
+  
+  // Initialize habits
+  const { initializeHabits } = useHabitInit();
+  
+  // Get habit actions with selected date
   const { 
-    handleToggleCompletion, 
+    handleToggleCompletion,
     handleLogFailure,
     handleUndoFailure,
-    selectedDate,
-    setSelectedDate,
-    isToday
   } = useHabitActions(state, refreshData);
   
-  // Calculate UI metrics using a dedicated hook
-  const metrics = useHabitMetrics(state.filteredHabits || [], state.completions || [], selectedDate);
-
-  // Return a more efficiently memoized object with flattened metrics
+  // Get stats for the current habits and completions
+  const { progress, completedCount, totalCount } = useHabitStats(habits, completions, failures, selectedDate);
+  
+  // Handle date selection changes
+  useEffect(() => {
+    if (user && isInitialized) {
+      console.log(`[useHabitTracking] Date changed to ${selectedDate}, refreshing data`);
+      refreshData(true, true); // Force refresh with loading indicator on date change
+    }
+  }, [selectedDate, user, isInitialized, refreshData]);
+  
+  // Initialize habits when needed
+  useEffect(() => {
+    if (user && isInitialized && habits.length === 0 && !loading && !error) {
+      initializeHabits();
+    }
+  }, [user, isInitialized, habits.length, loading, error, initializeHabits]);
+  
+  // Create integrated API for components
   return useMemo(() => ({
-    habits: state.filteredHabits || [],
-    completions: state.completions || [],
-    failures: state.failures || [],
-    loading: state.loading || authLoading,
-    error: state.error,
-    progress: metrics.progress,
-    completedCount: metrics.completedCount,
-    totalCount: metrics.totalCount,
+    habits,
+    completions,
+    failures,
+    loading,
+    error,
+    progress,
+    completedCount,
+    totalCount,
     handleToggleCompletion,
     handleLogFailure,
     handleUndoFailure,
     refreshData,
-    isInitialized: state.isInitialized,
-    isAuthenticated: !!user,
+    isInitialized,
     selectedDate,
     setSelectedDate,
     isToday
   }), [
-    state.filteredHabits,
-    state.completions,
-    state.failures,
-    state.loading,
-    state.error,
-    state.isInitialized,
-    metrics,
+    habits,
+    completions,
+    failures,
+    loading,
+    error,
+    progress,
+    completedCount,
+    totalCount,
     handleToggleCompletion,
     handleLogFailure,
     handleUndoFailure,
     refreshData,
-    authLoading,
-    user,
+    isInitialized,
     selectedDate,
-    setSelectedDate,
     isToday
   ]);
 }

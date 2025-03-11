@@ -22,7 +22,7 @@ export function useFailureActions(
   const { user } = useAuth();
   const { handleAction } = useActionHandler();
   
-  // Prevent recording failures for past dates
+  // Log a habit failure with reason
   const handleLogFailure = useCallback(async (habitId: string, reason: string) => {
     if (!user) return;
     
@@ -90,7 +90,7 @@ export function useFailureActions(
       () => logHabitFailure(habitId, selectedDate, reason),
       () => {},
       undefined,
-      () => refreshData(false),
+      () => refreshData(false, true), // Force refresh to ensure we get the latest data
       {
         title: "Habit skipped",
         description: "Keep going, tomorrow is a new day!"
@@ -99,7 +99,7 @@ export function useFailureActions(
     
   }, [user, selectedDate, setState, findHabit, handleAction, pendingActionsRef, refreshData]);
 
-  // Prevent undoing failures for past dates
+  // Remove a habit failure
   const handleUndoFailure = useCallback(async (habitId: string) => {
     if (!user) return;
     
@@ -133,7 +133,7 @@ export function useFailureActions(
       () => removeHabitFailure(habitId, selectedDate),
       () => {},
       undefined,
-      () => refreshData(false),
+      () => refreshData(false, true), // Force refresh to ensure we get the latest data
       {
         title: "Habit restored",
         description: "Failure has been removed"

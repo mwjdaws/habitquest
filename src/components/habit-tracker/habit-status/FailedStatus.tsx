@@ -30,7 +30,7 @@ export const FailedStatus = memo(function FailedStatus({
       transition={{ duration: 0.2 }}
     >
       <div className="text-xs text-red-500 italic">
-        {failureReason}
+        {failureReason || "Failed"}
       </div>
       
       {!isPast && (

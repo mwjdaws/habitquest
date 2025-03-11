@@ -59,6 +59,7 @@ export const StatusButtons = memo(function StatusButtons({
   return (
     <AnimatePresence mode="wait">
       <div className="flex gap-1">
+        {/* Only show Skip button for today's incomplete habits */}
         {!isCompleted && !isPast && (
           <motion.div key="skip-button" {...buttonVariants}>
             <Button

@@ -40,9 +40,10 @@ export const HabitStatus = memo(function HabitStatus({
         habitId={habitId}
         failureReason={failureInfo}
         onUndoFailure={onUndoFailure}
+        selectedDate={selectedDate}
       />
     );
-  }, [habitId, isFailed, failureInfo, onUndoFailure]);
+  }, [habitId, isFailed, failureInfo, onUndoFailure, selectedDate]);
   
   const statusButtonsComponent = useMemo(() => {
     if (isFailed) return null;

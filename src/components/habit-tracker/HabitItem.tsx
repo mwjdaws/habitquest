@@ -30,7 +30,7 @@ export const HabitItem = memo(function HabitItem({
   selectedDate = getTodayFormatted()
 }: HabitItemProps) {
   // Use our optimized custom hook for status calculations
-  const { isCompleted, isFailed, bgColorClass, failureReason } = useHabitStatus(habit, completions, failures, selectedDate);
+  const { isCompleted, isFailed, bgColorClass } = useHabitStatus(habit, completions, failures, selectedDate);
   
   // Check for habit inactivity
   const { isInconsistent, isLost, daysInactive } = useHabitInactivity(habit, completions);
