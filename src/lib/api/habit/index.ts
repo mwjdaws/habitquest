@@ -6,3 +6,4 @@ export * from './updateHabit';
 export * from './archiveHabits';
 export * from './deleteHabit';
 export * from './getHabitStats';
+export * from './createDefaultHabits';
