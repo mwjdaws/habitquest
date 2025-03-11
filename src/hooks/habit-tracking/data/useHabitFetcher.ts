@@ -7,6 +7,7 @@ import { useHabitCache } from "./fetching/useHabitCache";
 import { useHabitFetch } from "./fetching/useHabitFetch"; 
 import { useRequestThrottling } from "./fetching/useRequestThrottling";
 import { useDataVersion } from "./fetching/useDataVersion";
+import { getTodayFormatted } from "@/lib/habitUtils";
 
 /**
  * Hook to handle habit data fetching with improved error handling, cancellation, and caching
@@ -51,12 +52,15 @@ export function useHabitFetcher() {
   }, [initialized]);
 
   // Function to setup abort controller and handle fetch request with cache control
-  const loadData = useCallback(async (showLoading = true, forceRefresh = false) => {
+  const loadData = useCallback(async (showLoading = true, forceRefresh = false, selectedDate?: string) => {
     // Skip if not authenticated
     if (!user) {
       console.log("Skipping loadData - user not authenticated");
       return { habits: [], completions: [], failures: [], version: 0 };
     }
+    
+    // Use the selected date or default to today
+    const date = selectedDate || getTodayFormatted();
     
     try {
       // Cancel any in-flight requests
@@ -74,14 +78,14 @@ export function useHabitFetcher() {
       const controller = createAbortController();
       const signal = controller.signal;
       
-      // Invalidate cache if force refresh requested
-      if (forceRefresh) {
-        console.log("Forcing data refresh (cache invalidated)");
+      // Invalidate cache if force refresh requested or not today's date
+      if (forceRefresh || date !== getTodayFormatted()) {
+        console.log(`Forcing data refresh for date ${date} (cache invalidated)`);
         clearCache();
       }
       
-      // Check cache first if not forcing refresh
-      if (!forceRefresh) {
+      // Check cache first if not forcing refresh and it's today's date
+      if (!forceRefresh && date === getTodayFormatted()) {
         const cachedData = getCachedData();
         if (cachedData && !signal.aborted) {
           return cachedData;
@@ -90,10 +94,10 @@ export function useHabitFetcher() {
       
       // Get next version
       const currentVersion = getNextVersion();
-      console.log(`Starting data fetch (version ${currentVersion})`);
+      console.log(`Starting data fetch for date ${date} (version ${currentVersion})`);
       
-      // Perform fetch
-      const fetchResult = await fetchHabitData(signal);
+      // Perform fetch with the selected date
+      const fetchResult = await fetchHabitData(signal, date);
       
       // Track promise for proper cancellation
       trackPromise(Promise.resolve(fetchResult));
@@ -116,10 +120,10 @@ export function useHabitFetcher() {
         version: currentVersion
       };
       
-      // Cache result if no error
-      if (!result.error) {
+      // Cache result if no error and it's today's date
+      if (!result.error && date === getTodayFormatted()) {
         updateCache(result);
-      } else if (showLoading) {
+      } else if (showLoading && result.error) {
         toast({
           title: "Error",
           description: "Failed to load habit data. Please try again.",
@@ -128,7 +132,7 @@ export function useHabitFetcher() {
       }
       
       // Added debugging for result
-      console.log(`Fetch completed with ${result.habits?.length || 0} habits`);
+      console.log(`Fetch completed for date ${date} with ${result.habits?.length || 0} habits`);
       
       markFetchCompleted();
       return result;

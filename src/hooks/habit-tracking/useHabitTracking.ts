@@ -5,7 +5,6 @@ import { useHabitActions } from "./useHabitActions";
 import { useHabitMetrics } from "./utils/useHabitMetrics";
 import { HabitTrackingResult } from "./types";
 import { useAuth } from "@/contexts/AuthContext";
-import { useHabitInitialization } from "./useHabitInitialization";
 
 /**
  * Primary hook for habit tracking functionality that provides a complete solution
@@ -13,22 +12,27 @@ import { useHabitInitialization } from "./useHabitInitialization";
  */
 export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResult {
   const { user, isLoading: authLoading } = useAuth();
-  const { 
-    state, 
-    refreshData, 
-    clearCache,
-    isInitialized
-  } = useHabitData(onHabitChange);
   
   // Get actions from separate hook
   const { 
     handleToggleCompletion, 
     handleLogFailure,
-    handleUndoFailure
+    handleUndoFailure,
+    selectedDate,
+    setSelectedDate,
+    isToday
   } = useHabitActions(state, state.setState, refreshData);
+  
+  // Get data with the selected date
+  const { 
+    state, 
+    refreshData, 
+    clearCache,
+    isInitialized
+  } = useHabitData(onHabitChange, selectedDate);
 
   // Calculate UI metrics using a dedicated hook
-  const metrics = useHabitMetrics(state.filteredHabits || [], state.completions || []);
+  const metrics = useHabitMetrics(state.filteredHabits || [], state.completions || [], selectedDate);
 
   // Return a more efficiently memoized object with flattened metrics
   return useMemo(() => ({
@@ -45,7 +49,10 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     handleUndoFailure,
     refreshData,
     isInitialized: state.isInitialized,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    selectedDate,
+    setSelectedDate,
+    isToday
   }), [
     state.filteredHabits,
     state.completions,
@@ -59,6 +66,9 @@ export function useHabitTracking(onHabitChange?: () => void): HabitTrackingResul
     handleUndoFailure,
     refreshData,
     authLoading,
-    user
+    user,
+    selectedDate,
+    setSelectedDate,
+    isToday
   ]);
 }

@@ -1,3 +1,4 @@
+
 import { supabase } from "../supabase";
 import { HabitCompletion } from "../habitTypes";
 import { getAuthenticatedUser, handleApiError } from "./apiUtils";
@@ -27,8 +28,15 @@ export const getCompletionsForDate = async (date: string): Promise<HabitCompleti
 /**
  * Updates streak on habit completion with frequency awareness
  */
-const updateStreakOnCompletion = async (habitId: string, userId: string) => {
+const updateStreakOnCompletion = async (habitId: string, userId: string, date: string) => {
   try {
+    // Only update streak if completion is for today's date
+    const today = getTodayFormattedInToronto();
+    if (date !== today) {
+      console.log(`[updateStreakOnCompletion] Skipping streak update for past date ${date}`);
+      return;
+    }
+
     // Get both the habit data and recent completions
     const { data: habit, error: habitError } = await supabase
       .from("habits")
@@ -76,7 +84,6 @@ const updateStreakOnCompletion = async (habitId: string, userId: string) => {
       
       // If there's a recent failure, streak is 1 (today's completion)
       const mostRecentFailure = sortedFailures[0];
-      const today = getTodayFormattedInToronto();
       
       if (mostRecentFailure.failure_date === today) {
         // If failure was logged today but now completed, set streak to 1
@@ -116,8 +123,15 @@ const updateStreakOnCompletion = async (habitId: string, userId: string) => {
 /**
  * Updates streak on habit uncompletion with frequency awareness
  */
-const updateStreakOnUncompletion = async (habitId: string, userId: string) => {
+const updateStreakOnUncompletion = async (habitId: string, userId: string, date: string) => {
   try {
+    // Only update streak if uncompletion is for today's date
+    const today = getTodayFormattedInToronto();
+    if (date !== today) {
+      console.log(`[updateStreakOnUncompletion] Skipping streak update for past date ${date}`);
+      return;
+    }
+
     // Get the current habit data
     const { data: habit, error: habitError } = await supabase
       .from("habits")
@@ -170,7 +184,7 @@ export const toggleHabitCompletion = async (habitId: string, date: string, isCom
       if (error) throw error;
       
       // Update the streak (decrement)
-      await updateStreakOnUncompletion(habitId, userId);
+      await updateStreakOnUncompletion(habitId, userId, date);
       
     } else {
       // Add a completion
@@ -185,7 +199,7 @@ export const toggleHabitCompletion = async (habitId: string, date: string, isCom
       if (error) throw error;
       
       // Update the streak (increment)
-      await updateStreakOnCompletion(habitId, userId);
+      await updateStreakOnCompletion(habitId, userId, date);
     }
     
   } catch (error) {

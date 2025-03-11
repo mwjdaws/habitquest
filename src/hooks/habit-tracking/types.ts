@@ -26,4 +26,8 @@ export interface HabitTrackingResult {
   handleUndoFailure: (habitId: string) => Promise<void>;
   refreshData: (showLoading?: boolean) => void;
   isInitialized: boolean;
+  isAuthenticated: boolean;
+  selectedDate: string;
+  setSelectedDate: (date: string) => void;
+  isToday: boolean;
 }

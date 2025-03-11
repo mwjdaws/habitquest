@@ -64,17 +64,21 @@ export const logHabitFailure = async (habitId: string, date: string, reason: str
       if (error) throw error;
     }
     
-    // Reset the streak to 0
-    const { error: updateError } = await supabase
-      .from("habits")
-      .update({ 
-        current_streak: 0,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", habitId)
-      .eq("user_id", userId);
-    
-    if (updateError) throw updateError;
+    // Only reset streak if it's for today's date
+    const today = getTodayFormattedInToronto();
+    if (date === today) {
+      // Reset the streak to 0
+      const { error: updateError } = await supabase
+        .from("habits")
+        .update({ 
+          current_streak: 0,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", habitId)
+        .eq("user_id", userId);
+      
+      if (updateError) throw updateError;
+    }
     
   } catch (error) {
     return handleApiError(error, "logging habit failure");

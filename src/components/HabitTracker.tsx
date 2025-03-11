@@ -7,6 +7,7 @@ import { useHabitInitialization } from "@/hooks/habit-tracking/useHabitInitializ
 import { AuthRequiredState } from "./habit-tracker/AuthRequiredState";
 import { HabitContent } from "./habit-tracker/HabitContent";
 import { FailureDialog } from "@/components/habit/FailureDialog";
+import { DateSelector } from "./habit-tracker/DateSelector";
 
 interface HabitTrackerProps {
   onHabitChange?: () => void;
@@ -35,7 +36,10 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     handleLogFailure,
     handleUndoFailure,
     refreshData,
-    isInitialized
+    isInitialized,
+    selectedDate,
+    setSelectedDate,
+    isToday
   } = useHabitTracking(onHabitChange);
 
   // Use the initialization hook
@@ -45,7 +49,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     if (isAuthenticated) {
       toast({ title: "Refreshing", description: "Refreshing your habit data..." });
       console.log("[HabitTracker] Manual refresh requested by user");
-      refreshData(true, true);
+      refreshData(true);
     }
   }, [refreshData, isAuthenticated]);
 
@@ -72,12 +76,24 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
     if (!open) setFailureState({ habitId: null, habitName: "" });
   }, []);
 
+  const handleDateChange = useCallback((date: string) => {
+    setSelectedDate(date);
+  }, [setSelectedDate]);
+
   if (!isAuthenticated && !loading) {
     return <AuthRequiredState />;
   }
 
   return (
     <>
+      {isAuthenticated && isInitialized && (
+        <DateSelector 
+          selectedDate={selectedDate} 
+          onDateChange={handleDateChange} 
+          isToday={isToday} 
+        />
+      )}
+      
       <HabitContent
         loading={loading}
         error={error}

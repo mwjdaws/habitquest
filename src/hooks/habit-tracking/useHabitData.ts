@@ -6,11 +6,12 @@ import { useHabitStateManager } from "./data/useHabitStateManager";
 import { useDataRefresh } from "./data/useDataRefresh";
 import { useVisibilityRefresh } from "./data/useVisibilityRefresh";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatTorontoDate } from "@/lib/dateUtils";
 
 /**
  * Core hook that manages habit data fetching, caching, refreshing, and state management
  */
-export function useHabitData(onHabitChange?: () => void) {
+export function useHabitData(onHabitChange?: () => void, selectedDate?: string) {
   const { user } = useAuth();
   const { loadData, cancelPendingRequests, getCurrentVersion, clearCache } = useHabitFetcher();
   const { state, setState, updateHabits, setLoading, setError } = useHabitStateManager();
@@ -50,7 +51,7 @@ export function useHabitData(onHabitChange?: () => void) {
   
   // Handle refresh using the dedicated refresh hook with debouncing
   const { refreshData, lastRefreshTime, refreshAttempts, clearRefreshTimer } = useDataRefresh(
-    loadData,
+    (showLoading = true, forceRefresh = false) => loadData(showLoading, forceRefresh, selectedDate),
     updateState,
     setLoading,
     setError,
@@ -102,6 +103,14 @@ export function useHabitData(onHabitChange?: () => void) {
       refreshData(true, true);
     }
   }, [user, refreshData]);
+
+  // Effect for date changes
+  useEffect(() => {
+    if (user && state.isInitialized && selectedDate) {
+      console.log(`[useHabitData] Date changed to ${selectedDate}, refreshing data`);
+      refreshData(true, true);
+    }
+  }, [selectedDate, user, state.isInitialized, refreshData]);
 
   // Enhanced cleanup effect
   useEffect(() => {

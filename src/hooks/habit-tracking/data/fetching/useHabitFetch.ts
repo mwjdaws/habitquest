@@ -14,10 +14,9 @@ import { useAuth } from "@/contexts/AuthContext";
  */
 export function useHabitFetch() {
   const { user } = useAuth();
-  const today = getTodayFormatted();
   
   // Core data fetching function with retry capability
-  const fetchHabitData = useCallback(async (signal?: AbortSignal) => {
+  const fetchHabitData = useCallback(async (signal?: AbortSignal, selectedDate: string = getTodayFormatted()) => {
     // Skip if not authenticated
     if (!user) {
       console.log("Skipping habit data fetch - user not authenticated");
@@ -33,8 +32,8 @@ export function useHabitFetch() {
     try {
       // Create fetch promises with retry and abort signal
       const habitsPromise = withRetry(() => fetchHabits(), 2, signal);
-      const completionsPromise = withRetry(() => getCompletionsForDate(today), 2, signal);
-      const failuresPromise = withRetry(() => getFailuresForDate(today), 2, signal);
+      const completionsPromise = withRetry(() => getCompletionsForDate(selectedDate), 2, signal);
+      const failuresPromise = withRetry(() => getFailuresForDate(selectedDate), 2, signal);
       
       // Optimized data fetching with parallel requests
       const results = await Promise.allSettled([
@@ -65,7 +64,7 @@ export function useHabitFetch() {
         console.error("Failed to fetch failures:", results[2].reason);
       }
       
-      console.log("Habits data fetched successfully:", habitsData?.length || 0, "habits");
+      console.log(`Habits data fetched successfully for date ${selectedDate}:`, habitsData?.length || 0, "habits");
       
       return {
         habits: habitsData || [],
@@ -84,7 +83,7 @@ export function useHabitFetch() {
       const errorMessage = handleApiError(error, "loading habit data", "Failed to load habit data. Please try again.", false);
       return { error: errorMessage };
     }
-  }, [today, user]);
+  }, [user]);
   
   return { fetchHabitData };
 }

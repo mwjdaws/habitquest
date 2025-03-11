@@ -4,6 +4,8 @@ import { HabitTrackingState } from "./types";
 import { useHabitFinder } from "./utils/useHabitFinder";
 import { useCompletionActions } from "./actions/useCompletionActions";
 import { useFailureActions } from "./actions/useFailureActions";
+import { getTodayFormatted } from "@/lib/habitUtils";
+import { useState } from "react";
 
 /**
  * Centralized hook for managing all habit action operations with optimized rendering
@@ -31,13 +33,18 @@ export function useHabitActions(
   // Get the habit finder utility
   const findHabit = useHabitFinder(state);
 
+  // Default to today's date
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayFormatted());
+  const isToday = selectedDate === getTodayFormatted();
+
   // Get completion actions
   const { handleToggleCompletion } = useCompletionActions(
     state, 
     setState, 
     refreshData, 
     findHabit, 
-    pendingActionsRef
+    pendingActionsRef,
+    selectedDate
   );
 
   // Get failure actions
@@ -46,12 +53,16 @@ export function useHabitActions(
     setState, 
     refreshData, 
     findHabit, 
-    pendingActionsRef
+    pendingActionsRef,
+    selectedDate
   );
 
   return {
     handleToggleCompletion,
     handleLogFailure,
-    handleUndoFailure
+    handleUndoFailure,
+    selectedDate,
+    setSelectedDate,
+    isToday
   };
 }
