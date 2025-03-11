@@ -8,7 +8,12 @@ import { HabitTrackerHeader } from "./HabitTrackerHeader";
 export function AuthRequiredState() {
   return (
     <Card className="w-full">
-      <HabitTrackerHeader totalHabits={0} isLoading={false} />
+      <HabitTrackerHeader 
+        totalCount={0} 
+        completedCount={0}
+        progress={0}
+        isLoading={false}
+      />
       <CardContent className="flex flex-col items-center justify-center py-8">
         <p className="text-muted-foreground text-center mb-4">
           You need to be signed in to view and track your habits.

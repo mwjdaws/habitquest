@@ -54,7 +54,7 @@ export const HabitContent = memo(function HabitContent({
 
   // Show empty state if no habits
   if (isInitialized && habits.length === 0) {
-    return <EmptyState />;
+    return <EmptyState hasHabits={false} />;
   }
 
   return (
@@ -69,7 +69,8 @@ export const HabitContent = memo(function HabitContent({
       
       <ProgressBar 
         progress={progress} 
-        isLoading={loading}
+        completedCount={completedCount}
+        totalCount={totalCount}
       />
       
       <HabitList
