@@ -1,30 +1,32 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { HabitTrackerHeader } from "./HabitTrackerHeader";
-import { ProgressBar } from "./ProgressBar";
+import { memo } from "react";
+import { Habit, HabitCompletion, HabitFailure } from "@/lib/habitTypes";
 import { HabitList } from "./HabitList";
+import { ProgressBar } from "./ProgressBar";
+import { LoadingState } from "./LoadingState";
 import { EmptyState } from "./EmptyState";
-import { RetryButton } from "./RetryButton";
-import { LoadingState } from "../habit-list/LoadingState";
 import { ErrorState } from "./ErrorState";
+import { HabitTrackerHeader } from "./HabitTrackerHeader";
+import { getTodayFormatted } from "@/lib/habits";
 
 interface HabitContentProps {
   loading: boolean;
-  error: any;
+  error: string | null;
   isInitialized: boolean;
   totalCount: number;
-  habits: any[];
-  completions: any[];
-  failures: any[];
+  habits: Habit[];
+  completions: HabitCompletion[];
+  failures: HabitFailure[];
   progress: number;
   completedCount: number;
-  onToggleCompletion: (id: string) => Promise<void>;
-  onLogFailure: (id: string) => void;
-  onUndoFailure: (id: string) => Promise<void>;
+  onToggleCompletion: (habitId: string) => Promise<void>;
+  onLogFailure: (habitId: string) => void;
+  onUndoFailure: (habitId: string) => Promise<void>;
   onRetry: () => void;
+  selectedDate?: string;
 }
 
-export function HabitContent({
+export const HabitContent = memo(function HabitContent({
   loading,
   error,
   isInitialized,
@@ -37,58 +39,48 @@ export function HabitContent({
   onToggleCompletion,
   onLogFailure,
   onUndoFailure,
-  onRetry
+  onRetry,
+  selectedDate = getTodayFormatted()
 }: HabitContentProps) {
-  if (loading) {
-    return (
-      <Card className="w-full">
-        <HabitTrackerHeader totalHabits={totalCount} isLoading={true} />
-        <CardContent>
-          <LoadingState />
-        </CardContent>
-      </Card>
-    );
+  // Show loading state if not initialized or loading
+  if (loading && !isInitialized) {
+    return <LoadingState />;
   }
-  
+
+  // Show error state if there's an error
   if (error) {
-    return (
-      <Card className="w-full">
-        <HabitTrackerHeader totalHabits={totalCount} isLoading={false} />
-        <CardContent>
-          <ErrorState error={error} onRetry={onRetry} />
-        </CardContent>
-      </Card>
-    );
+    return <ErrorState error={error} onRetry={onRetry} />;
+  }
+
+  // Show empty state if no habits
+  if (isInitialized && habits.length === 0) {
+    return <EmptyState />;
   }
 
   return (
-    <Card className="w-full">
-      <HabitTrackerHeader totalHabits={totalCount} isLoading={false} />
-      <CardContent>
-        {habits.length === 0 ? (
-          <>
-            <EmptyState hasHabits={totalCount > 0} />
-            {isInitialized && <RetryButton onRetry={onRetry} />}
-          </>
-        ) : (
-          <>
-            <ProgressBar 
-              progress={progress} 
-              completedCount={completedCount} 
-              totalCount={totalCount} 
-            />
-            
-            <HabitList
-              habits={habits}
-              completions={completions}
-              failures={failures}
-              onToggleCompletion={onToggleCompletion}
-              onLogFailure={onLogFailure}
-              onUndoFailure={onUndoFailure}
-            />
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <HabitTrackerHeader
+        totalCount={totalCount}
+        completedCount={completedCount}
+        progress={progress}
+        isLoading={loading}
+        selectedDate={selectedDate}
+      />
+      
+      <ProgressBar 
+        progress={progress} 
+        isLoading={loading}
+      />
+      
+      <HabitList
+        habits={habits}
+        completions={completions}
+        failures={failures}
+        onToggleCompletion={onToggleCompletion}
+        onLogFailure={onLogFailure}
+        onUndoFailure={onUndoFailure}
+        selectedDate={selectedDate}
+      />
+    </div>
   );
-}
+});

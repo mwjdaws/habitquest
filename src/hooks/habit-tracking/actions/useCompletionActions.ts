@@ -6,6 +6,8 @@ import { Habit } from "@/lib/habitTypes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActionHandler } from "../utils/useActionHandler";
 import { useStreakCalculation } from "../utils/useStreakCalculation";
+import { isPastDate } from "../utils/commonUtils";
+import { toast } from "@/components/ui/use-toast";
 
 /**
  * Hook for managing habit completion actions
@@ -29,6 +31,17 @@ export function useCompletionActions(
     const actionKey = `toggle-${habitId}-${selectedDate}`;
     const isCompleted = state.completions.some(c => c.habit_id === habitId && c.completed_date === selectedDate);
     const habit = findHabit(habitId);
+    const isPast = isPastDate(selectedDate);
+    
+    // Prevent toggling off completions for past dates
+    if (isPast && isCompleted) {
+      toast({
+        title: "Cannot modify past completions",
+        description: "Past habit completions cannot be changed.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (!habit) {
       console.error('Could not find habit with ID:', habitId);

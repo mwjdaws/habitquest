@@ -3,6 +3,8 @@ import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { isPastDate } from "@/hooks/habit-tracking/utils/commonUtils";
+import { getTodayFormatted } from "@/lib/habits";
 
 /**
  * Props for the StatusButtons component
@@ -12,12 +14,14 @@ import { motion, AnimatePresence } from "framer-motion";
  * @property {boolean} isCompleted - Whether the habit is completed
  * @property {function} onToggleCompletion - Callback to toggle completion status
  * @property {function} onLogFailure - Callback to mark habit as failed
+ * @property {string} [selectedDate] - The currently selected date
  */
 type StatusButtonsProps = {
   habitId: string;
   isCompleted: boolean;
   onToggleCompletion: (habitId: string) => Promise<void>;
   onLogFailure: (habitId: string) => void;
+  selectedDate?: string;
 };
 
 // Animation variants consistent with parent component
@@ -41,15 +45,21 @@ export const StatusButtons = memo(function StatusButtons({
   isCompleted,
   onToggleCompletion,
   onLogFailure,
+  selectedDate = getTodayFormatted()
 }: StatusButtonsProps) {
+  // Determine if this is a past date
+  const isPast = isPastDate(selectedDate);
+  
   // Memoize handlers to prevent new function references on each render
   const handleSkip = useCallback(() => onLogFailure(habitId), [habitId, onLogFailure]);
   const handleToggle = useCallback(() => onToggleCompletion(habitId), [habitId, onToggleCompletion]);
   
+  // For past dates, only allow marking incomplete habits as complete, not vice versa
+  // For completed habits in the past, we show a disabled "Done" button
   return (
     <AnimatePresence mode="wait">
       <div className="flex gap-1">
-        {!isCompleted && (
+        {!isCompleted && !isPast && (
           <motion.div key="skip-button" {...buttonVariants}>
             <Button
               variant="outline"
@@ -71,6 +81,7 @@ export const StatusButtons = memo(function StatusButtons({
             size="sm"
             className={isCompleted ? "bg-green-500 hover:bg-green-600" : ""}
             onClick={handleToggle}
+            disabled={isPast && isCompleted} // Disable if past date and already completed
           >
             {isCompleted ? (
               <>

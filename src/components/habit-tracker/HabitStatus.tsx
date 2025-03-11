@@ -4,6 +4,7 @@ import { HabitFailure } from "@/lib/habitTypes";
 import { StatusButtons } from "./habit-status/StatusButtons";
 import { FailedStatus } from "./habit-status/FailedStatus";
 import { useFailureInfo } from "./habit-status/useFailureInfo";
+import { getTodayFormatted } from "@/lib/habits";
 
 type HabitStatusProps = {
   habitId: string;
@@ -13,6 +14,7 @@ type HabitStatusProps = {
   onLogFailure: (habitId: string) => void;
   onUndoFailure: (habitId: string) => Promise<void>;
   failures: HabitFailure[];
+  selectedDate?: string;
 };
 
 // Using memo with custom comparison to prevent unnecessary re-renders
@@ -23,7 +25,8 @@ export const HabitStatus = memo(function HabitStatus({
   onToggleCompletion,
   onLogFailure,
   onUndoFailure,
-  failures
+  failures,
+  selectedDate = getTodayFormatted()
 }: HabitStatusProps) {
   // Get failure reason if available - using custom hook for clarity
   const failureInfo = useFailureInfo(habitId, isFailed, failures);
@@ -50,9 +53,10 @@ export const HabitStatus = memo(function HabitStatus({
         isCompleted={isCompleted}
         onToggleCompletion={onToggleCompletion}
         onLogFailure={onLogFailure}
+        selectedDate={selectedDate}
       />
     );
-  }, [habitId, isCompleted, isFailed, onToggleCompletion, onLogFailure]);
+  }, [habitId, isCompleted, isFailed, onToggleCompletion, onLogFailure, selectedDate]);
   
   // Early return pattern for improved rendering performance
   return isFailed ? failedStatusComponent : statusButtonsComponent;
@@ -61,6 +65,7 @@ export const HabitStatus = memo(function HabitStatus({
   if (prevProps.habitId !== nextProps.habitId) return false;
   if (prevProps.isCompleted !== nextProps.isCompleted) return false;
   if (prevProps.isFailed !== nextProps.isFailed) return false;
+  if (prevProps.selectedDate !== nextProps.selectedDate) return false;
   
   // Only compare the relevant failure when needed
   if (prevProps.isFailed && nextProps.isFailed) {

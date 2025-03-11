@@ -5,9 +5,11 @@ import { HabitTrackingState } from "../types";
 import { Habit } from "@/lib/habitTypes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActionHandler } from "../utils/useActionHandler";
+import { toast } from "@/components/ui/use-toast";
+import { isPastDate } from "../utils/commonUtils";
 
 /**
- * Hook for managing habit failure and undo failure actions
+ * Hook for managing habit failure actions
  */
 export function useFailureActions(
   state: HabitTrackingState,
@@ -19,12 +21,22 @@ export function useFailureActions(
 ) {
   const { user } = useAuth();
   const { handleAction } = useActionHandler();
-
-  // Handle logging habit failure with improved error handling and optimistic updates
+  
+  // Prevent recording failures for past dates
   const handleLogFailure = useCallback(async (habitId: string, reason: string) => {
     if (!user) return;
     
-    const actionKey = `failure-${habitId}-${selectedDate}`;
+    // Prevent logging failures for past dates
+    if (isPastDate(selectedDate)) {
+      toast({
+        title: "Cannot log failures for past dates",
+        description: "You can only log failures for today.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const actionKey = `fail-${habitId}-${selectedDate}`;
     const habit = findHabit(habitId);
     
     if (!habit) {
@@ -32,23 +44,24 @@ export function useFailureActions(
       return;
     }
     
-    // Optimistic update with improved state management
-    const newFailure = {
-      id: crypto.randomUUID(),
-      habit_id: habitId,
-      user_id: user.id,
-      failure_date: selectedDate,
-      reason,
-      created_at: new Date().toISOString()
-    };
-    
+    // Optimistic update with immutable state management
     setState(prev => {
-      // Only reset streak if it's today's date
+      // Add the failure to the state
+      const newFailure = {
+        id: crypto.randomUUID(),
+        habit_id: habitId,
+        user_id: user.id,
+        reason,
+        failure_date: selectedDate,
+        created_at: new Date().toISOString()
+      };
+      
+      // Mark the streak as broken if this is for today
       let updatedHabits = prev.habits;
       let updatedFiltered = prev.filteredHabits;
       
       if (selectedDate === getTodayFormatted()) {
-        // Update habits and filtered habits with reset streak
+        // Reset streak to 0 for this habit
         updatedHabits = prev.habits.map(h => 
           h.id === habitId ? { ...h, current_streak: 0 } : h
         );
@@ -62,17 +75,11 @@ export function useFailureActions(
         ...prev,
         habits: updatedHabits,
         filteredHabits: updatedFiltered,
-        // Remove any completions for this habit when marking as failed
+        failures: [...prev.failures, newFailure],
+        // Remove any completion for this habit when marking as failed
         completions: prev.completions.filter(c => 
           !(c.habit_id === habitId && c.completed_date === selectedDate)
-        ),
-        // Add the failure or replace existing one
-        failures: [
-          ...prev.failures.filter(f => 
-            !(f.habit_id === habitId && f.failure_date === selectedDate)
-          ), 
-          newFailure
-        ]
+        )
       };
     });
     
@@ -85,29 +92,34 @@ export function useFailureActions(
       undefined,
       () => refreshData(false),
       {
-        title: "Reason logged",
-        description: "Thanks for your honesty. You'll do better tomorrow!"
+        title: "Habit skipped",
+        description: "Keep going, tomorrow is a new day!"
       }
     );
-  }, [user, selectedDate, setState, refreshData, findHabit, handleAction, pendingActionsRef]);
+    
+  }, [user, selectedDate, setState, findHabit, handleAction, pendingActionsRef, refreshData]);
 
-  // Handle undoing a skipped habit (remove failure entry)
+  // Prevent undoing failures for past dates
   const handleUndoFailure = useCallback(async (habitId: string) => {
     if (!user) return;
     
-    const actionKey = `undo-failure-${habitId}-${selectedDate}`;
-    const habit = findHabit(habitId);
-    
-    if (!habit) {
-      console.error('Could not find habit with ID:', habitId);
+    // Prevent undoing failures for past dates
+    if (isPastDate(selectedDate)) {
+      toast({
+        title: "Cannot modify past failures",
+        description: "Past habit failures cannot be changed.",
+        variant: "destructive"
+      });
       return;
     }
     
-    // Optimistic update
+    const actionKey = `undofail-${habitId}-${selectedDate}`;
+    
+    // Optimistic update with immutable state management
     setState(prev => {
       return {
         ...prev,
-        // Remove the failure for this habit
+        // Remove the failure from state
         failures: prev.failures.filter(f => 
           !(f.habit_id === habitId && f.failure_date === selectedDate)
         )
@@ -123,11 +135,12 @@ export function useFailureActions(
       undefined,
       () => refreshData(false),
       {
-        title: "Skip undone",
-        description: "You can now mark this habit as complete."
+        title: "Habit restored",
+        description: "Failure has been removed"
       }
     );
-  }, [user, selectedDate, setState, refreshData, findHabit, handleAction, pendingActionsRef]);
+    
+  }, [user, selectedDate, setState, handleAction, pendingActionsRef, refreshData]);
 
   return {
     handleLogFailure,

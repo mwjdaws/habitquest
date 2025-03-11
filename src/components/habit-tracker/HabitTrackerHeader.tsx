@@ -1,42 +1,39 @@
 
-import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
+import { memo } from "react";
+import { isToday } from "@/hooks/habit-tracking/utils/commonUtils";
+import { format } from "date-fns";
 
-interface HabitTrackerHeaderProps {
-  totalHabits?: number;
-  isLoading?: boolean;
-}
+type HabitTrackerHeaderProps = {
+  totalCount: number;
+  completedCount: number;
+  progress: number;
+  isLoading: boolean;
+  selectedDate?: string;
+};
 
-export function HabitTrackerHeader({ totalHabits = 0, isLoading = false }: HabitTrackerHeaderProps) {
-  // Determine the appropriate description based on loading and habit count
-  const getDescription = () => {
-    if (isLoading) {
-      return 'Loading your habits for today...';
-    }
-    
-    if (totalHabits > 0) {
-      return `Your habit progress for today (${totalHabits} habit${totalHabits !== 1 ? 's' : ''})`;
-    }
-    
-    return 'No habits scheduled for today';
-  };
-
+export const HabitTrackerHeader = memo(function HabitTrackerHeader({
+  totalCount,
+  completedCount,
+  progress,
+  isLoading,
+  selectedDate
+}: HabitTrackerHeaderProps) {
+  const todayMode = !selectedDate || isToday(selectedDate);
+  const dateDisplay = selectedDate ? 
+    format(new Date(selectedDate), "MMMM d, yyyy") : 
+    "Today";
+  
   return (
-    <CardHeader className="flex flex-row items-start justify-between pb-2">
+    <div className="flex items-center justify-between">
       <div>
-        <CardTitle>Today's Habits</CardTitle>
-        <CardDescription>
-          {getDescription()}
-        </CardDescription>
+        <h3 className="text-lg font-medium">
+          {todayMode ? "Today's Habits" : `Habits for ${dateDisplay}`}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          {isLoading ? "Loading..." : 
+            `${completedCount} of ${totalCount} complete${totalCount === 1 ? "" : "s"} (${Math.round(progress)}%)`}
+        </p>
       </div>
-      <Button variant="ghost" size="sm" asChild>
-        <Link to="/habits" className="flex items-center text-sm font-medium">
-          View All
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Link>
-      </Button>
-    </CardHeader>
+    </div>
   );
-}
+});

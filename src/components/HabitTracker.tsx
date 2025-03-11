@@ -108,6 +108,7 @@ export const HabitTracker = memo(function HabitTracker({ onHabitChange }: HabitT
         onLogFailure={onLogFailure}
         onUndoFailure={handleUndoFailure}
         onRetry={handleRetry}
+        selectedDate={selectedDate}
       />
       
       <FailureDialog

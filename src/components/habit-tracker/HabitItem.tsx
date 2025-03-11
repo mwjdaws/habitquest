@@ -7,6 +7,7 @@ import { HabitStatus } from "./HabitStatus";
 import { HabitWarningState } from './HabitWarningState';
 import { habitItemPropsAreEqual, useHabitStatus } from "@/hooks/habit-tracking/utils/useHabitMemoization";
 import { useHabitInactivity } from '@/hooks/habit-tracking/utils/useHabitInactivity';
+import { getTodayFormatted } from '@/lib/habits';
 
 type HabitItemProps = {
   habit: Habit;
@@ -15,6 +16,7 @@ type HabitItemProps = {
   onToggleCompletion: (habitId: string) => Promise<void>;
   onLogFailure: (habitId: string) => void;
   onUndoFailure: (habitId: string) => Promise<void>;
+  selectedDate?: string;
 };
 
 // Using memo with custom comparison to prevent unnecessary re-renders
@@ -24,10 +26,11 @@ export const HabitItem = memo(function HabitItem({
   failures,
   onToggleCompletion,
   onLogFailure,
-  onUndoFailure
+  onUndoFailure,
+  selectedDate = getTodayFormatted()
 }: HabitItemProps) {
   // Use our optimized custom hook for status calculations
-  const { isCompleted, isFailed, bgColorClass, failureReason } = useHabitStatus(habit, completions, failures);
+  const { isCompleted, isFailed, bgColorClass, failureReason } = useHabitStatus(habit, completions, failures, selectedDate);
   
   // Check for habit inactivity
   const { isInconsistent, isLost, daysInactive } = useHabitInactivity(habit, completions);
@@ -89,12 +92,13 @@ export const HabitItem = memo(function HabitItem({
             onLogFailure={handleFailure}
             onUndoFailure={handleUndo}
             failures={failures}
+            selectedDate={selectedDate}
           />
         </div>
       </div>
       
       {/* Display warning for inconsistent or lost habits */}
-      {!isCompleted && !isFailed && (isInconsistent || isLost) && (
+      {selectedDate === getTodayFormatted() && !isCompleted && !isFailed && (isInconsistent || isLost) && (
         <HabitWarningState 
           type={isLost ? 'lost' : 'inconsistent'} 
           daysInactive={daysInactive}
