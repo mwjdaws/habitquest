@@ -15,6 +15,6 @@ import { createDefaultHabitState } from "../utils/commonUtils";
  * const initialState = useHabitInitialState();
  * const [state, setState] = useState(initialState);
  */
-export function useHabitInitialState(): HabitTrackingState {
+export function useHabitInitialState(): Omit<HabitTrackingState, 'setState'> {
   return useMemo(() => createDefaultHabitState(), []);
 }

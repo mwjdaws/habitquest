@@ -10,6 +10,7 @@ export interface HabitTrackingState {
   loading: boolean;
   error: string | null;
   isInitialized: boolean;
+  setState: React.Dispatch<React.SetStateAction<HabitTrackingState>>;
 }
 
 export interface HabitTrackingResult {

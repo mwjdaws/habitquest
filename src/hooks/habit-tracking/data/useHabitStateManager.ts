@@ -13,7 +13,17 @@ export function useHabitStateManager() {
   const { user } = useAuth();
   // Get initial state from a dedicated hook
   const initialState = useHabitInitialState();
-  const [state, setState] = useState<HabitTrackingState>(initialState);
+  
+  // Create state with setState reference
+  const [stateInternal, setStateInternal] = useState<Omit<HabitTrackingState, 'setState'>>(initialState);
+  
+  // Create a self-referencing state object that includes the setState function
+  const state = useMemo(() => {
+    return {
+      ...stateInternal,
+      setState: setStateInternal
+    } as HabitTrackingState;
+  }, [stateInternal]);
   
   const { filterHabitsForToday } = useHabitFiltering();
   
@@ -32,7 +42,7 @@ export function useHabitStateManager() {
   useEffect(() => {
     if (!state.isInitialized && !state.loading) {
       console.log("Initializing habit state in useHabitStateManager");
-      setState(prev => ({
+      setStateInternal(prev => ({
         ...prev,
         isInitialized: true
       }));
@@ -51,7 +61,7 @@ export function useHabitStateManager() {
     const habitsArray = Array.isArray(habits) ? habits : [];
     const filteredHabits = filterHabitsForToday(habitsArray);
     
-    setState(prev => ({
+    setStateInternal(prev => ({
       ...prev,
       habits: habitsArray,
       filteredHabits,
@@ -63,7 +73,7 @@ export function useHabitStateManager() {
   
   // Wrapper for setLoading to update the state
   const handleSetLoading = useCallback((loading: boolean) => {
-    setState(prev => ({
+    setStateInternal(prev => ({
       ...prev,
       loading
     }));
@@ -71,7 +81,7 @@ export function useHabitStateManager() {
 
   // Wrapper for setError to update the state
   const handleSetError = useCallback((error: string | null) => {
-    setState(prev => ({
+    setStateInternal(prev => ({
       ...prev,
       error,
       loading: false
@@ -80,7 +90,7 @@ export function useHabitStateManager() {
   
   // Wrapper for resetState to update the state
   const handleResetState = useCallback(() => {
-    setState(initialState);
+    setStateInternal(initialState);
   }, [initialState]);
   
   // Combine all state updaters
@@ -105,7 +115,7 @@ export function useHabitStateManager() {
   // Memoize the return value to prevent unnecessary re-renders
   return useMemo(() => ({
     state,
-    setState,
+    setState: setStateInternal,
     ...stateUpdaters
   }), [state, stateUpdaters]);
 }

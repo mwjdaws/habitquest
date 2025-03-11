@@ -1,6 +1,21 @@
-
 import { HabitTrackingState } from "../types";
-import { Habit } from "@/lib/habitTypes";
+
+/**
+ * Creates a default habit tracking state object with empty arrays and default values
+ * 
+ * @returns {Omit<HabitTrackingState, 'setState'>} Default habit tracking state
+ */
+export function createDefaultHabitState(): Omit<HabitTrackingState, 'setState'> {
+  return {
+    habits: [],
+    filteredHabits: [],
+    completions: [],
+    failures: [],
+    loading: false,
+    error: null,
+    isInitialized: false
+  };
+}
 
 /**
  * Returns the lowercase name of the current day of the week
@@ -27,18 +42,3 @@ export const getTodayName = (): string => {
 export const isHabitForToday = (habit: Habit, todayName: string): boolean => {
   return habit.frequency.length === 0 || habit.frequency.includes(todayName);
 };
-
-/**
- * Creates a default state object for habit tracking with all properties initialized
- * 
- * @returns {HabitTrackingState} A fresh state object with default values
- */
-export const createDefaultHabitState = (): HabitTrackingState => ({
-  habits: [],
-  filteredHabits: [],
-  completions: [],
-  failures: [],
-  loading: true,
-  error: null,
-  isInitialized: false
-});

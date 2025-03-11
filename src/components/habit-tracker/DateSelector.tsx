@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { format, isToday, parseISO } from "date-fns";
+import { format, isToday as dateFnsIsToday, parseISO } from "date-fns";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ export function DateSelector({ selectedDate, onDateChange, isToday }: DateSelect
 
   // Function to format the date for display
   const formatDateForDisplay = (date: Date) => {
-    if (isToday(date)) {
+    if (dateFnsIsToday(date)) {
       return "Today";
     }
     return format(date, "EEEE, MMMM d");
